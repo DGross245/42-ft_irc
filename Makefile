@@ -6,13 +6,13 @@
 #    By: dgross <dgross@student.42.fr>              +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/05/31 08:49:39 by dgross            #+#    #+#              #
-#    Updated: 2023/05/31 09:22:04 by dgross           ###   ########.fr        #
+#    Updated: 2023/05/31 11:00:40 by dgross           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME			= ircserv
 
-VPATH			= includes:
+VPATH			= includes: src:
 
 SRC				= main.cpp
 
