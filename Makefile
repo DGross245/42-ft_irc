@@ -6,7 +6,7 @@
 #    By: dgross <dgross@student.42.fr>              +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/05/31 08:49:39 by dgross            #+#    #+#              #
-#    Updated: 2023/05/31 11:00:40 by dgross           ###   ########.fr        #
+#    Updated: 2023/06/08 12:36:22 by dgross           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -14,7 +14,8 @@ NAME			= ircserv
 
 VPATH			= includes: src:
 
-SRC				= main.cpp
+SRC				= main.cpp\
+				  server.cpp
 
 HEADER			=
 

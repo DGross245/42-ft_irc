@@ -1,5 +1,5 @@
-#ifndef FT_IRC_H
-# define FT_IRC_H
+#ifndef CLIENT_H
+# define CLIENT_H
 
 # include <exception>
 # include <string>
@@ -8,9 +8,7 @@ class IRC {
 
 public:
 
-	void	InitServer( void );
-	IRC( void );
-	~IRC( void );
+
 	class ServerFailException : std::exception {
 	
 	public:
