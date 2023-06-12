@@ -12,7 +12,7 @@ int main (int argc, char **argv) {
 			// check IP
 			// check password
 			// init server
-			IRC server;
+			IRC server( argv[1], argv[2]);
 			(void)server;
 		}
 		catch(const std::exception& e)

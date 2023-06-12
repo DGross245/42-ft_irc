@@ -9,12 +9,12 @@ class IRC {
 public:
 
 
-	class ServerFailException : std::exception {
+	class ClientFailException : std::exception {
 	
 	public:
 
-		ServerFailException( std::string Error );
-		~ServerFailException( void ) throw();
+		ClientFailException( std::string Error );
+		~ClientFailException( void ) throw();
 		virtual const char *what() const throw();
 
 	private:

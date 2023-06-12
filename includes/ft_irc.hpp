@@ -8,9 +8,10 @@ class IRC {
 
 public:
 
-	void	InitServer( void );
-	IRC( void );
+	IRC( std::string Port, std::string Password );
 	~IRC( void );
+	void	InitServer( std::string Port, std::string Password );
+
 	class ServerFailException : std::exception {
 	
 	public:
