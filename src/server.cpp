@@ -1,4 +1,4 @@
-#include "ft_irc.hpp"
+#include "Server.hpp"
 #include <exception>
 #include <string>
 #include <iostream>
@@ -10,16 +10,16 @@
 #include <cstring>
 #include <unistd.h>
 
-IRC::IRC( std::string Port, std::string Password ) {
+Server::Server( std::string Port, std::string Password ) {
 	InitServer( Port, Password );
 	return ;
 }
 
-IRC::~IRC( void ) {
+Server::~Server( void ) {
 	return ;
 }
 
-void IRC::InitServer( std::string Port, std::string Password ) {
+void Server::InitServer( std::string Port, std::string Password ) {
 	(void)Password;
 	int ServerSocketfd = socket(AF_INET, SOCK_STREAM, 0);
 	struct sockaddr_in ServerAddress;
@@ -40,20 +40,15 @@ void IRC::InitServer( std::string Port, std::string Password ) {
 		char buffer[1024];
 		memset(buffer, 0, 1024);
 		int bytesRead = read(ClientSocketfd, buffer, 1024 - 1);
-		if (bytesRead == -1) {
-			std::cerr << "Failed to read data from client" << std::endl;
-		} 
-		else {
-			std::cout << "client: " << buffer << std::endl;
-			//Input parser
+		if (bytesRead != -1) {
+			std::cout << ": " << buffer << std::endl; }
 		}
-	}
 
 	close(ClientSocketfd);
 	close(ServerSocketfd);
 	return ;
 }
 
-IRC::ServerFailException::~ServerFailException( void ) throw() { return ;	}
-IRC::ServerFailException::ServerFailException( std::string Error ) : _error(Error) { return ; }
-const char *IRC::ServerFailException::what() const throw() { return (this->_error.c_str());}
+Server::ServerFailException::~ServerFailException( void ) throw() { return ;	}
+Server::ServerFailException::ServerFailException( std::string Error ) : _error(Error) { return ; }
+const char *Server::ServerFailException::what() const throw() { return (this->_error.c_str());}

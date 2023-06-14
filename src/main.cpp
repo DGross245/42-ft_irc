@@ -1,5 +1,5 @@
 #include <iostream>
-#include "ft_irc.hpp"
+#include "Server.hpp"
 
 int main (int argc, char **argv) {
 	if (argc != 3)	{
@@ -12,7 +12,7 @@ int main (int argc, char **argv) {
 			// check IP
 			// check password
 			// init server
-			IRC server( argv[1], argv[2]);
+			Server server( argv[1], argv[2]);
 			(void)server;
 		}
 		catch(const std::exception& e)

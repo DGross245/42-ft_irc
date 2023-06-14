@@ -4,7 +4,7 @@
 # include <exception>
 # include <string>
 
-class IRC {
+class Client {
 
 public:
 

@@ -1,15 +1,15 @@
-#ifndef FT_IRC_H
-# define FT_IRC_H
+#ifndef SERVER_H
+# define SERVER_H
 
 # include <exception>
 # include <string>
 
-class IRC {
+class Server {
 
 public:
 
-	IRC( std::string Port, std::string Password );
-	~IRC( void );
+	Server( std::string Port, std::string Password );
+	~Server( void );
 	void	InitServer( std::string Port, std::string Password );
 
 	class ServerFailException : std::exception {
