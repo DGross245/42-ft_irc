@@ -9,9 +9,12 @@
 #include <cstdlib>
 #include <cstring>
 #include <unistd.h>
+#include <cmath>
 
 Server::Server( std::string Port, std::string Password ) {
-	InitServer( Port, Password );
+	this->setPort( Port ); // maybe have to parse here a little
+	this->setPassword( Password ); // same for this one
+	InitServer();
 	return ;
 }
 
@@ -19,14 +22,31 @@ Server::~Server( void ) {
 	return ;
 }
 
-void Server::InitServer( std::string Port, std::string Password ) {
-	(void)Password;
+int Server::getPort( void ) {
+	return (this->_port);
+}
+
+int Server::getPassword( void ) {
+	return (this->_password);
+}
+
+void Server::setPort( std::string &Port ) {
+	this->_port = strtod(Port.c_str(), NULL);
+	return ;
+}
+
+void Server::setPassword( std::string &Password ) {
+	this->_password = strtod(Password.c_str(), NULL); // subject to change
+	return ;
+}
+
+void Server::InitServer( void ) {
 	int ServerSocketfd = socket(AF_INET, SOCK_STREAM, 0);
 	struct sockaddr_in ServerAddress;
 	memset(&ServerAddress, 0, sizeof(ServerAddress));
 	ServerAddress.sin_family = AF_INET;
 	ServerAddress.sin_addr.s_addr = INADDR_ANY;
-	ServerAddress.sin_port = htons(strtod(Port.c_str(), NULL));
+	ServerAddress.sin_port = htons(this->getPort());
 	bind(ServerSocketfd, reinterpret_cast<struct sockaddr *>(&ServerAddress), sizeof(ServerAddress));
 	listen(ServerSocketfd, 1);
 	struct sockaddr_in ClientAddress;
@@ -36,16 +56,27 @@ void Server::InitServer( std::string Port, std::string Password ) {
 	ClientSocketfd = accept(ServerSocketfd, reinterpret_cast<struct sockaddr *>(&ClientAddress), &ClientAddressLength);
 	
 	// Reading part, just a basic test
-	while (1) {
-		char buffer[1024];
-		memset(buffer, 0, 1024);
-		int bytesRead = read(ClientSocketfd, buffer, 1024 - 1);
-		if (bytesRead != -1) {
-			std::cout << ": " << buffer << std::endl; }
-		}
+	ClientIOHandler( ClientSocketfd );
 
 	close(ClientSocketfd);
 	close(ServerSocketfd);
+	return ;
+}
+
+void Server::ClientIOHandler( int ClientSocketfd ) {
+	struct timeval tv;
+	tv.tv_usec = 0.0;
+	tv.tv_sec = 5.0;
+
+	while (1) {
+		fd_set rfds;
+		FD_ZERO( &rfds );
+		FD_SET( ClientSocketfd, &rfds );
+		int kp = select( ClientSocketfd + 1, &rfds, NULL, NULL, &tv);
+		// maybe switch statments
+		if (kp == -1)
+			throw ServerFailException("");
+	}
 	return ;
 }
 
