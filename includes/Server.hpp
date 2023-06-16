@@ -11,13 +11,15 @@ public:
 
 	Server( std::string Port, std::string Password );
 	~Server( void );
-	void	InitServer( void );
 
-	int	getPort( void );
-	int	getPassword( void );
-	void setPort( std::string &Port );
-	void setPassword( std::string &Password );
-	void ClientIOHandler( int ServerSocketfd );
+	void	InitServer( void );
+	void	CloseConnection( void );
+	int		getPort( void );
+	int		getPassword( void );
+	void	setPort( std::string &Port );
+	void	setPassword( std::string &Password );
+	void	ClientIOHandler( int ServerSocketfd );
+
 	class ServerFailException : std::exception {
 	
 	public:
@@ -34,7 +36,7 @@ public:
 
 private:
 
-	//std::vector<int> *connections;
+	std::vector<int> connections;
 	int _port;
 	int _password;
 

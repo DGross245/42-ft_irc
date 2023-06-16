@@ -10,6 +10,7 @@
 #include <cstring>
 #include <unistd.h>
 #include <cmath>
+#include <fcntl.h>
 
 Server::Server( std::string Port, std::string Password ) {
 	this->setPort( Port ); // maybe have to parse here a little
@@ -45,37 +46,76 @@ void Server::InitServer( void ) {
 	struct sockaddr_in ServerAddress;
 	memset(&ServerAddress, 0, sizeof(ServerAddress));
 	ServerAddress.sin_family = AF_INET;
-	ServerAddress.sin_addr.s_addr = INADDR_ANY;
+	ServerAddress.sin_addr.s_addr = inet_addr("10.12.6.6");
 	ServerAddress.sin_port = htons(this->getPort());
+	fcntl(ServerSocketfd, F_SETFL, O_NONBLOCK);
 	bind(ServerSocketfd, reinterpret_cast<struct sockaddr *>(&ServerAddress), sizeof(ServerAddress));
 	listen(ServerSocketfd, 1);
+	
+	// Reading part, just a basic test
+	ClientIOHandler(ServerSocketfd);
+
+	//CloseConnection();
+	close(ServerSocketfd);
+	return ;
+}
+
+void Server::CloseConnection( void ) {
+	// connections are not init.
+	std::vector<int>::iterator it;
+
+	for(it = this->connections.begin(); *it != 0; it++)
+		
+	return ;
+}
+
+void Server::ClientIOHandler( int ServerSocketfd ) {
+	// timeout time
+	struct timeval tv;
+	tv.tv_usec = 0.0;
+	tv.tv_sec = 5.0;
+
 	struct sockaddr_in ClientAddress;
 	int ClientSocketfd;
 	memset(&ClientAddress, 0, sizeof(ClientAddress));
 	socklen_t ClientAddressLength = sizeof(ClientAddress);
 	ClientSocketfd = accept(ServerSocketfd, reinterpret_cast<struct sockaddr *>(&ClientAddress), &ClientAddressLength);
+	this->connections.push_back(ClientSocketfd);
 	
-	// Reading part, just a basic test
-	ClientIOHandler( ClientSocketfd );
-
-	close(ClientSocketfd);
-	close(ServerSocketfd);
-	return ;
-}
-
-void Server::ClientIOHandler( int ClientSocketfd ) {
-	struct timeval tv;
-	tv.tv_usec = 0.0;
-	tv.tv_sec = 5.0;
-
 	while (1) {
+		struct sockaddr_in ClientAddress;
+		int ClientSocketfd;
+		memset(&ClientAddress, 0, sizeof(ClientAddress));
+		socklen_t ClientAddressLength = sizeof(ClientAddress);
+		ClientSocketfd = accept(ServerSocketfd, reinterpret_cast<struct sockaddr *>(&ClientAddress), &ClientAddressLength);
+		this->connections.push_back(ClientSocketfd);
 		fd_set rfds;
 		FD_ZERO( &rfds );
 		FD_SET( ClientSocketfd, &rfds );
 		int kp = select( ClientSocketfd + 1, &rfds, NULL, NULL, &tv);
+
 		// maybe switch statments
 		if (kp == -1)
-			throw ServerFailException("");
+			throw ServerFailException("select Error");
+		else if (kp == 0) // disconnected
+			continue;
+		else if (FD_ISSET(ClientSocketfd, &rfds))
+		{
+			char Buffer[1024];
+			ssize_t bytes_read;
+			bytes_read = ::recv(ClientSocketfd, Buffer, sizeof(Buffer), 0);
+			if (bytes_read == -1)
+				throw ServerFailException("recv Error");
+			else if (bytes_read == 0) {
+				// disconnected
+				std::cout << "Disconnected" << std::endl;
+				break ;
+			}
+			else {
+				// read
+				std::cout << "Client: " << std::string(Buffer, bytes_read);
+			}
+		}
 	}
 	return ;
 }
