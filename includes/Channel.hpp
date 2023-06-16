@@ -27,7 +27,8 @@ public:
 
 private:
 
-	
+	// channel infos
+	std::string _Name;
 
 };
 
