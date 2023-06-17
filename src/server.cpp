@@ -83,37 +83,41 @@ void Server::ClientIOHandler( int ServerSocketfd ) {
 	this->connections.push_back(ClientSocketfd);
 	
 	while (1) {
-		struct sockaddr_in ClientAddress;
-		int ClientSocketfd;
-		memset(&ClientAddress, 0, sizeof(ClientAddress));
-		socklen_t ClientAddressLength = sizeof(ClientAddress);
-		ClientSocketfd = accept(ServerSocketfd, reinterpret_cast<struct sockaddr *>(&ClientAddress), &ClientAddressLength);
-		this->connections.push_back(ClientSocketfd);
 		fd_set rfds;
 		FD_ZERO( &rfds );
 		FD_SET( ClientSocketfd, &rfds );
 		int kp = select( ClientSocketfd + 1, &rfds, NULL, NULL, &tv);
 
-		// maybe switch statments
-		if (kp == -1)
-			throw ServerFailException("select Error");
-		else if (kp == 0) // disconnected
-			continue;
-		else if (FD_ISSET(ClientSocketfd, &rfds))
-		{
-			char Buffer[1024];
-			ssize_t bytes_read;
-			bytes_read = ::recv(ClientSocketfd, Buffer, sizeof(Buffer), 0);
-			if (bytes_read == -1)
-				throw ServerFailException("recv Error");
-			else if (bytes_read == 0) {
-				// disconnected
-				std::cout << "Disconnected" << std::endl;
-				break ;
+		switch(kp) {
+			case -1:
+				throw ServerFailException("select Error");
+			case 0: {
+				struct sockaddr_in ClientAddress;
+				int ClientSocketfd;
+				memset(&ClientAddress, 0, sizeof(ClientAddress));
+				socklen_t ClientAddressLength = sizeof(ClientAddress);
+				ClientSocketfd = accept(ServerSocketfd, reinterpret_cast<struct sockaddr *>(&ClientAddress), &ClientAddressLength);
+				fcntl(ClientSocketfd, F_SETFL, O_NONBLOCK);
+				this->connections.push_back(ClientSocketfd);
 			}
-			else {
-				// read
-				std::cout << "Client: " << std::string(Buffer, bytes_read);
+			default: {
+				if (FD_ISSET(ClientSocketfd, &rfds)) {
+					char Buffer[1024];
+					ssize_t bytes_read;
+					bytes_read = ::recv(ClientSocketfd, Buffer, sizeof(Buffer), 0);
+					if (bytes_read == -1)
+						throw ServerFailException("recv Error");
+					else if (bytes_read == 0) {
+						// disconnected
+						std::cout << "Disconnected" << std::endl;
+						//delete user
+						break ;
+					}
+					else {
+						// read
+						std::cout << "Client: " << std::string(Buffer, bytes_read);
+					}
+				}
 			}
 		}
 	}
