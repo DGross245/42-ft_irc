@@ -46,7 +46,7 @@ void Server::InitServer( void ) {
 	struct sockaddr_in ServerAddress;
 	memset(&ServerAddress, 0, sizeof(ServerAddress));
 	ServerAddress.sin_family = AF_INET;
-	ServerAddress.sin_addr.s_addr = inet_addr("");
+	ServerAddress.sin_addr.s_addr = inet_addr("10.12.6.6");
 	ServerAddress.sin_port = htons(this->getPort());
 	fcntl(ServerSocketfd, F_SETFL, O_NONBLOCK);
 	bind(ServerSocketfd, reinterpret_cast<struct sockaddr *>(&ServerAddress), sizeof(ServerAddress));
@@ -108,6 +108,7 @@ void Server::ClientIOHandler( int ServerSocketfd ) {
 		FD_SET( ClientSocketfd, &rfds );
 	
 		int maxfd = ServerSocketfd;
+		//std::cout << "ich war hier" << std::endl;
         for (size_t i = 0; i < connections.size(); i++) {
             int fd = connections[i];
             FD_SET(fd, &rfds);
@@ -121,6 +122,7 @@ void Server::ClientIOHandler( int ServerSocketfd ) {
 		else if (kp == 0)
 			AddClient( ServerSocketfd );
 		else {
+			// segfault ensteht hier
 			for (size_t i = 0; i < this->connections.size(); i++)
 				ReadMsg( this->connections[i], rfds );
 		}
