@@ -46,79 +46,83 @@ void Server::InitServer( void ) {
 	struct sockaddr_in ServerAddress;
 	memset(&ServerAddress, 0, sizeof(ServerAddress));
 	ServerAddress.sin_family = AF_INET;
-	ServerAddress.sin_addr.s_addr = inet_addr("10.12.6.6");
+	ServerAddress.sin_addr.s_addr = inet_addr("");
 	ServerAddress.sin_port = htons(this->getPort());
 	fcntl(ServerSocketfd, F_SETFL, O_NONBLOCK);
 	bind(ServerSocketfd, reinterpret_cast<struct sockaddr *>(&ServerAddress), sizeof(ServerAddress));
 	listen(ServerSocketfd, 1);
-	
-	// Reading part, just a basic test
 	ClientIOHandler(ServerSocketfd);
-
-	//CloseConnection();
+	CloseConnection();
 	close(ServerSocketfd);
 	return ;
 }
 
 void Server::CloseConnection( void ) {
-	// connections are not init.
-	std::vector<int>::iterator it;
+	// segfault when no client is connected to the server (probl in the ClientIOHandle for loop)
+	for (size_t i = 0; i < this->connections.size(); i++)
+		close(this->connections[i]);
+	return ;
+}
 
-	for(it = this->connections.begin(); *it != 0; it++)
-		
+void Server::AddClient( int ServerSocketfd ) {
+	struct sockaddr_in ClientAddress;
+	int Clientfd;
+
+	memset(&ClientAddress, 0, sizeof(ClientAddress));
+	socklen_t ClientAddressLength = sizeof(ClientAddress);
+	Clientfd = accept(ServerSocketfd, reinterpret_cast<struct sockaddr *>(&ClientAddress), &ClientAddressLength);
+	if (Clientfd > 0)
+		this->connections.push_back(Clientfd);
+	return ;
+}
+
+void Server::ReadMsg( int client, fd_set rfds) {
+	if (FD_ISSET(client, &rfds)) {
+		char Buffer[1024];
+		ssize_t bytes_read;
+		bytes_read = ::recv(client, Buffer, sizeof(Buffer), 0);
+		if (bytes_read == -1)
+			throw ServerFailException("recv Error");
+		else if (bytes_read == 0) {
+			std::cout << "Disconnected" << std::endl;
+			close(client);
+			this->connections.erase(this->connections.begin() + 1);
+		}
+		else
+			std::cout << "Client: " << std::string(Buffer, bytes_read);
+	}
 	return ;
 }
 
 void Server::ClientIOHandler( int ServerSocketfd ) {
-	// timeout time
 	struct timeval tv;
 	tv.tv_usec = 0.0;
 	tv.tv_sec = 5.0;
 
-	struct sockaddr_in ClientAddress;
-	int ClientSocketfd;
-	memset(&ClientAddress, 0, sizeof(ClientAddress));
-	socklen_t ClientAddressLength = sizeof(ClientAddress);
-	ClientSocketfd = accept(ServerSocketfd, reinterpret_cast<struct sockaddr *>(&ClientAddress), &ClientAddressLength);
-	this->connections.push_back(ClientSocketfd);
+	int ClientSocketfd = socket(AF_INET, SOCK_STREAM, 0);
+	fcntl(ClientSocketfd, F_SETFL, O_NONBLOCK);
 	
 	while (1) {
 		fd_set rfds;
 		FD_ZERO( &rfds );
 		FD_SET( ClientSocketfd, &rfds );
-		int kp = select( ClientSocketfd + 1, &rfds, NULL, NULL, &tv);
+	
+		int maxfd = ServerSocketfd;
+        for (size_t i = 0; i < connections.size(); i++) {
+            int fd = connections[i];
+            FD_SET(fd, &rfds);
+            if (fd > maxfd)
+                maxfd = fd;
+        }
+		int kp = select( maxfd + 1, &rfds, NULL, NULL, &tv);
 
-		switch(kp) {
-			case -1:
-				throw ServerFailException("select Error");
-			case 0: {
-				struct sockaddr_in ClientAddress;
-				int ClientSocketfd;
-				memset(&ClientAddress, 0, sizeof(ClientAddress));
-				socklen_t ClientAddressLength = sizeof(ClientAddress);
-				ClientSocketfd = accept(ServerSocketfd, reinterpret_cast<struct sockaddr *>(&ClientAddress), &ClientAddressLength);
-				fcntl(ClientSocketfd, F_SETFL, O_NONBLOCK);
-				this->connections.push_back(ClientSocketfd);
-			}
-			default: {
-				if (FD_ISSET(ClientSocketfd, &rfds)) {
-					char Buffer[1024];
-					ssize_t bytes_read;
-					bytes_read = ::recv(ClientSocketfd, Buffer, sizeof(Buffer), 0);
-					if (bytes_read == -1)
-						throw ServerFailException("recv Error");
-					else if (bytes_read == 0) {
-						// disconnected
-						std::cout << "Disconnected" << std::endl;
-						//delete user
-						break ;
-					}
-					else {
-						// read
-						std::cout << "Client: " << std::string(Buffer, bytes_read);
-					}
-				}
-			}
+		if (kp == -1)
+			throw ServerFailException("select Error");
+		else if (kp == 0)
+			AddClient( ServerSocketfd );
+		else {
+			for (size_t i = 0; i < this->connections.size(); i++)
+				ReadMsg( this->connections[i], rfds );
 		}
 	}
 	return ;

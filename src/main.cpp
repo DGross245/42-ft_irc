@@ -15,7 +15,7 @@ int main (int argc, char **argv) {
 			Server server( argv[1], argv[2]);
 			(void)server;
 		}
-		catch(const std::exception& e)
+		catch(Server::ServerFailException & e)
 		{
 			std::cerr << e.what() << '\n';
 			return (1);

@@ -4,7 +4,7 @@
 # include <exception>
 # include <string>
 # include <vector>
-
+# include <sys/types.h>
 class Server {
 
 public:
@@ -19,6 +19,8 @@ public:
 	void	setPort( std::string &Port );
 	void	setPassword( std::string &Password );
 	void	ClientIOHandler( int ServerSocketfd );
+	void 	AddClient( int ServerSocketfd );
+	void	ReadMsg( int client, fd_set rfds );
 
 	class ServerFailException : std::exception {
 	
