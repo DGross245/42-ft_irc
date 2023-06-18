@@ -20,7 +20,7 @@ public:
 	void	setPassword( std::string &Password );
 	void	ClientIOHandler( int ServerSocketfd );
 	void 	AddClient( int ServerSocketfd );
-	void	ReadMsg( int client, fd_set rfds );
+	void	ReadMsg( int client, fd_set rfds, int i);
 
 	class ServerFailException : std::exception {
 	

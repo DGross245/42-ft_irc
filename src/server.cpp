@@ -46,7 +46,7 @@ void Server::InitServer( void ) {
 	struct sockaddr_in ServerAddress;
 	memset(&ServerAddress, 0, sizeof(ServerAddress));
 	ServerAddress.sin_family = AF_INET;
-	ServerAddress.sin_addr.s_addr = inet_addr("10.12.6.6");
+	ServerAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
 	ServerAddress.sin_port = htons(this->getPort());
 	fcntl(ServerSocketfd, F_SETFL, O_NONBLOCK);
 	bind(ServerSocketfd, reinterpret_cast<struct sockaddr *>(&ServerAddress), sizeof(ServerAddress));
@@ -76,20 +76,29 @@ void Server::AddClient( int ServerSocketfd ) {
 	return ;
 }
 
-void Server::ReadMsg( int client, fd_set rfds) {
+void Server::ReadMsg( int client, fd_set rfds, int i) {
 	if (FD_ISSET(client, &rfds)) {
 		char Buffer[1024];
 		ssize_t bytes_read;
 		bytes_read = ::recv(client, Buffer, sizeof(Buffer), 0);
 		if (bytes_read == -1)
-			throw ServerFailException("recv Error");
+			throw ServerFailException("recv Error"); // nochmal nachlesen vllt hier was anderes machen
 		else if (bytes_read == 0) {
 			std::cout << "Disconnected" << std::endl;
 			close(client);
-			this->connections.erase(this->connections.begin() + 1);
+			this->connections.erase(this->connections.begin() + i);
 		}
-		else
-			std::cout << "Client: " << std::string(Buffer, bytes_read);
+		else {
+			try
+			{
+				//parse
+				//execute
+			}
+			catch(const std::exception& e)
+			{
+				std::cerr << e.what() << '\n';
+			}
+		}
 	}
 	return ;
 }
@@ -124,7 +133,7 @@ void Server::ClientIOHandler( int ServerSocketfd ) {
 		else {
 			// segfault ensteht hier
 			for (size_t i = 0; i < this->connections.size(); i++)
-				ReadMsg( this->connections[i], rfds );
+				ReadMsg( this->connections[i], rfds, i);
 		}
 	}
 	return ;
