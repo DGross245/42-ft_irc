@@ -5,6 +5,8 @@
 # include <string>
 # include <vector>
 # include <sys/types.h>
+# include <Channel.hpp>
+
 class Server {
 
 public:
@@ -21,6 +23,10 @@ public:
 	void	ClientIOHandler( int ServerSocketfd );
 	void 	AddClient( int ServerSocketfd );
 	void	ReadMsg( int client, fd_set rfds, int i);
+	void	ParseMsg( std::string Buffer );
+	void	ExecuteMsg( void );
+	int		SearchForChannel( std::string ChannelName );
+	void	JoinChannel( std::string ChannelName );
 
 	class ServerFailException : std::exception {
 	
@@ -38,7 +44,8 @@ public:
 
 private:
 
-	std::vector<int> connections;
+	std::vector<int> _connections;
+	std::vector<Channel> _channel;
 	int _port;
 	int _password;
 

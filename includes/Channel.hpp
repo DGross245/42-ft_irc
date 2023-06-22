@@ -6,10 +6,16 @@
 
 class Channel {
 
+public:
+
 	Channel( std::string Name );
 	~Channel( void );
-	
-public:
+
+	void DeleteUserFormChannel( void );
+	void CreateChannel( void );
+	void DeleteChannel( void );
+	void AddUser( void );
+	std::string getChannelName( void );
 
 	class ChannelFailException : std::exception {
 	

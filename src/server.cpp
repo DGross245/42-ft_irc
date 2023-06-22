@@ -11,6 +11,8 @@
 #include <unistd.h>
 #include <cmath>
 #include <fcntl.h>
+#include <algorithm>
+#include "Channel.hpp"
 
 Server::Server( std::string Port, std::string Password ) {
 	this->setPort( Port ); // maybe have to parse here a little
@@ -59,8 +61,8 @@ void Server::InitServer( void ) {
 
 void Server::CloseConnection( void ) {
 	// segfault when no client is connected to the server (probl in the ClientIOHandle for loop)
-	for (size_t i = 0; i < this->connections.size(); i++)
-		close(this->connections[i]);
+	for (size_t i = 0; i < this->_connections.size(); i++)
+		close(this->_connections[i]);
 	return ;
 }
 
@@ -72,7 +74,35 @@ void Server::AddClient( int ServerSocketfd ) {
 	socklen_t ClientAddressLength = sizeof(ClientAddress);
 	Clientfd = accept(ServerSocketfd, reinterpret_cast<struct sockaddr *>(&ClientAddress), &ClientAddressLength);
 	if (Clientfd > 0)
-		this->connections.push_back(Clientfd);
+		this->_connections.push_back(Clientfd);
+	return ;
+}
+
+void Server::ParseMsg( std::string Buffer ) {
+	
+}
+
+void Server::ExecuteMsg( void ) {
+	
+	return ;
+}
+
+int Server::SearchForChannel( std::string ChannelName ) {
+	for (std::vector<Channel>::iterator Interator = this->_channel.begin(); Interator != this->_channel.end(); Interator++ ) {
+		if (Interator->getChannelName() == ChannelName )
+			return (std::distance(this->_channel.begin(), Interator));
+	}
+	return (-1);
+}
+
+void Server::JoinChannel( std::string ChannelName ) { // ChannelName, ClientID oder Client
+	int	i = SearchForChannel( ChannelName );
+	if (i < 0) {
+		this->_channel.push_back(Channel ( ChannelName ));
+	}
+	else {
+		this->_channel[i].AddUser();
+	}
 	return ;
 }
 
@@ -86,13 +116,13 @@ void Server::ReadMsg( int client, fd_set rfds, int i) {
 		else if (bytes_read == 0) {
 			std::cout << "Disconnected" << std::endl;
 			close(client);
-			this->connections.erase(this->connections.begin() + i);
+			this->_connections.erase(this->_connections.begin() + i);
 		}
 		else {
 			try
 			{
-				//parse
-				//execute
+				ParseMsg( Buffer );
+				ExecuteMsg();
 			}
 			catch(const std::exception& e)
 			{
@@ -117,9 +147,8 @@ void Server::ClientIOHandler( int ServerSocketfd ) {
 		FD_SET( ClientSocketfd, &rfds );
 	
 		int maxfd = ServerSocketfd;
-		//std::cout << "ich war hier" << std::endl;
-        for (size_t i = 0; i < connections.size(); i++) {
-            int fd = connections[i];
+        for (size_t i = 0; i < this->_connections.size(); i++) {
+            int fd = this->_connections[i];
             FD_SET(fd, &rfds);
             if (fd > maxfd)
                 maxfd = fd;
@@ -131,9 +160,8 @@ void Server::ClientIOHandler( int ServerSocketfd ) {
 		else if (kp == 0)
 			AddClient( ServerSocketfd );
 		else {
-			// segfault ensteht hier
-			for (size_t i = 0; i < this->connections.size(); i++)
-				ReadMsg( this->connections[i], rfds, i);
+			for (size_t i = 0; i < this->_connections.size(); i++)
+				ReadMsg( this->_connections[i], rfds, i);
 		}
 	}
 	return ;

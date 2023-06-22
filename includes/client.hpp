@@ -8,7 +8,6 @@ class Client {
 
 public:
 
-
 	class ClientFailException : std::exception {
 	
 	public:

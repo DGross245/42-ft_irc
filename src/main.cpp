@@ -9,9 +9,6 @@ int main (int argc, char **argv) {
 	else
 		try
 		{
-			// check IP
-			// check password
-			// init server
 			Server server( argv[1], argv[2]);
 			(void)server;
 		}
