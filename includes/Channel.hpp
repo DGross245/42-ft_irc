@@ -3,6 +3,7 @@
 
 # include <exception>
 # include <string>
+# include "Client.hpp"
 
 class Channel {
 
@@ -11,12 +12,13 @@ public:
 	Channel( std::string Name );
 	~Channel( void );
 
-	void DeleteUserFormChannel( void );
-	void CreateChannel( void );
-	void DeleteChannel( void );
-	void AddUser( void );
-	std::string getChannelName( void );
+	void LeaveChannel( std::string UserName );
+	void AddUser( Client User );
+	void SetSettings( void );
+	int SearchforUser( Client User );
 
+	std::string getChannelName( void );
+	bool CanUserJoin( Client User );
 	class ChannelFailException : std::exception {
 	
 	public:
@@ -33,8 +35,15 @@ public:
 
 private:
 
-	// channel infos
-	std::string _Name;
+	std::string _name;
+	std::vector<Client> _clients;
+	std::vector<Client> _invited;
+	std::string _topic;
+	bool _isTopicRestricted;
+	bool _isInviteOnly;
+	std::string _password;
+	// ChannelOP - kp was für typ das sein soll vllt, einfach ein client
+	// Founder ??
 
 };
 

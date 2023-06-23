@@ -60,7 +60,6 @@ void Server::InitServer( void ) {
 }
 
 void Server::CloseConnection( void ) {
-	// segfault when no client is connected to the server (probl in the ClientIOHandle for loop)
 	for (size_t i = 0; i < this->_connections.size(); i++)
 		close(this->_connections[i]);
 	return ;
@@ -73,7 +72,7 @@ void Server::AddClient( int ServerSocketfd ) {
 	memset(&ClientAddress, 0, sizeof(ClientAddress));
 	socklen_t ClientAddressLength = sizeof(ClientAddress);
 	Clientfd = accept(ServerSocketfd, reinterpret_cast<struct sockaddr *>(&ClientAddress), &ClientAddressLength);
-	if (Clientfd > 0)
+	if (Clientfd > 0) // vlt mit der Client klasse verbinden und eine instance pushen ansatt nur den socket
 		this->_connections.push_back(Clientfd);
 	return ;
 }
@@ -95,13 +94,18 @@ int Server::SearchForChannel( std::string ChannelName ) {
 	return (-1);
 }
 
-void Server::JoinChannel( std::string ChannelName ) { // ChannelName, ClientID oder Client
+void Server::JoinChannel( std::string ChannelName, Client User) { // ChannelName, ClientID oder Client
 	int	i = SearchForChannel( ChannelName );
 	if (i < 0) {
 		this->_channel.push_back(Channel ( ChannelName ));
+		this->_channel.end()->SetSettings();
+		this->_channel.end()->AddUser( User );
 	}
 	else {
-		this->_channel[i].AddUser();
+		if (this->_channel[i].CanUserJoin( User ))
+			this->_channel[i].AddUser( User );
+		else
+			; // Nachricht an Client : Invited only, can't join!
 	}
 	return ;
 }

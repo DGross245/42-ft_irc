@@ -8,6 +8,12 @@ class Client {
 
 public:
 
+	Client( void );
+	~Client( void );
+
+	std::string getUsername( void );
+	std::string getNickname( void );
+	
 	class ClientFailException : std::exception {
 	
 	public:
@@ -24,7 +30,9 @@ public:
 
 private:
 
-
+	std::string _username;
+	std::string _nickname;
+	bool IsAuthenticated;
 
 };
 

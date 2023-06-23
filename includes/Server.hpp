@@ -26,7 +26,7 @@ public:
 	void	ParseMsg( std::string Buffer );
 	void	ExecuteMsg( void );
 	int		SearchForChannel( std::string ChannelName );
-	void	JoinChannel( std::string ChannelName );
+	void	JoinChannel( std::string ChannelName , Client User );
 
 	class ServerFailException : std::exception {
 	
