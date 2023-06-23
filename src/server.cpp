@@ -99,12 +99,14 @@ void Server::JoinChannel( std::string ChannelName, Client User) { // ChannelName
 	int	i = SearchForChannel( ChannelName );
 	if (i < 0) {
 		this->_channel.push_back(Channel ( ChannelName, User ));
-		this->_channel.end()->SetSettings();
+		this->_channel.end()->SetSettings(); // vllt wenn der parse mal da ist ändern
 		this->_channel.end()->AddUser( User );
 	}
 	else {
-		if (this->_channel[i].CanUserJoin( User ))
+		if (this->_channel[i].CanUserJoin( User )) {
 			this->_channel[i].AddUser( User );
+			// delete user from invite list
+		}
 		else
 			; // Nachricht an Client : Invited only, can't join!
 	}

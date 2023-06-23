@@ -21,6 +21,7 @@ void Channel::LeaveChannel( std::string UserName ) { // vlt UserName mit einer i
 			if (this->_founder.getSocketID() == Interator->getSocketID()) // Vllt dort socket vergleichen
 				;//Promote some to founder
 			this->_clients.erase(Interator); 
+			// invited liste auch löschen
 			return ;
 		}
 	}
