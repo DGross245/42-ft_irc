@@ -4,12 +4,13 @@
 # include <exception>
 # include <string>
 # include "Client.hpp"
+# include <vector>
 
 class Channel {
 
 public:
 
-	Channel( std::string Name );
+	Channel( std::string Name, Client User );
 	~Channel( void );
 
 	void LeaveChannel( std::string UserName );
@@ -17,8 +18,12 @@ public:
 	void SetSettings( void );
 	int SearchforUser( Client User );
 
+	void setTopic( std::string Topic );
+	std::string getTopic( void );
 	std::string getChannelName( void );
 	bool CanUserJoin( Client User );
+	void setFounder( Client &Founder );
+
 	class ChannelFailException : std::exception {
 	
 	public:
@@ -42,8 +47,8 @@ private:
 	bool _isTopicRestricted;
 	bool _isInviteOnly;
 	std::string _password;
-	// ChannelOP - kp was für typ das sein soll vllt, einfach ein client
-	// Founder ??
+	std::vector<Client> _op; // vlt doch kein vector aber mal gucken
+	Client _founder;
 
 };
 

@@ -6,7 +6,7 @@
 #    By: dgross <dgross@student.42.fr>              +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/05/31 08:49:39 by dgross            #+#    #+#              #
-#    Updated: 2023/06/17 14:47:50 by dgross           ###   ########.fr        #
+#    Updated: 2023/06/23 13:23:56 by dgross           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -15,9 +15,13 @@ NAME			= ircserv
 VPATH			= includes: src:
 
 SRC				= main.cpp\
-				  server.cpp
+				  server.cpp\
+				  client.cpp \
+				  channel.cpp
 
-HEADER			=
+HEADER			= Channel.hpp \
+				  Client.hpp \
+				  Server.hpp
 
 OBJ_DIR			= ./obj/
 

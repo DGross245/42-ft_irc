@@ -54,14 +54,14 @@ void Server::InitServer( void ) {
 	bind(ServerSocketfd, reinterpret_cast<struct sockaddr *>(&ServerAddress), sizeof(ServerAddress));
 	listen(ServerSocketfd, 1);
 	ClientIOHandler(ServerSocketfd);
-	CloseConnection();
+	CloseALLConnections();
 	close(ServerSocketfd);
 	return ;
 }
 
-void Server::CloseConnection( void ) {
+void Server::CloseALLConnections( void ) {
 	for (size_t i = 0; i < this->_connections.size(); i++)
-		close(this->_connections[i]);
+		close(this->_connections[i].getSocketID());
 	return ;
 }
 
@@ -73,12 +73,13 @@ void Server::AddClient( int ServerSocketfd ) {
 	socklen_t ClientAddressLength = sizeof(ClientAddress);
 	Clientfd = accept(ServerSocketfd, reinterpret_cast<struct sockaddr *>(&ClientAddress), &ClientAddressLength);
 	if (Clientfd > 0) // vlt mit der Client klasse verbinden und eine instance pushen ansatt nur den socket
-		this->_connections.push_back(Clientfd);
+		this->_connections.push_back(Client (Clientfd));
 	return ;
 }
 
 void Server::ParseMsg( std::string Buffer ) {
-	
+	std::cout << Buffer;
+	return ;
 }
 
 void Server::ExecuteMsg( void ) {
@@ -97,7 +98,7 @@ int Server::SearchForChannel( std::string ChannelName ) {
 void Server::JoinChannel( std::string ChannelName, Client User) { // ChannelName, ClientID oder Client
 	int	i = SearchForChannel( ChannelName );
 	if (i < 0) {
-		this->_channel.push_back(Channel ( ChannelName ));
+		this->_channel.push_back(Channel ( ChannelName, User ));
 		this->_channel.end()->SetSettings();
 		this->_channel.end()->AddUser( User );
 	}
@@ -152,7 +153,7 @@ void Server::ClientIOHandler( int ServerSocketfd ) {
 	
 		int maxfd = ServerSocketfd;
         for (size_t i = 0; i < this->_connections.size(); i++) {
-            int fd = this->_connections[i];
+            int fd = this->_connections[i].getSocketID();
             FD_SET(fd, &rfds);
             if (fd > maxfd)
                 maxfd = fd;
@@ -165,7 +166,7 @@ void Server::ClientIOHandler( int ServerSocketfd ) {
 			AddClient( ServerSocketfd );
 		else {
 			for (size_t i = 0; i < this->_connections.size(); i++)
-				ReadMsg( this->_connections[i], rfds, i);
+				ReadMsg( this->_connections[i].getSocketID(), rfds, i);
 		}
 	}
 	return ;

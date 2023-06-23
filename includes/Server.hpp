@@ -15,7 +15,7 @@ public:
 	~Server( void );
 
 	void	InitServer( void );
-	void	CloseConnection( void );
+	void	CloseALLConnections( void );
 	int		getPort( void );
 	int		getPassword( void );
 	void	setPort( std::string &Port );
@@ -44,7 +44,7 @@ public:
 
 private:
 
-	std::vector<int> _connections;
+	std::vector<Client> _connections;
 	std::vector<Channel> _channel;
 	int _port;
 	int _password;

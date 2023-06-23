@@ -8,12 +8,17 @@ class Client {
 
 public:
 
-	Client( void );
+	Client( int SocketID );
 	~Client( void );
 
 	std::string getUsername( void );
 	std::string getNickname( void );
-	
+	bool getAuthentication( void );
+	void setAuthentication( bool Authentication );
+	void setNickname( std::string Nickname );
+	void setUsername( std::string Username );
+	int getSocketID( void );
+
 	class ClientFailException : std::exception {
 	
 	public:
@@ -32,6 +37,7 @@ private:
 
 	std::string _username;
 	std::string _nickname;
+	int _SocketID;
 	bool IsAuthenticated;
 
 };

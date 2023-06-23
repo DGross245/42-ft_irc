@@ -7,7 +7,7 @@
 // SearchforUser und Leavechannel vlt zu einem Template umcoden, weil benutze es doppelt
 // im sinne von sucht und returnt den index, gibt es ihn nicht dann -1
 
-Channel::Channel( std::string Name ) : _name(Name), _isTopicRestricted(false), _isInviteOnly(false) {
+Channel::Channel( std::string Name, Client User ) : _name(Name), _isTopicRestricted(false), _isInviteOnly(false), _founder(User) {
 	return ;
 }
 
@@ -18,6 +18,8 @@ Channel::~Channel( void ) {
 void Channel::LeaveChannel( std::string UserName ) { // vlt UserName mit einer instanz umtauschen
 	for (std::vector<Client>::iterator Interator = this->_clients.begin(); Interator != this->_clients.end(); Interator++ ) {
 		if (Interator->getUsername() == UserName ) { // vlt anstatt username id nehmen (macht vlt auch kein unterschied)
+			if (this->_founder.getSocketID() == Interator->getSocketID()) // Vllt dort socket vergleichen
+				;//Promote some to founder
 			this->_clients.erase(Interator); 
 			return ;
 		}
@@ -43,7 +45,7 @@ int	Channel::SearchforUser( Client User ) {
 	for (std::vector<Client>::iterator Interator = this->_invited.begin(); Interator != this->_invited.end(); Interator++ ) {
 		if (Interator->getUsername() == User.getUsername() ) { // vlt anstatt username id nehmen (macht vlt auch kein unterschied)
 			this->_invited.erase(Interator); 
-			return ;
+			return (1);
 		}
 	}
 	throw ChannelFailException("Error: User not found");
@@ -59,3 +61,21 @@ bool Channel::CanUserJoin( Client User ) {
 		return (true);
 	return (false);
 }
+
+void Channel::setFounder( Client &Founder ) {
+	this->_founder = Founder;
+	return ;
+}
+
+std::string Channel::getTopic( void ) {
+	return (this->_topic);
+}
+void Channel::setTopic( std::string Topic ) {
+	if (this->_isTopicRestricted)
+		;// hier checken ob OP oder ein Founder diesen Change ausführt
+	this->_topic = Topic;
+	return ;
+}
+Channel::ChannelFailException::~ChannelFailException( void ) throw() { return ;	}
+Channel::ChannelFailException::ChannelFailException( std::string Error ) : _error(Error) { return ; }
+const char *Channel::ChannelFailException::what() const throw() { return (this->_error.c_str());}
