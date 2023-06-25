@@ -14,6 +14,7 @@
 #include <algorithm>
 #include "Channel.hpp"
 #include "Parser.hpp"
+#include <csignal>
 
 Server::Server( std::string Port, std::string Password ) {
 	this->setPort( Port ); // maybe have to parse here a little
