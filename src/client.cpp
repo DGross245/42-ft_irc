@@ -1,4 +1,4 @@
-#include "Client.hpp"
+#include "client.hpp"
 
 Client::Client( int ClientID ) : _SocketID(ClientID) {
 	return ;

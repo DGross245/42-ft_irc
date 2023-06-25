@@ -3,7 +3,7 @@
 
 # include <exception>
 # include <string>
-# include "Client.hpp"
+# include "client.hpp"
 # include <vector>
 
 class Channel {

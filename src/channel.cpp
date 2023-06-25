@@ -1,5 +1,5 @@
 #include "Channel.hpp"
-#include "Client.hpp"
+#include "client.hpp"
 #include <string>
 #include <iostream>
 #include <vector>

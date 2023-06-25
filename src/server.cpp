@@ -77,8 +77,11 @@ void Server::AddClient( int ServerSocketfd ) {
 	return ;
 }
 
-void Server::ParseMsg( std::string Buffer ) {
+void Server::ParseMsg( std::string Buffer, int clientSocket ) {
 	std::cout << Buffer;
+	std::string message = "CAP";
+	ssize_t bytesSent = ::send(clientSocket, message.c_str(), message.length(), 0);
+	std::cout << "BytesSend =" << bytesSent;
 	return ;
 }
 
@@ -128,7 +131,7 @@ void Server::ReadMsg( int client, fd_set rfds, int i) {
 		else {
 			try
 			{
-				ParseMsg( Buffer );
+				ParseMsg( Buffer, client );
 				ExecuteMsg();
 			}
 			catch(const std::exception& e)
