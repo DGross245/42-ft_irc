@@ -13,6 +13,7 @@
 #include <fcntl.h>
 #include <algorithm>
 #include "Channel.hpp"
+#include "Parser.hpp"
 
 Server::Server( std::string Port, std::string Password ) {
 	this->setPort( Port ); // maybe have to parse here a little
@@ -77,16 +78,8 @@ void Server::AddClient( int ServerSocketfd ) {
 	return ;
 }
 
-void Server::ParseMsg( std::string Buffer, int clientSocket ) {
-	std::cout << Buffer;
-	std::string message = "CAP";
-	ssize_t bytesSent = ::send(clientSocket, message.c_str(), message.length(), 0);
-	std::cout << "BytesSend =" << bytesSent;
-	return ;
-}
-
-void Server::ExecuteMsg( void ) {
-	
+void Server::ExecuteMsg( Parser &Input ) {
+	(void)Input;
 	return ;
 }
 
@@ -98,7 +91,7 @@ int Server::SearchForChannel( std::string ChannelName ) {
 	return (-1);
 }
 
-void Server::JoinChannel( std::string ChannelName, Client User) { // ChannelName, ClientID oder Client
+void Server::JoinChannel( std::string ChannelName, Client User) {
 	int	i = SearchForChannel( ChannelName );
 	if (i < 0) {
 		this->_channel.push_back(Channel ( ChannelName, User ));
@@ -131,8 +124,8 @@ void Server::ReadMsg( int client, fd_set rfds, int i) {
 		else {
 			try
 			{
-				ParseMsg( Buffer, client );
-				ExecuteMsg();
+				Parser Input( Buffer );
+				ExecuteMsg( Input );
 			}
 			catch(const std::exception& e)
 			{

@@ -6,6 +6,7 @@
 # include <vector>
 # include <sys/types.h>
 # include <Channel.hpp>
+# include <Parser.hpp>
 
 class Server {
 
@@ -23,8 +24,7 @@ public:
 	void	ClientIOHandler( int ServerSocketfd );
 	void 	AddClient( int ServerSocketfd );
 	void	ReadMsg( int client, fd_set rfds, int i);
-	void	ParseMsg( std::string Buffer, int ClientSocket );
-	void	ExecuteMsg( void );
+	void	ExecuteMsg( Parser &Input );
 	int		SearchForChannel( std::string ChannelName );
 	void	JoinChannel( std::string ChannelName , Client User );
 
