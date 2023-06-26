@@ -3,6 +3,7 @@
 
 # include <exception>
 # include <string>
+# include <vector>
 
 class Parser {
 
@@ -12,13 +13,18 @@ public:
 	~Parser( void );
 
 	void ParseMsg( void );
+	void PrefixHandler( std::string Prefix );
+	void CommandHandler( std::string Command );
+	void ParamHandler( std::string Param );
+	void TrailingHandler( std::string trailing );
 
 private:
 
 	std::string _input;
-	std::string _parameter;
+	std::vector<std::string> _parameter;
 	std::string _command;
-
+	std::string _trailing;
+	std::string _prefix;
 };
 
 #endif
