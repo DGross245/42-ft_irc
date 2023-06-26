@@ -1,11 +1,68 @@
-LOGIC PLAN IRC SERVER
+#LOGIC PLAN IRC SERVER
+####################### CLASSES #######################
+SERVER {
+	private:
+	
+	public:
+}
 
-INIT_SERVER
-	CREATE_SOCKET()
-	BIND_SOCKET_TO_ADDR()
+PARSER {
+	private:
 
-RUN_SERVER
+	public:
+}
 
 
-INIT_SERVER()
-RUN_SERVER()
+####################### STRUCTS #######################
+STRUCT	SERVER {
+	std::vector<pollfd>	file_descriptors;
+}
+
+
+################### PROGRAMME LOGIC ###################
+FUNCTION CREATE_NEW_CONNECTION:
+	accept the new connection
+	create a new structure for the new connection
+	set up necessary flags and data structures
+
+
+FUNCTION PROCCESS_EXISTING_CONNECTIONS:
+	handle errors
+	handle connection closeure
+	handle failed approval
+	 processes the received message
+
+FUNCTION INIT_SOCKET:
+	create a socket
+	setting socket mode (non-blocking mode)
+	binding socket to address
+	binding socket to port
+	setting socket to "listen"
+
+
+FUNCTION INIT_SERVER:
+	PARSE_GIVEN INPUT()
+	INIT_SOCKET()
+		
+
+FUNCTION RUN_SERVER:
+	WHILE TRUE:
+		RETURN_CODE = POLL()
+		CHECK_RETURN_CODE(RETURN_CODE)
+		FOR (ALL FILE DESCRIPTORS)
+			IF (FD[i].REVENT == 0)
+				CONTINUE
+			ELSE IF (FD[I].REVENT == POLLHUB)
+				ERASE_ELEMENTS()
+				CONTINUE
+			ELSE IF (FD[I].REVENT == POLLIN)
+				RETURN (ERROR)
+			IF (FD == LISTENING_SOCKET_FD)
+				CREATE_NEW_CONNECTION()
+			ELSE
+				PROCCESS_EXISTING_CONNECTIONS()
+			
+		
+MAIN()
+	INIT_SERVER()
+	RUN_SERVER()
