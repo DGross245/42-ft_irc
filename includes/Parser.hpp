@@ -18,6 +18,8 @@ public:
 	void ParamHandler( std::string Param );
 	void TrailingHandler( std::string trailing );
 
+	std::string getCMD( void );
+	std::vector<std::string> getParam( void );
 private:
 
 	std::string _input;

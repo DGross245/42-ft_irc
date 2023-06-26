@@ -37,10 +37,21 @@ Parser::Parser( std::string Buffer ) {
 	if (pos != std::string::npos ) {
 		this->_input = Buffer.substr(0, pos);
 		ParseMsg();
+		std::cout << "Command:" << this->_command << std::endl;
+		for (std::vector<std::string>::iterator it = this->_parameter.begin(); it != this->_parameter.end(); it++)
+			std::cout << "Param :" << *it<< std::endl;
 	}
 	else
 		std::cerr << "Parsing Error" << std::endl;
 	return ;
+}
+
+std::string Parser::getCMD( void ) {
+	return (this->_command);
+}
+
+std::vector<std::string> Parser::getParam( void ) {
+	return (this->_parameter);
 }
 
 Parser::~Parser( void ) {
@@ -61,27 +72,41 @@ void Parser::ParseMsg( void ) {
 void Parser::PrefixHandler( std::string Prefix ) {
 	// starts with ':'
 	this->_prefix = Prefix;
-	this->_input.erase(0, this->_input.find_first_of(' '));
+	this->_input.erase(0, this->_input.find_first_of(' ') + 1); // vllt einfach returnen 
 }
 
 void Parser::CommandHandler( std::string Command ) {
 	// after the prefix the first word after a space is the command
 	this->_command = Command;
-	this->_input.erase(0, this->_input.find_first_of(' '));
+	this->_input.erase(0, this->_input.find_first_of(' ') + 1);
 }
 
 void Parser::ParamHandler( std::string Param ) {
 	// everything after the command that doesnt start with a : ist a parameter
-	int i = 0;
+	size_t found = 0; 
 
-	while (Param[i] != '\r' || Param[i] != '\n') // nochmal nachgucken wo man dann stopt
-	{
+	while (!Param.empty()) {
+		if (Param == "\r\n")
+			return ;
+		found = Param.find_first_of(": ");
+		if (found == ':') {
+			TrailingHandler(Param.substr(1, Param.find("\r\n")));
+			return ;
+		}
+		else if (found == std::string::npos) {
+			this->_parameter.push_back(Param.substr(0, Param.find("\r\n")));
+			return ;
+		}
+		else
+			this->_parameter.push_back(Param.substr(0, found));
+		Param.erase(0, found + 1);
 		//nach params suchen und auf pushen
 		//hier nochmal nach trailing checken
 	}
 }
 
-void Parser::TrailingHandler( std::string trailing ) {
+void Parser::TrailingHandler( std::string Trailing ) {
 	// everything after a command that starts with a : is a trailing
+	this->_trailing = Trailing;
 	return ;
 }

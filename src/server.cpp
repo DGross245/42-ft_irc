@@ -15,6 +15,7 @@
 #include "Channel.hpp"
 #include "Parser.hpp"
 #include <csignal>
+#include <vector>
 
 Server::Server( std::string Port, std::string Password ) {
 	this->setPort( Port ); // maybe have to parse here a little
@@ -79,8 +80,16 @@ void Server::AddClient( int ServerSocketfd ) {
 	return ;
 }
 
-void Server::ExecuteMsg( Parser &Input ) {
-	(void)Input;
+void Server::ExecuteMsg( Parser &Input, int Client ) {
+	if (Input.getCMD() == "CAP") {
+		std::vector<std::string> params = Input.getParam();
+		for (std::vector<std::string>::iterator it = params.begin(); it != params.end(); it++) {
+			if (*it == "END")
+				return ;
+		}
+		std::string message = "CAP * LS :JOIN\r\n";
+		send(Client, message.c_str(), message.length(), 0);
+	}
 	return ;
 }
 
@@ -126,7 +135,7 @@ void Server::ReadMsg( int client, fd_set rfds, int i) {
 			try
 			{
 				Parser Input( Buffer );
-				ExecuteMsg( Input );
+				ExecuteMsg( Input, client );
 			}
 			catch(const std::exception& e)
 			{

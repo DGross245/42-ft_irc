@@ -24,7 +24,7 @@ public:
 	void	ClientIOHandler( int ServerSocketfd );
 	void 	AddClient( int ServerSocketfd );
 	void	ReadMsg( int client, fd_set rfds, int i);
-	void	ExecuteMsg( Parser &Input );
+	void	ExecuteMsg( Parser &Input, int Client );
 	int		SearchForChannel( std::string ChannelName );
 	void	JoinChannel( std::string ChannelName , Client User );
 	class ServerFailException : std::exception {
