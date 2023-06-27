@@ -2,8 +2,6 @@
 #include <string>
 #include <iostream>
 
-// gibt vllt noch ein problem mit blocking
-
 	/*2.3.1 Message format in 'pseudo' BNF
 
   	 The protocol messages must be extracted from the contiguous stream of
@@ -58,32 +56,29 @@ std::vector<std::string> Parser::getParam( void ) {
 Parser::~Parser( void ) {
 	return ;
 }
-// :KICK #Channel User :weil draum\r\n
+
 void Parser::ParseMsg( void ) {
 	if (this->_input[0] == ':')
 		PrefixHandler(this->_input.substr(1, this->_input.find_first_of(' ')));
 	CommandHandler(this->_input.substr(0, this->_input.find_first_of(' ')));
 	if (this->_input[0] != ':')
-		ParamHandler(this->_input.substr(0, this->_input.find_first_of("\r\n") )); // end limiter ist glaube falsch
+		ParamHandler(this->_input.substr(0, this->_input.find_first_of("\r\n") ));
 	else
-		TrailingHandler(this->_input.substr(1, this->_input.find_first_of("\r\n"))); // end limiter ist glaube falsch
+		TrailingHandler(this->_input.substr(1, this->_input.find_first_of("\r\n")));
 	return ;
 }
 
 void Parser::PrefixHandler( std::string Prefix ) {
-	// starts with ':'
 	this->_prefix = Prefix;
-	this->_input.erase(0, this->_input.find_first_of(' ') + 1); // vllt einfach returnen 
+	this->_input.erase(0, this->_input.find_first_of(' ') + 1);
 }
 
 void Parser::CommandHandler( std::string Command ) {
-	// after the prefix the first word after a space is the command
 	this->_command = Command;
 	this->_input.erase(0, this->_input.find_first_of(' ') + 1);
 }
 
 void Parser::ParamHandler( std::string Param ) {
-	// everything after the command that doesnt start with a : ist a parameter
 	size_t found = 0; 
 
 	while (!Param.empty()) {
@@ -91,7 +86,7 @@ void Parser::ParamHandler( std::string Param ) {
 		if (Param == "\r\n")
 			return ;
 		found = Param.find_first_of(": ");
-		if (found == ':') {
+		if (found != std::string::npos && Param[found] == ':') {
 			TrailingHandler(Param.substr(1, Param.find("\r\n")));
 			return ;
 		}
@@ -102,13 +97,10 @@ void Parser::ParamHandler( std::string Param ) {
 		else
 			this->_parameter.push_back(Param.substr(0, found));
 		Param.erase(0, found + 1);
-		//nach params suchen und auf pushen
-		//hier nochmal nach trailing checken
 	}
 }
 
 void Parser::TrailingHandler( std::string Trailing ) {
-	// everything after a command that starts with a : is a trailing
 	this->_trailing = Trailing;
 	return ;
 }
