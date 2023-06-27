@@ -40,6 +40,7 @@ Parser::Parser( std::string Buffer ) {
 		std::cout << "Command:" << this->_command << std::endl;
 		for (std::vector<std::string>::iterator it = this->_parameter.begin(); it != this->_parameter.end(); it++)
 			std::cout << "Param :" << *it<< std::endl;
+		std::cout << "trailing :" << this->_trailing << std::endl;
 	}
 	else
 		std::cerr << "Parsing Error" << std::endl;
@@ -86,6 +87,7 @@ void Parser::ParamHandler( std::string Param ) {
 	size_t found = 0; 
 
 	while (!Param.empty()) {
+		std::cout << "INPUT :" << Param << std::endl;
 		if (Param == "\r\n")
 			return ;
 		found = Param.find_first_of(": ");
