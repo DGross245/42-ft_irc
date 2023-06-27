@@ -101,6 +101,18 @@ void Server::ExecuteMsg( Parser &Input, int Client ) {
 			}
 		}
 	}
+	else if (Input.getCMD() == "NICK") {
+		std::string message = ":IRCSERV 001 dgross :Willkommen in der IRC-Welt, dgross!\r\n";
+		send(Client, message.c_str(), message.length(), 0);
+	}
+	else if (Input.getCMD() == "USER") {
+		std::string message = ":IRCSERV 001 dgross :Benutzerinformationen erfolgreich empfangen.\r\n";
+		send(Client, message.c_str(), message.length(), 0);
+	}
+	else if (Input.getCMD() == "PING") {
+		std::string message = "PONG :127.0.0.1";
+		send(Client, message.c_str(), message.length(), 0);
+	}
 	return ;
 }
 
