@@ -46,6 +46,11 @@ void Server::setPassword( std::string &Password ) {
 	return ;
 }
 
+void Server::setServerID( int ServerSocketID ) {
+	this->_serverID = ServerSocketID;
+	return ;
+}
+
 void Server::InitServer( void ) {
 	int ServerSocketfd = socket(AF_INET, SOCK_STREAM, 0);
 	struct sockaddr_in ServerAddress;
@@ -56,9 +61,7 @@ void Server::InitServer( void ) {
 	fcntl(ServerSocketfd, F_SETFL, O_NONBLOCK);
 	bind(ServerSocketfd, reinterpret_cast<struct sockaddr *>(&ServerAddress), sizeof(ServerAddress));
 	listen(ServerSocketfd, 1);
-	ClientIOHandler(ServerSocketfd);
-	CloseALLConnections();
-	close(ServerSocketfd);
+	this->setServerID( ServerSocketfd );
 	return ;
 }
 
@@ -68,15 +71,19 @@ void Server::CloseALLConnections( void ) {
 	return ;
 }
 
-void Server::AddClient( int ServerSocketfd ) {
+void Server::AddClient( int ServerSocketfd, fd_set &readfds ) {
 	struct sockaddr_in ClientAddress;
 	int Clientfd;
 
 	memset(&ClientAddress, 0, sizeof(ClientAddress));
 	socklen_t ClientAddressLength = sizeof(ClientAddress);
 	Clientfd = accept(ServerSocketfd, reinterpret_cast<struct sockaddr *>(&ClientAddress), &ClientAddressLength);
-	if (Clientfd > 0) // vlt mit der Client klasse verbinden und eine instance pushen ansatt nur den socket
+	FD_SET(Clientfd, &readfds);
+	if (Clientfd > 0) {
+		std::cout << "New Client tries to connect" << std::endl;
 		this->_connections.push_back(Client (Clientfd));
+		fcntl(Clientfd, F_SETFL, O_NONBLOCK);
+	}
 	return ;
 }
 
@@ -84,11 +91,15 @@ void Server::ExecuteMsg( Parser &Input, int Client ) {
 	if (Input.getCMD() == "CAP") {
 		std::vector<std::string> params = Input.getParam();
 		for (std::vector<std::string>::iterator it = params.begin(); it != params.end(); it++) {
-			if (*it == "END")
-				return ;
+			if (*it == "END") {
+				std::string message = "CAP * ACK :JOIN\r\n";
+				send(Client, message.c_str(), message.length(), 0);
+			}
+			else if (*it == "LS") {
+				std::string message = "CAP * LS :JOIN\r\n";
+				send(Client, message.c_str(), message.length(), 0);
+			}
 		}
-		std::string message = "CAP * LS :JOIN\r\n";
-		send(Client, message.c_str(), message.length(), 0);
 	}
 	return ;
 }
@@ -119,65 +130,82 @@ void Server::JoinChannel( std::string ChannelName, Client User) {
 	return ;
 }
 
-void Server::ReadMsg( int client, fd_set rfds, int i) {
-	if (FD_ISSET(client, &rfds)) {
-		char Buffer[1024];
-		ssize_t bytes_read;
-		bytes_read = ::recv(client, Buffer, sizeof(Buffer), 0);
-		if (bytes_read == -1)
-			throw ServerFailException("recv Error"); // nochmal nachlesen vllt hier was anderes machen
-		else if (bytes_read == 0) {
-			std::cout << "Disconnected" << std::endl;
-			close(client);
-			this->_connections.erase(this->_connections.begin() + i);
+void Server::ReadMsg( int client, int i) {
+	char Buffer[1024];
+	ssize_t bytes_read;
+	bytes_read = ::recv(client, Buffer, sizeof(Buffer), 0);
+	if (bytes_read == -1)
+		throw ServerFailException("recv Error"); // nochmal nachlesen vllt hier was anderes machen
+	else if (bytes_read == 0) {
+		std::cout << "Disconnected" << std::endl;
+		close(client);
+		this->_connections.erase(this->_connections.begin() + i);
+	}
+	else {
+		try
+		{
+			Parser Input( Buffer );
+			ExecuteMsg( Input, client );
 		}
-		else {
-			try
-			{
-				Parser Input( Buffer );
-				ExecuteMsg( Input, client );
-			}
-			catch(const std::exception& e)
-			{
+		catch(const std::exception& e)
+		{
 				std::cerr << e.what() << '\n';
+		}
+	}
+	return ;
+}
+
+void Server::launchServer( void ) {
+	ClientIOHandler();
+	CloseALLConnections();
+	close(this->_serverID);
+	return ;
+}
+
+void Server::setTime( void ) {
+	this->_tv.tv_usec = 0.0;
+	this->_tv.tv_sec = 5.0;
+	return ;
+}
+
+void Server::ClientIOHandler( void ) {
+	this->setTime();
+
+	while (1) {
+		fd_set readfds;
+		FD_ZERO( &readfds );
+		FD_SET( this->_serverID, &readfds );
+		int maxfd = getmaxfd( readfds );
+
+		int ready_fds = select( maxfd + 1, &readfds, NULL, NULL , &this->_tv);
+		if (ready_fds == -1)
+			throw ServerFailException("select Error");
+		else if (ready_fds == 0)
+			continue;
+		else {
+			if (FD_ISSET(this->_serverID, &readfds)) {
+				AddClient( this->_serverID, readfds );
+			}
+			else {
+				for (size_t i = 0; i < this->_connections.size(); i++) {
+					if (FD_ISSET(this->_connections[i].getSocketID(), &readfds))
+						ReadMsg( this->_connections[i].getSocketID(), i);
+			}
 			}
 		}
 	}
 	return ;
 }
 
-void Server::ClientIOHandler( int ServerSocketfd ) {
-	struct timeval tv;
-	tv.tv_usec = 0.0;
-	tv.tv_sec = 5.0;
-
-	int ClientSocketfd = socket(AF_INET, SOCK_STREAM, 0);
-	fcntl(ClientSocketfd, F_SETFL, O_NONBLOCK);
-	
-	while (1) {
-		fd_set rfds;
-		FD_ZERO( &rfds );
-		FD_SET( ClientSocketfd, &rfds );
-	
-		int maxfd = ServerSocketfd;
-        for (size_t i = 0; i < this->_connections.size(); i++) {
-            int fd = this->_connections[i].getSocketID();
-            FD_SET(fd, &rfds);
-            if (fd > maxfd)
-                maxfd = fd;
-        }
-		int kp = select( maxfd + 1, &rfds, NULL, NULL, &tv);
-
-		if (kp == -1)
-			throw ServerFailException("select Error");
-		else if (kp == 0)
-			AddClient( ServerSocketfd );
-		else {
-			for (size_t i = 0; i < this->_connections.size(); i++)
-				ReadMsg( this->_connections[i].getSocketID(), rfds, i);
-		}
+int Server::getmaxfd( fd_set &readfds ) {
+	int max = this->_serverID;
+	for (size_t i = 0; i < this->_connections.size(); i++) {
+		int clientfd = this->_connections[i].getSocketID();
+		FD_SET(clientfd, &readfds);
+		if (clientfd > max)
+			max = clientfd;
 	}
-	return ;
+	return (max);
 }
 
 Server::ServerFailException::~ServerFailException( void ) throw() { return ;	}

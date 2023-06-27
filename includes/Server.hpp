@@ -7,6 +7,7 @@
 # include <sys/types.h>
 # include <Channel.hpp>
 # include <Parser.hpp>
+# include <sys/time.h>
 
 class Server {
 
@@ -21,12 +22,17 @@ public:
 	int		getPassword( void );
 	void	setPort( std::string &Port );
 	void	setPassword( std::string &Password );
-	void	ClientIOHandler( int ServerSocketfd );
-	void 	AddClient( int ServerSocketfd );
-	void	ReadMsg( int client, fd_set rfds, int i);
+	void	ClientIOHandler( void );
+	void 	AddClient( int ServerSocketfd, fd_set &readfds );
+	void	ReadMsg( int client, int i);
 	void	ExecuteMsg( Parser &Input, int Client );
 	int		SearchForChannel( std::string ChannelName );
 	void	JoinChannel( std::string ChannelName , Client User );
+	void	launchServer( void );
+	void	setTime( void );
+	int		getmaxfd( fd_set &readfds );
+	void	setServerID( int ServerSocketfd );
+	
 	class ServerFailException : std::exception {
 	
 	public:
@@ -45,9 +51,10 @@ private:
 
 	std::vector<Client> _connections;
 	std::vector<Channel> _channel;
+	int _serverID;
 	int _port;
 	int _password;
-
+	struct timeval _tv;
 };
 
 #endif
