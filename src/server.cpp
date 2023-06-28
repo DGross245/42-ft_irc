@@ -18,31 +18,31 @@
 #include <vector>
 #include <sstream>
 
-Server::Server( std::string Port, std::string Password ) {
-	if (Port.find_first_not_of("0123456789") == std::string::npos) {
-		int _port = static_cast<int>( strtod(Port.c_str(), nullptr) );
-		int OverflowCheck;
+Server::Server( std::string port, std::string password ) {
+	if (port.find_first_not_of("0123456789") == std::string::npos) {
+		int _port = static_cast<int>( strtod(port.c_str(), nullptr) );
+		int overflowCheck;
 
-		std::stringstream ss(Port);
-		ss >> OverflowCheck;
+		std::stringstream ss(port);
+		ss >> overflowCheck;
 		if (ss.fail() || !ss.eof())
-			throw ServerFailException("Error: Invalid port. Port must be a valid port range <1024-49151>");
+			throw serverFailException("Error: Invalid port. Port must be a valid port range <1024-49151>");
 		if (_port < 1024 || _port > 49151)
-			throw ServerFailException("Error: Port out of range. Valid ports are in the range <1024-49151>");
+			throw serverFailException("Error: Port out of range. Valid ports are in the range <1024-49151>");
 		else
-			this->setPort( Port ); // maybe have to parse here a little
+			this->setPort( _port );
 	}
 	else
-		throw ServerFailException("Error: Invalid input. Port must be a numeric value");
-	if (Password.length() >= 8 && Password.length() <= 32) {
-		if (Port.find_first_of(' ') != std::string::npos)
-			throw ServerFailException("Error: Invalid Password. No space allowed");
+		throw serverFailException("Error: Invalid input. Port must be a numeric value");
+	if (password.length() >= 8 && password.length() <= 32) {
+		if (port.find_first_of(' ') != std::string::npos)
+			throw serverFailException("Error: Invalid Password. No space allowed");
 		else
-			this->setPassword( Password ); // same for this one
+			this->setPassword( password );
 	}
 	else
-		throw ServerFailException("Error: Invalid Password. Password lenght should be around 8-32");
-	InitServer();
+		throw serverFailException("Error: Invalid Password. Password lenght should be around 8-32");
+	initServer();
 	return ;
 }
 
@@ -54,62 +54,62 @@ int Server::getPort( void ) {
 	return (this->_port);
 }
 
-int Server::getPassword( void ) {
+std::string Server::getPassword( void ) {
 	return (this->_password);
 }
 
-void Server::setPort( std::string &Port ) {
-	this->_port = strtod(Port.c_str(), NULL);
+void Server::setPort( int port ) {
+	this->_port = port;
 	return ;
 }
 
-void Server::setPassword( std::string &Password ) {
-	this->_password = strtod(Password.c_str(), NULL); // subject to change
+void Server::setPassword( std::string &password ) {
+	this->_password = password;
 	return ;
 }
 
-void Server::setServerID( int ServerSocketID ) {
-	this->_serverID = ServerSocketID;
+void Server::setServerfd( int serverSocketfd ) {
+	this->_serverfd = serverSocketfd;
 	return ;
 }
 
-void Server::InitServer( void ) {
-	int ServerSocketfd = socket(AF_INET, SOCK_STREAM, 0);
-	struct sockaddr_in ServerAddress;
-	memset(&ServerAddress, 0, sizeof(ServerAddress));
-	ServerAddress.sin_family = AF_INET;
-	ServerAddress.sin_addr.s_addr = inet_addr("127.0.0.1"); // später IP noch ändern
-	ServerAddress.sin_port = htons(this->getPort());
-	fcntl(ServerSocketfd, F_SETFL, O_NONBLOCK);
-	bind(ServerSocketfd, reinterpret_cast<struct sockaddr *>(&ServerAddress), sizeof(ServerAddress));
-	listen(ServerSocketfd, 1);
-	this->setServerID( ServerSocketfd );
+void Server::initServer( void ) {
+	int serverSocketfd = socket(AF_INET, SOCK_STREAM, 0);
+	struct sockaddr_in serverAddress;
+	memset(&serverAddress, 0, sizeof(serverAddress));
+	serverAddress.sin_family = AF_INET;
+	serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1"); // später IP noch ändern
+	serverAddress.sin_port = htons(this->getPort());
+	fcntl(serverSocketfd, F_SETFL, O_NONBLOCK);
+	bind(serverSocketfd, reinterpret_cast<struct sockaddr *>(&serverAddress), sizeof(serverAddress));
+	listen(serverSocketfd, 1);
+	this->setServerfd( serverSocketfd );
 	return ;
 }
 
-void Server::CloseALLConnections( void ) {
+void Server::closeALLConnections( void ) {
 	for (size_t i = 0; i < this->_connections.size(); i++)
-		close(this->_connections[i].getSocketID());
+		close(this->_connections[i].getSocketfd());
 	return ;
 }
 
-void Server::AddClient( int ServerSocketfd, fd_set &readfds ) {
-	struct sockaddr_in ClientAddress;
-	int Clientfd;
+void Server::addClient( int serverSocketfd, fd_set &readfds ) {
+	struct sockaddr_in clientAddress;
+	int clientfd;
 
-	memset(&ClientAddress, 0, sizeof(ClientAddress));
-	socklen_t ClientAddressLength = sizeof(ClientAddress);
-	Clientfd = accept(ServerSocketfd, reinterpret_cast<struct sockaddr *>(&ClientAddress), &ClientAddressLength);
-	FD_SET(Clientfd, &readfds);
-	if (Clientfd > 0) {
+	memset(&clientAddress, 0, sizeof(clientAddress));
+	socklen_t clientAddressLength = sizeof(clientAddress);
+	clientfd = accept(serverSocketfd, reinterpret_cast<struct sockaddr *>(&clientAddress), &clientAddressLength);
+	FD_SET(clientfd, &readfds);
+	if (clientfd > 0) {
 		std::cout << "New Client tries to connect" << std::endl;
-		this->_connections.push_back(Client (Clientfd));
-		fcntl(Clientfd, F_SETFL, O_NONBLOCK);
+		this->_connections.push_back(Client (clientfd));
+		fcntl(clientfd, F_SETFL, O_NONBLOCK);
 	}
 	return ;
 }
 
-void Server::ExecuteMsg( Parser &Input, int Client ) {
+void Server::executeMsg( Parser &Input, int Client ) {
 	if (Input.getCMD() == "CAP") {
 		std::vector<std::string> params = Input.getParam();
 		for (std::vector<std::string>::iterator it = params.begin(); it != params.end(); it++) {
@@ -138,24 +138,24 @@ void Server::ExecuteMsg( Parser &Input, int Client ) {
 	return ;
 }
 
-int Server::SearchForChannel( std::string ChannelName ) {
-	for (std::vector<Channel>::iterator Interator = this->_channel.begin(); Interator != this->_channel.end(); Interator++ ) {
-		if (Interator->getChannelName() == ChannelName )
-			return (std::distance(this->_channel.begin(), Interator));
+int Server::searchForChannel( std::string channelName ) {
+	for (std::vector<Channel>::iterator iterator = this->_channel.begin(); iterator != this->_channel.end(); iterator++ ) {
+		if (iterator->getChannelName() == channelName )
+			return (std::distance(this->_channel.begin(), iterator));
 	}
 	return (-1);
 }
 
-void Server::JoinChannel( std::string ChannelName, Client User) {
-	int	i = SearchForChannel( ChannelName );
+void Server::joinChannel( std::string channelName, Client user) {
+	int	i = searchForChannel( channelName );
 	if (i < 0) {
-		this->_channel.push_back(Channel ( ChannelName, User ));
-		this->_channel.end()->SetSettings(); // vllt wenn der parse mal da ist ändern
-		this->_channel.end()->AddUser( User );
+		this->_channel.push_back(Channel ( channelName, user ));
+		this->_channel.end()->setSettings(); // vllt wenn der parse mal da ist ändern
+		this->_channel.end()->addUser( user );
 	}
 	else {
-		if (this->_channel[i].CanUserJoin( User )) {
-			this->_channel[i].AddUser( User );
+		if (this->_channel[i].canUserJoin( user )) { 
+			this->_channel[i].addUser( user );
 			// delete user from invite list
 		}
 		else
@@ -164,12 +164,12 @@ void Server::JoinChannel( std::string ChannelName, Client User) {
 	return ;
 }
 
-void Server::ReadMsg( int client, int i) {
-	char Buffer[1024];
+void Server::readMsg( int client, int i) {
+	char buffer[1024];
 	ssize_t bytes_read;
-	bytes_read = ::recv(client, Buffer, sizeof(Buffer), 0);
+	bytes_read = ::recv(client, buffer, sizeof(buffer), 0);
 	if (bytes_read == -1)
-		throw ServerFailException("recv Error"); // nochmal nachlesen vllt hier was anderes machen
+		throw serverFailException("recv Error"); // nochmal nachlesen vllt hier was anderes machen
 	else if (bytes_read == 0) {
 		std::cout << "Disconnected" << std::endl;
 		close(client);
@@ -178,8 +178,8 @@ void Server::ReadMsg( int client, int i) {
 	else {
 		try
 		{
-			Parser Input( Buffer );
-			ExecuteMsg( Input, client );
+			Parser input( buffer );
+			executeMsg( input, client );
 		}
 		catch(const std::exception& e)
 		{
@@ -190,9 +190,9 @@ void Server::ReadMsg( int client, int i) {
 }
 
 void Server::launchServer( void ) {
-	ClientIOHandler();
-	CloseALLConnections();
-	close(this->_serverID);
+	clientIOHandler();
+	closeALLConnections();
+	close(this->_serverfd);
 	return ;
 }
 
@@ -202,27 +202,27 @@ void Server::setTime( void ) {
 	return ;
 }
 
-void Server::ClientIOHandler( void ) {
+void Server::clientIOHandler( void ) {
 	this->setTime();
 
 	while (1) {
 		fd_set readfds;
 		FD_ZERO( &readfds );
-		FD_SET( this->_serverID, &readfds );
+		FD_SET( this->_serverfd, &readfds );
 		int maxfd = getmaxfd( readfds );
 
 		int ready_fds = select( maxfd + 1, &readfds, NULL, NULL , &this->_tv);
 		if (ready_fds == -1)
-			throw ServerFailException("select Error");
+			throw serverFailException("select Error");
 		else if (ready_fds == 0)
 			continue;
 		else {
-			if (FD_ISSET(this->_serverID, &readfds))
-				AddClient( this->_serverID, readfds );
+			if (FD_ISSET(this->_serverfd, &readfds))
+				addClient( this->_serverfd, readfds );
 			else {
 				for (size_t i = 0; i < this->_connections.size(); i++) {
-					if (FD_ISSET(this->_connections[i].getSocketID(), &readfds))
-						ReadMsg( this->_connections[i].getSocketID(), i);
+					if (FD_ISSET(this->_connections[i].getSocketfd(), &readfds))
+						readMsg( this->_connections[i].getSocketfd(), i);
 				}
 			}
 		}
@@ -231,9 +231,9 @@ void Server::ClientIOHandler( void ) {
 }
 
 int Server::getmaxfd( fd_set &readfds ) {
-	int max = this->_serverID;
+	int max = this->_serverfd;
 	for (size_t i = 0; i < this->_connections.size(); i++) {
-		int clientfd = this->_connections[i].getSocketID();
+		int clientfd = this->_connections[i].getSocketfd();
 		FD_SET(clientfd, &readfds);
 		if (clientfd > max)
 			max = clientfd;
@@ -241,6 +241,6 @@ int Server::getmaxfd( fd_set &readfds ) {
 	return (max);
 }
 
-Server::ServerFailException::~ServerFailException( void ) throw() { return ;	}
-Server::ServerFailException::ServerFailException( std::string Error ) : _error(Error) { return ; }
-const char *Server::ServerFailException::what() const throw() { return (this->_error.c_str());}
+Server::serverFailException::~serverFailException( void ) throw() { return ;	}
+Server::serverFailException::serverFailException( std::string Error ) : _error(Error) { return ; }
+const char *Server::serverFailException::what() const throw() { return (this->_error.c_str());}

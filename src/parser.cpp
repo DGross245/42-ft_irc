@@ -30,11 +30,11 @@
 
 	<crlf>     ::= CR LF*/
 
-Parser::Parser( std::string Buffer ) {
-	size_t pos = Buffer.find("\r\n");
+Parser::Parser( std::string buffer ) {
+	size_t pos = buffer.find("\r\n");
 	if (pos != std::string::npos ) {
-		this->_input = Buffer.substr(0, pos);
-		ParseMsg();
+		this->_input = buffer.substr(0, pos);
+		parseMsg();
 	}
 	else
 		std::cerr << "Parsing Error" << std::endl;
@@ -53,49 +53,49 @@ Parser::~Parser( void ) {
 	return ;
 }
 
-void Parser::ParseMsg( void ) {
+void Parser::parseMsg( void ) {
 	if (this->_input[0] == ':')
-		PrefixHandler(this->_input.substr(1, this->_input.find_first_of(' ')));
-	CommandHandler(this->_input.substr(0, this->_input.find_first_of(' ')));
+		prefixHandler(this->_input.substr(1, this->_input.find_first_of(' ')));
+	commandHandler(this->_input.substr(0, this->_input.find_first_of(' ')));
 	if (this->_input[0] != ':')
-		ParamHandler(this->_input.substr(0, this->_input.find_first_of("\r\n") ));
+		paramHandler(this->_input.substr(0, this->_input.find_first_of("\r\n") ));
 	else
-		TrailingHandler(this->_input.substr(1, this->_input.find_first_of("\r\n")));
+		trailingHandler(this->_input.substr(1, this->_input.find_first_of("\r\n")));
 	return ;
 }
 
-void Parser::PrefixHandler( std::string Prefix ) {
-	this->_prefix = Prefix;
+void Parser::prefixHandler( std::string prefix ) {
+	this->_prefix = prefix;
 	this->_input.erase(0, this->_input.find_first_of(' ') + 1);
 }
 
-void Parser::CommandHandler( std::string Command ) {
-	this->_command = Command;
+void Parser::commandHandler( std::string command ) {
+	this->_command = command;
 	this->_input.erase(0, this->_input.find_first_of(' ') + 1);
 }
 
-void Parser::ParamHandler( std::string Param ) {
+void Parser::paramHandler( std::string param ) {
 	size_t found = 0; 
 
-	while (!Param.empty()) {
-		if (Param == "\r\n")
+	while (!param.empty()) {
+		if (param == "\r\n")
 			return ;
-		found = Param.find_first_of(": ");
-		if (found != std::string::npos && Param[found] == ':') {
-			TrailingHandler(Param.substr(1, Param.find("\r\n")));
+		found = param.find_first_of(": ");
+		if (found != std::string::npos && param[found] == ':') {
+			trailingHandler(param.substr(1, param.find("\r\n")));
 			return ;
 		}
 		else if (found == std::string::npos) {
-			this->_parameter.push_back(Param.substr(0, Param.find("\r\n")));
+			this->_parameter.push_back(param.substr(0, param.find("\r\n")));
 			return ;
 		}
 		else
-			this->_parameter.push_back(Param.substr(0, found));
-		Param.erase(0, found + 1);
+			this->_parameter.push_back(param.substr(0, found));
+		param.erase(0, found + 1);
 	}
 }
 
-void Parser::TrailingHandler( std::string Trailing ) {
-	this->_trailing = Trailing;
+void Parser::trailingHandler( std::string trailing ) {
+	this->_trailing = trailing;
 	return ;
 }

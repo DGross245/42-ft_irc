@@ -1,6 +1,6 @@
 #include "Client.hpp"
 
-Client::Client( int ClientID ) : _SocketID(ClientID) {
+Client::Client( int clientfd ) : _socketfd(clientfd) {
 	return ;
 }
 
@@ -8,13 +8,13 @@ Client::~Client( void ) {
 	return ;
 }
 
-void Client::setUsername( std::string Username ) {
-	this->_username = Username;
+void Client::setUsername( std::string username ) {
+	this->_username = username;
 	return ;
 }
 
-void Client::setNickname( std::string Nickname ) {
-	this->_nickname = Nickname;
+void Client::setNickname( std::string nickname ) {
+	this->_nickname = nickname;
 	return ;
 }
 
@@ -27,18 +27,18 @@ std::string Client::getNickname( void ) {
 }
 
 bool Client::getAuthentication( void ) {
-	return (this->IsAuthenticated);
+	return (this->_isAuthenticated);
 }
 
-void Client::setAuthentication( bool Authentication ) {
-	this->IsAuthenticated = Authentication;
+void Client::setAuthentication( bool authentication ) {
+	this->_isAuthenticated = authentication;
 	return ;
 }
 
-int Client::getSocketID( void ) {
-	return (this->_SocketID);
+int Client::getSocketfd( void ) {
+	return (this->_socketfd);
 }
 
-Client::ClientFailException::~ClientFailException( void ) throw() { return ;	}
-Client::ClientFailException::ClientFailException( std::string Error ) : _error(Error) { return ; }
-const char *Client::ClientFailException::what() const throw() { return (this->_error.c_str());}
+Client::clientFailException::~clientFailException( void ) throw() { return ;	}
+Client::clientFailException::clientFailException( std::string error ) : _error(error) { return ; }
+const char *Client::clientFailException::what() const throw() { return (this->_error.c_str());}

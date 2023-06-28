@@ -8,23 +8,23 @@ class Client {
 
 public:
 
-	Client( int SocketID );
+	Client( int socketfd );
 	~Client( void );
 
 	std::string getUsername( void );
 	std::string getNickname( void );
 	bool getAuthentication( void );
-	void setAuthentication( bool Authentication );
-	void setNickname( std::string Nickname );
-	void setUsername( std::string Username );
-	int getSocketID( void );
+	void setAuthentication( bool authentication );
+	void setNickname( std::string nickname );
+	void setUsername( std::string username );
+	int getSocketfd( void );
 
-	class ClientFailException : std::exception {
+	class clientFailException : std::exception {
 	
 	public:
 
-		ClientFailException( std::string Error );
-		~ClientFailException( void ) throw();
+		clientFailException( std::string error );
+		~clientFailException( void ) throw();
 		virtual const char *what() const throw();
 
 	private:
@@ -37,8 +37,8 @@ private:
 
 	std::string _username;
 	std::string _nickname;
-	int _SocketID;
-	bool IsAuthenticated;
+	int _socketfd;
+	bool _isAuthenticated;
 
 };
 

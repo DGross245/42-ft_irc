@@ -12,11 +12,11 @@ public:
 	Parser( std::string Buffer );
 	~Parser( void );
 
-	void ParseMsg( void );
-	void PrefixHandler( std::string Prefix );
-	void CommandHandler( std::string Command );
-	void ParamHandler( std::string Param );
-	void TrailingHandler( std::string trailing );
+	void parseMsg( void );
+	void prefixHandler( std::string Prefix );
+	void commandHandler( std::string Command );
+	void paramHandler( std::string Param );
+	void trailingHandler( std::string trailing );
 
 	std::string getCMD( void );
 	std::vector<std::string> getParam( void );

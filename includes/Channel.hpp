@@ -10,26 +10,26 @@ class Channel {
 
 public:
 
-	Channel( std::string Name, Client User );
+	Channel( std::string name, Client user );
 	~Channel( void );
 
-	void LeaveChannel( std::string UserName );
-	void AddUser( Client User );
-	void SetSettings( void );
-	int SearchforUser( Client User );
+	void leaveChannel( std::string username );
+	void addUser( Client user );
+	void setSettings( void );
+	int searchforUser( Client user );
 
-	void setTopic( std::string Topic );
+	void setTopic( std::string topic );
 	std::string getTopic( void );
 	std::string getChannelName( void );
-	bool CanUserJoin( Client User );
+	bool canUserJoin( Client user );
 	void setFounder( Client &Founder );
 
-	class ChannelFailException : std::exception {
+	class channelFailException : std::exception {
 	
 	public:
 
-		ChannelFailException( std::string Error );
-		~ChannelFailException( void ) throw();
+		channelFailException( std::string error );
+		~channelFailException( void ) throw();
 		virtual const char *what() const throw();
 
 	private:
