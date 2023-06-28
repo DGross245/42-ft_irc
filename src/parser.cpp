@@ -53,6 +53,11 @@ Parser::~Parser( void ) {
 	return ;
 }
 
+void Parser::isValidCommandLine( void ) {
+	
+	return ;
+}
+
 void Parser::parseMsg( void ) {
 	if (this->_input[0] == ':')
 		prefixHandler(this->_input.substr(1, this->_input.find_first_of(' ')));
@@ -61,6 +66,7 @@ void Parser::parseMsg( void ) {
 		paramHandler(this->_input.substr(0, this->_input.find_first_of("\r\n") ));
 	else
 		trailingHandler(this->_input.substr(1, this->_input.find_first_of("\r\n")));
+	isValidCommandLine();
 	return ;
 }
 

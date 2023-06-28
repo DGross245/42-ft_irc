@@ -18,7 +18,7 @@ public:
 	void setSettings( void );
 	int searchforUser( Client user );
 
-	void setTopic( std::string topic );
+	void setTopic( std::string topic, Client client );
 	std::string getTopic( void );
 	std::string getChannelName( void );
 	bool canUserJoin( Client user );

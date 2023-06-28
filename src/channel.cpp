@@ -3,6 +3,7 @@
 #include <string>
 #include <iostream>
 #include <vector>
+#include <sys/socket.h>
 
 // SearchforUser und Leavechannel vlt zu einem Template umcoden, weil benutze es doppelt
 // im sinne von sucht und returnt den index, gibt es ihn nicht dann -1
@@ -71,10 +72,29 @@ void Channel::setFounder( Client &founder ) {
 std::string Channel::getTopic( void ) {
 	return (this->_topic);
 }
-void Channel::setTopic( std::string topic ) {
-	if (this->_isTopicRestricted)
-		;// hier checken ob OP oder ein Founder diesen Change ausführt
-	this->_topic = topic;
+void Channel::setTopic( std::string topic, Client client ) {
+	std::string message;
+	if (this->_isTopicRestricted) {
+		if (this->_founder.getSocketfd() == client.getSocketfd())
+			this->_topic = topic;
+		else {
+			for (std::vector<Client>::iterator it = this->_op.begin(); it != this->_op.end(); it++ ) {
+				if (it->getSocketfd() == client.getSocketfd() ) {
+					this->_topic = topic;
+					message = ":IRCSERV 332" + client.getNickname() + this->getChannelName() + ":" + this->_topic;
+					send(client.getSocketfd(), message.c_str(), message.length(), 0);
+					return ;
+				}
+			}
+			message = ":IRCSERV 482" + client.getNickname() + this->getChannelName() + ":You're not a channel operator";
+			send(client.getSocketfd(), message.c_str(), message.length(), 0);
+		}
+	}
+	else {
+		this->_topic = topic;
+		message = ":IRCSERV 332" + client.getNickname() + this->getChannelName() + ":" + this->_topic;
+		send(client.getSocketfd(), message.c_str(), message.length(), 0);
+	}
 	return ;
 }
 Channel::channelFailException::~channelFailException( void ) throw() { return ;	}
