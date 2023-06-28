@@ -16,10 +16,32 @@
 #include "Parser.hpp"
 #include <csignal>
 #include <vector>
+#include <sstream>
 
 Server::Server( std::string Port, std::string Password ) {
-	this->setPort( Port ); // maybe have to parse here a little
-	this->setPassword( Password ); // same for this one
+	if (Port.find_first_not_of("0123456789") == std::string::npos) {
+		int _port = static_cast<int>( strtod(Port.c_str(), nullptr) );
+		int OverflowCheck;
+
+		std::stringstream ss(Port);
+		ss >> OverflowCheck;
+		if (ss.fail() || !ss.eof())
+			throw ServerFailException("Error: Invalid port. Port must be a valid port range <1024-49151>");
+		if (_port < 1024 || _port > 49151)
+			throw ServerFailException("Error: Port out of range. Valid ports are in the range <1024-49151>");
+		else
+			this->setPort( Port ); // maybe have to parse here a little
+	}
+	else
+		throw ServerFailException("Error: Invalid input. Port must be a numeric value");
+	if (Password.length() >= 8 && Password.length() <= 32) {
+		if (Port.find_first_of(' ') != std::string::npos)
+			throw ServerFailException("Error: Invalid Password. No space allowed");
+		else
+			this->setPassword( Password ); // same for this one
+	}
+	else
+		throw ServerFailException("Error: Invalid Password. Password lenght should be around 8-32");
 	InitServer();
 	return ;
 }
