@@ -56,7 +56,7 @@ void Server::InitServer( void ) {
 	struct sockaddr_in ServerAddress;
 	memset(&ServerAddress, 0, sizeof(ServerAddress));
 	ServerAddress.sin_family = AF_INET;
-	ServerAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
+	ServerAddress.sin_addr.s_addr = inet_addr("127.0.0.1"); // später IP noch ändern
 	ServerAddress.sin_port = htons(this->getPort());
 	fcntl(ServerSocketfd, F_SETFL, O_NONBLOCK);
 	bind(ServerSocketfd, reinterpret_cast<struct sockaddr *>(&ServerAddress), sizeof(ServerAddress));
@@ -195,14 +195,13 @@ void Server::ClientIOHandler( void ) {
 		else if (ready_fds == 0)
 			continue;
 		else {
-			if (FD_ISSET(this->_serverID, &readfds)) {
+			if (FD_ISSET(this->_serverID, &readfds))
 				AddClient( this->_serverID, readfds );
-			}
 			else {
 				for (size_t i = 0; i < this->_connections.size(); i++) {
 					if (FD_ISSET(this->_connections[i].getSocketID(), &readfds))
 						ReadMsg( this->_connections[i].getSocketID(), i);
-			}
+				}
 			}
 		}
 	}

@@ -24,10 +24,10 @@ public:
 private:
 
 	std::string _input;
-	std::vector<std::string> _parameter;
-	std::string _command;
-	std::string _trailing;
 	std::string _prefix;
+	std::string _command;
+	std::vector<std::string> _parameter;
+	std::string _trailing;
 };
 
 #endif
