@@ -32,9 +32,9 @@ public:
 	void	setTime( void );
 	int		getmaxfd( fd_set &readfds );
 	void	setServerID( int ServerSocketfd );
-	
+
 	class ServerFailException : std::exception {
-	
+
 	public:
 
 		ServerFailException( std::string Error );

@@ -17,6 +17,11 @@
 #include <csignal>
 #include <vector>
 
+#define RESET   "\033[0m"
+#define RED     "\033[31m"
+#define GREEN   "\033[32m"
+#define ORANGE  "\033[38;2;255;165;0m"
+
 Server::Server( std::string Port, std::string Password ) {
 	this->setPort( Port ); // maybe have to parse here a little
 	this->setPassword( Password ); // same for this one
@@ -87,31 +92,46 @@ void Server::AddClient( int ServerSocketfd, fd_set &readfds ) {
 	return ;
 }
 
-void Server::ExecuteMsg( Parser &Input, int Client ) {
+// all the data from the server with the connected clients etc is the sever class (there is a vectore which stores all of that informations)
+// @todo add the server class to this function cause all the informations are in that class
+// @todo create a own class for the commands
+void Server::ExecuteMsg( Parser &Input, int client ) {
 	if (Input.getCMD() == "CAP") {
 		std::vector<std::string> params = Input.getParam();
 		for (std::vector<std::string>::iterator it = params.begin(); it != params.end(); it++) {
 			if (*it == "END") {
 				std::string message = "CAP * ACK :JOIN\r\n";
-				send(Client, message.c_str(), message.length(), 0);
+				std::cout << "\n-------------------------------------\n" << "sended message:" << RED << message << RESET << std::endl;
+				send(client, message.c_str(), message.length(), 0);
 			}
 			else if (*it == "LS") {
 				std::string message = "CAP * LS :JOIN\r\n";
-				send(Client, message.c_str(), message.length(), 0);
+				std::cout << "\n-------------------------------------\n" << "sended message:" << RED << message << RESET << std::endl;
+				send(client, message.c_str(), message.length(), 0);
 			}
 		}
 	}
 	else if (Input.getCMD() == "NICK") {
-		std::string message = ":IRCSERV 001 dgross :Willkommen in der IRC-Welt, dgross!\r\n";
-		send(Client, message.c_str(), message.length(), 0);
+		std::string message = ":IRCSERV 001 jschneid :Willkommen in der IRC-Welt, jschneid!\r\n";
+		std::cout << "\n-------------------------------------\n" << "sended message:" << RED << message << RESET << std::endl;
+		send(client, message.c_str(), message.length(), 0);
 	}
 	else if (Input.getCMD() == "USER") {
-		std::string message = ":IRCSERV 001 dgross :Benutzerinformationen erfolgreich empfangen.\r\n";
-		send(Client, message.c_str(), message.length(), 0);
+		std::string message = ":IRCSERV 001 jschneid :Benutzerinformationen erfolgreich empfangen.\r\n";
+		std::cout << "\n-------------------------------------\n" << "sended message:" << RED << message << RESET << std::endl;
+		send(client, message.c_str(), message.length(), 0);
 	}
 	else if (Input.getCMD() == "PING") {
 		std::string message = "PONG :127.0.0.1";
-		send(Client, message.c_str(), message.length(), 0);
+		std::cout << "\n-------------------------------------\n" << "sended message:" << RED << message << RESET << std::endl;
+		send(client, message.c_str(), message.length(), 0);
+	}
+	else if (Input.getCMD() == "JOIN") {
+		std::cout << "Join command gets executed" << std::endl;
+		JoinChannel(Input.getParam()[0], client);
+		std::string message = ":irc JOIN #test";
+		std::cout << "\n-------------------------------------\n" << "sended message:" << RED << message << RESET << std::endl;
+		send(client, message.c_str(), message.length(), 0);
 	}
 	return ;
 }
@@ -127,8 +147,9 @@ int Server::SearchForChannel( std::string ChannelName ) {
 void Server::JoinChannel( std::string ChannelName, Client User) {
 	int	i = SearchForChannel( ChannelName );
 	if (i < 0) {
+		// creating the channel if the channel does not exist
 		this->_channel.push_back(Channel ( ChannelName, User ));
-		this->_channel.end()->SetSettings(); // vllt wenn der parse mal da ist ändern
+		this->_channel.end()->SetSettings();
 		this->_channel.end()->AddUser( User );
 	}
 	else {
@@ -146,6 +167,8 @@ void Server::ReadMsg( int client, int i) {
 	char Buffer[1024];
 	ssize_t bytes_read;
 	bytes_read = ::recv(client, Buffer, sizeof(Buffer), 0);
+	std::cout << "\n-------------------------------------" << std::endl;
+	std::cout <<"Recived msg: \n	" << ORANGE << Buffer << RESET << std::cout;
 	if (bytes_read == -1)
 		throw ServerFailException("recv Error"); // nochmal nachlesen vllt hier was anderes machen
 	else if (bytes_read == 0) {
