@@ -33,11 +33,13 @@
 
 	<crlf>     ::= CR LF*/
 
-std::string Parser::getPrefix( void ) {
+// spæter nochmal genau checken was genau geparset werden musst für jeden cmd
+
+std::string &Parser::getPrefix( void ) {
 	return (this->_prefix);
 }
 
-std::string Parser::getTrailing( void ) {
+std::string &Parser::getTrailing( void ) {
 	return (this->_trailing);
 }
 
@@ -52,11 +54,11 @@ Parser::Parser( std::string buffer, Client client ) {
 	return ;
 }
 
-std::string Parser::getCMD( void ) {
+std::string &Parser::getCMD( void ) {
 	return (this->_command);
 }
 
-std::vector<std::string> Parser::getParam( void ) {
+std::vector<std::string> &Parser::getParam( void ) {
 	return (this->_parameter);
 }
 
@@ -94,6 +96,7 @@ void Parser::isValidCommandLine( Client client ) {
 
 void Parser::checkPASS( Client client ) {
 	// prefix check ?
+	std::vector<std::string> checker = this->getParam()
 	std::vector<std::string>::iterator it = this->getParam().begin();
 	if (this->getParam().size() != 1) {
 		std::string message = SERVER  "" ERR_NEEDMOREPARAMS + client.getNickname() + this->getCMD() + " :Not enough parameters";
@@ -109,7 +112,7 @@ void Parser::checkNICK( Client client ) {
 		std::string message = SERVER  "" ERR_NEEDMOREPARAMS + client.getNickname() + this->getCMD() + " :Not enough parameters";
 		throw parserErrorException("Invalid Command");
 	}
-	if ( it[0] != ":" )
+	if ( it->length() < 16 )
 		return ;
 	std::string message = SERVER  "" ERR_NEEDMOREPARAMS + client.getNickname() + this->getCMD() + " :Not enough parameters";
 	throw parserErrorException("Invalid Command");

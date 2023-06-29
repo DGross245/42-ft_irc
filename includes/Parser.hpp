@@ -33,10 +33,10 @@ public:
 	void checkPING( Client client );
 	void checkPART( Client client );
 
-	std::string getCMD( void );
-	std::vector<std::string> getParam( void );
-	std::string getPrefix( void );
-	std::string getTrailing( void );
+	std::string &getCMD( void );
+	std::vector<std::string> &getParam( void );
+	std::string &getPrefix( void );
+	std::string &getTrailing( void );
 
 	class parserErrorException : std::exception {
 	
