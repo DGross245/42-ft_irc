@@ -101,37 +101,55 @@ void Server::ExecuteMsg( Parser &Input, int client ) {
 		for (std::vector<std::string>::iterator it = params.begin(); it != params.end(); it++) {
 			if (*it == "END") {
 				std::string message = "CAP * ACK :JOIN\r\n";
-				std::cout << "\n-------------------------------------\n" << "sended message:" << RED << message << RESET << std::endl;
 				send(client, message.c_str(), message.length(), 0);
+				std::cout << "\n-------------------------------------\n" << "sended message:" << RED << message << RESET << std::endl;
 			}
 			else if (*it == "LS") {
 				std::string message = "CAP * LS :JOIN\r\n";
-				std::cout << "\n-------------------------------------\n" << "sended message:" << RED << message << RESET << std::endl;
 				send(client, message.c_str(), message.length(), 0);
+				std::cout << "\n-------------------------------------\n" << "sended message:" << RED << message << RESET << std::endl;
 			}
 		}
 	}
 	else if (Input.getCMD() == "NICK") {
 		std::string message = ":IRCSERV 001 jschneid :Willkommen in der IRC-Welt, jschneid!\r\n";
-		std::cout << "\n-------------------------------------\n" << "sended message:" << RED << message << RESET << std::endl;
 		send(client, message.c_str(), message.length(), 0);
+		std::cout << "\n-------------------------------------\n" << "sended message:" << RED << message << RESET << std::endl;
 	}
 	else if (Input.getCMD() == "USER") {
 		std::string message = ":IRCSERV 001 jschneid :Benutzerinformationen erfolgreich empfangen.\r\n";
-		std::cout << "\n-------------------------------------\n" << "sended message:" << RED << message << RESET << std::endl;
 		send(client, message.c_str(), message.length(), 0);
+		std::cout << "\n-------------------------------------\n" << "sended message:" << RED << message << RESET << std::endl;
 	}
 	else if (Input.getCMD() == "PING") {
 		std::string message = "PONG :127.0.0.1";
-		std::cout << "\n-------------------------------------\n" << "sended message:" << RED << message << RESET << std::endl;
 		send(client, message.c_str(), message.length(), 0);
+		std::cout << "\n-------------------------------------\n" << "sended message:" << RED << message << RESET << std::endl;
 	}
 	else if (Input.getCMD() == "JOIN") {
+		// std::cout << "Join command gets executed" << std::endl;
+		// JoinChannel(Input.getParam()[0], client);
 		std::cout << "Join command gets executed" << std::endl;
-		JoinChannel(Input.getParam()[0], client);
-		std::string message = ":irc JOIN #test";
+    	JoinChannel(Input.getParam()[0], client);
+
+    	// Simulate JOIN message from the server
+    	std::string message = ":IRCSERV JOIN #test\r\n";
+    	send(client, message.c_str(), message.length(), 0);
+
+    	// Simulate JOIN message from the client
+    	std::string message1 = ":jschneid JOIN #test\r\n";
+    	send(client, message1.c_str(), message1.length(), 0);
+
+    	// Simulate buffer switch command in WeeChat
+    	std::string bufferSwitchCommand = "/buffer #test\r\n";
+    	send(client, bufferSwitchCommand.c_str(), bufferSwitchCommand.length(), 0);
+
+    	// Simulate chat message in the channel
+    	std::string message2 = ":jschneid PRIVMSG #test :Hello, everyone!\r\n";
+    	send(client, message2.c_str(), message2.length(), 0);
 		std::cout << "\n-------------------------------------\n" << "sended message:" << RED << message << RESET << std::endl;
-		send(client, message.c_str(), message.length(), 0);
+		std::cout << "\n-------------------------------------\n" << "sended message:" << RED << message1 << RESET << std::endl;
+		std::cout << "\n-------------------------------------\n" << "sended message:" << RED << message2 << RESET << std::endl;
 	}
 	return ;
 }
