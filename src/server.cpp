@@ -21,6 +21,9 @@
 #define RED     "\033[31m"
 #define GREEN   "\033[32m"
 #define ORANGE  "\033[38;2;255;165;0m"
+#define BLUE    "\033[34m"
+#define CYAN    "\033[36m"
+#define PURPLE  "\033[35m"
 
 Server::Server( std::string Port, std::string Password ) {
 	this->setPort( Port ); // maybe have to parse here a little
@@ -127,29 +130,27 @@ void Server::ExecuteMsg( Parser &Input, int client ) {
 		std::cout << "\n-------------------------------------\n" << "sended message:" << RED << message << RESET << std::endl;
 	}
 	else if (Input.getCMD() == "JOIN") {
-		// std::cout << "Join command gets executed" << std::endl;
-		// JoinChannel(Input.getParam()[0], client);
 		std::cout << "Join command gets executed" << std::endl;
-    	JoinChannel(Input.getParam()[0], client);
-
-    	// Simulate JOIN message from the server
-    	std::string message = ":IRCSERV JOIN #test\r\n";
-    	send(client, message.c_str(), message.length(), 0);
-
-    	// Simulate JOIN message from the client
-    	std::string message1 = ":jschneid JOIN #test\r\n";
-    	send(client, message1.c_str(), message1.length(), 0);
-
-    	// Simulate buffer switch command in WeeChat
-    	std::string bufferSwitchCommand = "/buffer #test\r\n";
-    	send(client, bufferSwitchCommand.c_str(), bufferSwitchCommand.length(), 0);
-
-    	// Simulate chat message in the channel
-    	std::string message2 = ":jschneid PRIVMSG #test :Hello, everyone!\r\n";
-    	send(client, message2.c_str(), message2.length(), 0);
-		std::cout << "\n-------------------------------------\n" << "sended message:" << RED << message << RESET << std::endl;
-		std::cout << "\n-------------------------------------\n" << "sended message:" << RED << message1 << RESET << std::endl;
-		std::cout << "\n-------------------------------------\n" << "sended message:" << RED << message2 << RESET << std::endl;
+		JoinChannel(Input.getParam()[0], client);
+		std::string joinMessageServer = ":IRCSERV JOIN #test\r\n";
+		std::string joinMessageClient = ":jschneid JOIN #test\r\n";
+		std::string bufferSwitchCommand = "/buffer #test\r\n";
+		std::string message = ":jschneid PRIVMSG #test :Hello, everyone!\r\n";
+		send(client, joinMessageServer.c_str(), joinMessageServer.length(), 0);
+		send(client, joinMessageClient.c_str(), joinMessageClient.length(), 0);
+		send(client, bufferSwitchCommand.c_str(), bufferSwitchCommand.length(), 0);
+		send(client, message.c_str(), message.length(), 0);
+		std::cout << "\n-------------------------------------\n" << "sended message:" << RED <<
+		joinMessageServer << RESET << std::endl;
+		std::cout << "\n-------------------------------------\n" << "sended message:" << RED <<
+		joinMessageClient << RESET << std::endl;
+		std::cout << "\n-------------------------------------\n" << "sended message:" << RED <<
+		bufferSwitchCommand << RESET << std::endl;
+		std::cout << "\n-------------------------------------\n" << "sended message:" << RED <<
+		message << RESET << std::endl;
+	}
+	else if (Input.getCMD() == "PRIVMSG") {
+		std::cout << "Reseved a private message" << std::endl;
 	}
 	return ;
 }
@@ -225,6 +226,7 @@ void Server::ClientIOHandler( void ) {
 	this->setTime();
 
 	while (1) {
+		std::cout << "Active channels on Server: " << this->_channel.size() << std::endl;
 		fd_set readfds;
 		FD_ZERO( &readfds );
 		FD_SET( this->_serverID, &readfds );

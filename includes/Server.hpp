@@ -50,7 +50,7 @@ public:
 private:
 
 	std::vector<Client> _connections;
-	std::vector<Channel> _channel;
+	std::vector<Channel> _channel; // how many channels on the server
 	int _serverID;
 	int _port;
 	int _password;
