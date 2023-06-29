@@ -17,6 +17,7 @@
 #include <csignal>
 #include <vector>
 #include <sstream>
+#include <Client.hpp>
 
 Server::Server( std::string port, std::string password ) {
 	if (port.find_first_not_of("0123456789") == std::string::npos) {
@@ -109,31 +110,31 @@ void Server::addClient( int serverSocketfd, fd_set &readfds ) {
 	return ;
 }
 
-void Server::executeMsg( Parser &Input, int Client ) {
-	if (Input.getCMD() == "CAP") {
-		std::vector<std::string> params = Input.getParam();
+void Server::executeMsg( Parser &input, Client client ) {
+	if (input.getCMD() == "CAP") {
+		std::vector<std::string> params = input.getParam();
 		for (std::vector<std::string>::iterator it = params.begin(); it != params.end(); it++) {
 			if (*it == "END") {
 				std::string message = "CAP * ACK :JOIN\r\n";
-				send(Client, message.c_str(), message.length(), 0);
+				send(client.getSocketfd(), message.c_str(), message.length(), 0);
 			}
 			else if (*it == "LS") {
 				std::string message = "CAP * LS :JOIN\r\n";
-				send(Client, message.c_str(), message.length(), 0);
+				send(client.getSocketfd(), message.c_str(), message.length(), 0);
 			}
 		}
 	}
-	else if (Input.getCMD() == "NICK") {
+	else if (input.getCMD() == "NICK") {
 		std::string message = ":IRCSERV 001 dgross :Willkommen in der IRC-Welt, dgross!\r\n";
-		send(Client, message.c_str(), message.length(), 0);
+		send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	}
-	else if (Input.getCMD() == "USER") {
+	else if (input.getCMD() == "USER") {
 		std::string message = ":IRCSERV 001 dgross :Benutzerinformationen erfolgreich empfangen.\r\n";
-		send(Client, message.c_str(), message.length(), 0);
+		send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	}
-	else if (Input.getCMD() == "PING") {
+	else if (input.getCMD() == "PING") {
 		std::string message = "PONG :127.0.0.1";
-		send(Client, message.c_str(), message.length(), 0);
+		send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	}
 	return ;
 }
@@ -163,22 +164,32 @@ void Server::joinChannel( std::string channelName, Client user) {
 	}
 	return ;
 }
+static void Sprinter( Parser parser) {
+	std::cout << "Prefix:" << parser.getPrefix() << std::endl;
+	std::cout << "Command:" << parser.getCMD() << std::endl;
+	std::vector<std::string> test = parser.getParam();
+	for (std::vector<std::string>::iterator it = test.begin(); it != test.end(); it++)
+		std::cout << "Param :" << *it << std::endl;
+	std::cout << "trailing :" << parser.getTrailing() << std::endl;
+	return ;
+}
 
-void Server::readMsg( int client, int i) {
+void Server::readMsg( Client client, int i) {
 	char buffer[1024];
 	ssize_t bytes_read;
-	bytes_read = ::recv(client, buffer, sizeof(buffer), 0);
+	bytes_read = ::recv(client.getSocketfd(), buffer, sizeof(buffer), 0);
 	if (bytes_read == -1)
-		throw serverFailException("recv Error"); // nochmal nachlesen vllt hier was anderes machen
+		throw serverFailException("recv Error");
 	else if (bytes_read == 0) {
 		std::cout << "Disconnected" << std::endl;
-		close(client);
+		close(client.getSocketfd());
 		this->_connections.erase(this->_connections.begin() + i);
 	}
 	else {
 		try
 		{
-			Parser input( buffer );
+			Parser input( buffer, client );
+			Sprinter( input );
 			executeMsg( input, client );
 		}
 		catch(const std::exception& e)
@@ -222,7 +233,7 @@ void Server::clientIOHandler( void ) {
 			else {
 				for (size_t i = 0; i < this->_connections.size(); i++) {
 					if (FD_ISSET(this->_connections[i].getSocketfd(), &readfds))
-						readMsg( this->_connections[i].getSocketfd(), i);
+						readMsg( this->_connections[i], i);
 				}
 			}
 		}
@@ -242,5 +253,5 @@ int Server::getmaxfd( fd_set &readfds ) {
 }
 
 Server::serverFailException::~serverFailException( void ) throw() { return ;	}
-Server::serverFailException::serverFailException( std::string Error ) : _error(Error) { return ; }
+Server::serverFailException::serverFailException( std::string error ) : _error(error) { return ; }
 const char *Server::serverFailException::what() const throw() { return (this->_error.c_str());}

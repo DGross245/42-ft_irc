@@ -20,8 +20,8 @@ public:
 	void	closeALLConnections( void );
 	void	clientIOHandler( void );
 	void 	addClient( int serverSocketfd, fd_set &readfds );
-	void	readMsg( int client, int i);
-	void	executeMsg( Parser &input, int client );
+	void	readMsg( Client client, int i);
+	void	executeMsg( Parser &input, Client client );
 	int		searchForChannel( std::string channelName );
 	void	joinChannel( std::string channelName , Client user );
 	void	launchServer( void );
