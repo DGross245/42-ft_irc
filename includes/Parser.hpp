@@ -39,7 +39,7 @@ public:
 	std::string &getTrailing( void );
 
 	class parserErrorException : std::exception {
-	
+
 	public:
 
 		parserErrorException( std::string error );
@@ -54,11 +54,11 @@ public:
 
 private:
 
-	std::string _input;
-	std::string _prefix;
-	std::string _command;
-	std::vector<std::string> _parameter;
-	std::string _trailing;
+	std::string _input; // ganzer command
+	std::string _prefix; // alles was vor commad
+	std::string _command; // zb join, kick etc
+	std::vector<std::string> _parameter; // alles nach dem command zb #test (server name)
+	std::string _trailing;	// alles was mit doppelpunkt anfängt im commd
 };
 
 #endif
