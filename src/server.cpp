@@ -18,6 +18,7 @@
 #include <vector>
 #include <sstream>
 #include <Client.hpp>
+#include "Constants.hpp"
 
 Server::Server( std::string port, std::string password ) {
 	if (port.find_first_not_of("0123456789") == std::string::npos) {
@@ -110,30 +111,45 @@ void Server::addClient( int serverSocketfd, fd_set &readfds ) {
 	return ;
 }
 
+// all the data from the server with the connected clients etc is the sever class (there is a vectore which stores all of that informations)
+// @todo add the server class to this function cause all the informations are in that class
+// @todo create a own class for the commands
 void Server::executeMsg( Parser &input, Client client ) {
 	if (input.getCMD() == "CAP") {
 		std::vector<std::string> params = input.getParam();
 		for (std::vector<std::string>::iterator it = params.begin(); it != params.end(); it++) {
 			if (*it == "END") {
 				std::string message = "CAP * ACK :JOIN\r\n";
+				std::cout << "\n-------------------------------------\n" << "sended message:" << RED << message << RESET << std::endl;
 				send(client.getSocketfd(), message.c_str(), message.length(), 0);
 			}
 			else if (*it == "LS") {
 				std::string message = "CAP * LS :JOIN\r\n";
+				std::cout << "\n-------------------------------------\n" << "sended message:" << RED << message << RESET << std::endl;
 				send(client.getSocketfd(), message.c_str(), message.length(), 0);
 			}
 		}
 	}
 	else if (input.getCMD() == "NICK") {
-		std::string message = ":IRCSERV 001 dgross :Willkommen in der IRC-Welt, dgross!\r\n";
+		std::string message = ":IRCSERV 001 jschneid :Willkommen in der IRC-Welt, jschneid!\r\n";
+		std::cout << "\n-------------------------------------\n" << "sended message:" << RED << message << RESET << std::endl;
 		send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	}
 	else if (input.getCMD() == "USER") {
-		std::string message = ":IRCSERV 001 dgross :Benutzerinformationen erfolgreich empfangen.\r\n";
+		std::string message = ":IRCSERV 001 jschneid :Benutzerinformationen erfolgreich empfangen.\r\n";
+		std::cout << "\n-------------------------------------\n" << "sended message:" << RED << message << RESET << std::endl;
 		send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	}
 	else if (input.getCMD() == "PING") {
 		std::string message = "PONG :127.0.0.1";
+		std::cout << "\n-------------------------------------\n" << "sended message:" << RED << message << RESET << std::endl;
+		send(client.getSocketfd(), message.c_str(), message.length(), 0);
+	}
+	else if (input.getCMD() == "JOIN") {
+		std::cout << "Join command gets executed" << std::endl;
+		joinChannel(input.getParam()[0], client.getSocketfd());
+		std::string message = ":irc JOIN #test";
+		std::cout << "\n-------------------------------------\n" << "sended message:" << RED << message << RESET << std::endl;
 		send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	}
 	return ;
@@ -150,8 +166,9 @@ int Server::searchForChannel( std::string channelName ) {
 void Server::joinChannel( std::string channelName, Client user) {
 	int	i = searchForChannel( channelName );
 	if (i < 0) {
+		// creating the channel if the channel does not exist
 		this->_channel.push_back(Channel ( channelName, user ));
-		this->_channel.end()->setSettings(); // vllt wenn der parse mal da ist ändern
+		this->_channel.end()->setSettings();
 		this->_channel.end()->addUser( user );
 	}
 	else {
@@ -178,6 +195,8 @@ void Server::readMsg( Client client, int i) {
 	char buffer[1024];
 	ssize_t bytes_read;
 	bytes_read = ::recv(client.getSocketfd(), buffer, sizeof(buffer), 0);
+	std::cout << "\n-------------------------------------" << std::endl;
+	std::cout <<"Recived msg: \n	" << ORANGE << buffer << RESET << std::endl;
 	if (bytes_read == -1)
 		throw serverFailException("recv Error");
 	else if (bytes_read == 0) {
@@ -220,7 +239,7 @@ void Server::clientIOHandler( void ) {
 		fd_set readfds;
 		FD_ZERO( &readfds );
 		FD_SET( this->_serverfd, &readfds );
-		int maxfd = getmaxfd( readfds );
+		int maxfd = getMaxfd( readfds );
 
 		int ready_fds = select( maxfd + 1, &readfds, NULL, NULL , &this->_tv);
 		if (ready_fds == -1)
@@ -241,7 +260,7 @@ void Server::clientIOHandler( void ) {
 	return ;
 }
 
-int Server::getmaxfd( fd_set &readfds ) {
+int Server::getMaxfd( fd_set &readfds ) {
 	int max = this->_serverfd;
 	for (size_t i = 0; i < this->_connections.size(); i++) {
 		int clientfd = this->_connections[i].getSocketfd();

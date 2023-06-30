@@ -28,7 +28,7 @@ public:
 
 	std::string	getPassword( void );
 	int			getPort( void );
-	int			getmaxfd( fd_set &readfds );
+	int			getMaxfd( fd_set &readfds );
 	void		setPort( int port );
 	void		setPassword( std::string &password );
 	void		setTime( void );

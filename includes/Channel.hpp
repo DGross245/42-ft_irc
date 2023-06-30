@@ -42,13 +42,13 @@ private:
 
 	std::string _name;
 	std::vector<Client> _clients;
-	std::vector<Client> _invited;
-	std::string _topic;
-	bool _isTopicRestricted;
+	std::vector<Client> _invited; //invited clients
+	std::string _topic; // of the channel
+	bool _isTopicRestricted; // if true only the founder can change the topic of the channel
 	bool _isInviteOnly;
 	std::string _password;
-	std::vector<Client> _op; // vlt doch kein vector aber mal gucken
-	Client _founder;
+	std::vector<Client> _op; // vlt doch kein vector aber mal gucken // clients which got admin rights
+	Client _founder; // the founder of the channel
 
 };
 
