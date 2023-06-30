@@ -192,7 +192,7 @@ void Server::readMsg( Client client, int i) {
 			Sprinter( input );
 			executeMsg( input, client );
 		}
-		catch(const std::exception& e)
+		catch(const Parser::parserErrorException &e)
 		{
 				std::cerr << e.what() << '\n';
 		}

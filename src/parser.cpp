@@ -5,36 +5,6 @@
 #include "Client.hpp"
 #include <vector>
 
-	/*2.3.1 Message format in 'pseudo' BNF
-
-  	 The protocol messages must be extracted from the contiguous stream of
-  	 octets.  The current solution is to designate two characters, CR and
-  	 LF, as message separators.   Empty  messages  are  silently  ignored,
-  	 which permits  use  of  the  sequence  CR-LF  between  messages
-  	 without extra problems.
-
-  	 The extracted message is parsed into the components <prefix>,
-  	 <command> and list of parameters matched either by <middle> or
-  	 <trailing> components.
-
-  	 The BNF representation for this is:
-
-
-	<message>  ::= [':' <prefix> <SPACE> ] <command> <params> <crlf>
-	<prefix>   ::= <servername> | <nick> [ '!' <user> ] [ '@' <host> ]
-	<command>  ::= <letter> { <letter> } | <number> <number> <number>
-	<SPACE>    ::= ' ' { ' ' }
-	<params>   ::= <SPACE> [ ':' <trailing> | <middle> <params> ]
-
-	<middle>   ::= <Any *non-empty* sequence of octets not including SPACE
-               or NUL or CR or LF, the first of which may not be ':'>
-	<trailing> ::= <Any, possibly *empty*, sequence of octets not including
-                 NUL or CR or LF>
-
-	<crlf>     ::= CR LF*/
-
-// spæter nochmal genau checken was genau geparset werden musst für jeden cmd
-
 std::string &Parser::getPrefix( void ) {
 	return (this->_prefix);
 }
@@ -95,10 +65,7 @@ void Parser::isValidCommandLine( Client client ) {
 }
 
 void Parser::checkPASS( Client client ) {
-	// prefix check ?
-	std::vector<std::string> checker = this->getParam()
-	std::vector<std::string>::iterator it = this->getParam().begin();
-	if (this->getParam().size() != 1) {
+	if (this->getParam().size() != 1 || this->getTrailing().empty()) {
 		std::string message = SERVER  "" ERR_NEEDMOREPARAMS + client.getNickname() + this->getCMD() + " :Not enough parameters";
 		throw parserErrorException("Invalid Command");
 	}
@@ -106,150 +73,91 @@ void Parser::checkPASS( Client client ) {
 }
 
 void Parser::checkNICK( Client client ) {
-	// prefix check ?
-	std::vector<std::string>::iterator it = this->getParam().begin();
-	if (this->getParam().size() != 1) {
+	if (this->getParam().size() != 1 || this->getTrailing().empty()) {
 		std::string message = SERVER  "" ERR_NEEDMOREPARAMS + client.getNickname() + this->getCMD() + " :Not enough parameters";
 		throw parserErrorException("Invalid Command");
 	}
-	if ( it->length() < 16 )
-		return ;
-	std::string message = SERVER  "" ERR_NEEDMOREPARAMS + client.getNickname() + this->getCMD() + " :Not enough parameters";
-	throw parserErrorException("Invalid Command");
 	return ;
 }
 
 void Parser::checkUSER( Client client ) {
-	// prefix check ?
-	std::vector<std::string> checker = this->getParam();
-	for (std::vector<std::string>::iterator it = checker.begin(); it != checker.end(); it++) {
-		if (*it == "kek") {
-			;
-		}
+	if (this->getParam().size() != 3 || this->getTrailing().empty()) {
+		std::string message = SERVER  "" ERR_NEEDMOREPARAMS + client.getNickname() + this->getCMD() + " :Not enough parameters";
+		throw parserErrorException("Invalid Command");
 	}
-	std::string message = SERVER  "" ERR_NEEDMOREPARAMS + client.getNickname() + this->getCMD() + " :Not enough parameters";
-	throw parserErrorException("Invalid Command");
 	return ;
 }
 
 void Parser::checkQUIT( Client client ) {
-	// prefix check ?
-	std::vector<std::string> checker = this->getParam();
-	for (std::vector<std::string>::iterator it = checker.begin(); it != checker.end(); it++) {
-		if (*it == "kek") {
-
-		}
+	if (!this->getParam().empty()) {
+		std::string message = SERVER  "" ERR_NEEDMOREPARAMS + client.getNickname() + this->getCMD() + " :Not enough parameters";
+		throw parserErrorException("Invalid Command");
 	}
-	std::string message = SERVER  "" ERR_NEEDMOREPARAMS + client.getNickname() + this->getCMD() + " :Not enough parameters";
-	throw parserErrorException("Invalid Command");
 	return ;
 }
 
 void Parser::checkJOIN( Client client ) {
-	// prefix check ?
-	std::vector<std::string> checker = this->getParam();
-	for (std::vector<std::string>::iterator it = checker.begin(); it != checker.end(); it++) {
-		if (*it == "kek") {
-
-		}
-	}
-	std::string message = SERVER  "" ERR_NEEDMOREPARAMS + client.getNickname() + this->getCMD() + " :Not enough parameters";
-	throw parserErrorException("Invalid Command");
+	(void)client;
+	// in progress
 	return ;
 }
 
 void Parser::checkMODE( Client client ) {
-	// prefix check ?
-	std::vector<std::string> checker = this->getParam();
-	for (std::vector<std::string>::iterator it = checker.begin(); it != checker.end(); it++) {
-		if (*it == "kek") {
-
-		}
-	}
-	std::string message = SERVER  "" ERR_NEEDMOREPARAMS + client.getNickname() + this->getCMD() + " :Not enough parameters";
-	throw parserErrorException("Invalid Command");
+	(void)client;
+	// nochmal gucken ob wir multiple parameters erlauben wie +i +o -k etc.
 	return ;
 }
 
 void Parser::checkTOPIC( Client client ) {
-	// prefix check ?
-	std::vector<std::string> checker = this->getParam();
-	for (std::vector<std::string>::iterator it = checker.begin(); it != checker.end(); it++) {
-		if (*it == "kek") {
-
-		}
+	if (this->getParam().size() != 1) {
+		std::string message = SERVER  "" ERR_NEEDMOREPARAMS + client.getNickname() + this->getCMD() + " :Not enough parameters";
+		throw parserErrorException("Invalid Command");
 	}
-	std::string message = SERVER  "" ERR_NEEDMOREPARAMS + client.getNickname() + this->getCMD() + " :Not enough parameters";
-	throw parserErrorException("Invalid Command");
 	return ;
 }
 
 void Parser::checkINVITE( Client client ) {
-	// prefix check ?
-	std::vector<std::string> checker = this->getParam();
-	for (std::vector<std::string>::iterator it = checker.begin(); it != checker.end(); it++) {
-		if (*it == "kek") {
-
-		}
+	if (this->getParam().size() != 2 || !this->getTrailing().empty()) {
+		std::string message = SERVER  "" ERR_NEEDMOREPARAMS + client.getNickname() + this->getCMD() + " :Not enough parameters";
+		throw parserErrorException("Invalid Command");
 	}
-	std::string message = SERVER  "" ERR_NEEDMOREPARAMS + client.getNickname() + this->getCMD() + " :Not enough parameters";
-	throw parserErrorException("Invalid Command");
 	return ;
 }
 
 void Parser::checkKICK( Client client ) {
-	// prefix check ?
-	std::vector<std::string> checker = this->getParam();
-	for (std::vector<std::string>::iterator it = checker.begin(); it != checker.end(); it++) {
-		if (*it == "kek") {
-
-		}
+	if (this->getParam().size() != 2) {
+		std::string message = SERVER  "" ERR_NEEDMOREPARAMS + client.getNickname() + this->getCMD() + " :Not enough parameters";
+		throw parserErrorException("Invalid Command");
 	}
-	std::string message = SERVER  "" ERR_NEEDMOREPARAMS + client.getNickname() + this->getCMD() + " :Not enough parameters";
-	throw parserErrorException("Invalid Command");
 	return ;
 }
 
 void Parser::checkPRIVMSG( Client client ) {
-	// prefix check ?
-	std::vector<std::string> checker = this->getParam();
-	for (std::vector<std::string>::iterator it = checker.begin(); it != checker.end(); it++) {
-		if (*it == "kek") {
-
-		}
+	if (this->getParam().size() != 1 || this->getTrailing().empty()) {
+		std::string message = SERVER  "" ERR_NEEDMOREPARAMS + client.getNickname() + this->getCMD() + " :Not enough parameters";
+		throw parserErrorException("Invalid Command");
 	}
-	std::string message = SERVER  "" ERR_NEEDMOREPARAMS + client.getNickname() + this->getCMD() + " :Not enough parameters";
-	throw parserErrorException("Invalid Command");
+	// split parameter if there is mulitple
 	return ;
 }
 
 void Parser::checkPING( Client client ) {
-	// prefix check ?
-	std::vector<std::string> checker = this->getParam();
-	for (std::vector<std::string>::iterator it = checker.begin(); it != checker.end(); it++) {
-		if (*it == "kek") {
-
-		}
+	if (this->getParam().size() != 1 || !this->getTrailing().empty()) {
+		std::string message = SERVER  "" ERR_NEEDMOREPARAMS + client.getNickname() + this->getCMD() + " :Not enough parameters";
+		throw parserErrorException("Invalid Command");
 	}
-	std::string message = SERVER "" ERR_NEEDMOREPARAMS + client.getNickname() + this->getCMD() + " :Not enough parameters";
-	throw parserErrorException("Invalid Command");
 	return ;
 }
 
 void Parser::checkPART( Client client ) {
-	// prefix check ?
-	std::vector<std::string> checker = this->getParam();
-	for (std::vector<std::string>::iterator it = checker.begin(); it != checker.end(); it++) {
-		if (*it == "kek") {
-
-		}
+	if (this->getParam().size() != 1 || !this->getTrailing().empty()) {
+		std::string message = SERVER  "" ERR_NEEDMOREPARAMS + client.getNickname() + this->getCMD() + " :Not enough parameters";
+		throw parserErrorException("Invalid Command");
 	}
-	std::string message = SERVER  "" ERR_NEEDMOREPARAMS + client.getNickname() + this->getCMD() + " :Not enough parameters";
-	throw parserErrorException("Invalid Command");
+	// split parameter if there is mulitple
 	return ;
 }
 
-// :<server_name> 461 <nick> <command> :Not enough parameters - ERR_NOSUCHPARAM error code
 void Parser::parseMsg( Client client ) {
 	if (this->_input[0] == ':')
 		prefixHandler(this->_input.substr(1, this->_input.find_first_of(' ')));
