@@ -12,7 +12,7 @@ int main (int argc, char **argv) {
 			Server server( argv[1], argv[2]);
 			server.launchServer();
 		}
-		catch(Server::ServerFailException & e)
+		catch(Server::serverFailException & e)
 		{
 			std::cerr << e.what() << '\n';
 			return (1);

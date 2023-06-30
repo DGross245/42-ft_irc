@@ -19,7 +19,6 @@
 #include <sstream>
 #include <Client.hpp>
 #include "Constants.hpp"
-#include "Commands.hpp"
 
 Server::Server( std::string port, std::string password ) {
 	if (port.find_first_not_of("0123456789") == std::string::npos) {
@@ -116,42 +115,43 @@ void Server::addClient( int serverSocketfd, fd_set &readfds ) {
 // @todo add the server class to this function cause all the informations are in that class
 // @todo create a own class for the commands
 void Server::executeMsg( Parser &input, Client client ) {
-	Commands	command;
 	if (input.getCMD() == "CAP") {
 		std::vector<std::string> params = input.getParam();
 		for (std::vector<std::string>::iterator it = params.begin(); it != params.end(); it++) {
 			if (*it == "END") {
 				std::string message = "CAP * ACK :JOIN\r\n";
+				std::cout << "\n-------------------------------------\n" << "sended message:" << RED << message << RESET << std::endl;
 				send(client.getSocketfd(), message.c_str(), message.length(), 0);
 			}
 			else if (*it == "LS") {
 				std::string message = "CAP * LS :JOIN\r\n";
+				std::cout << "\n-------------------------------------\n" << "sended message:" << RED << message << RESET << std::endl;
 				send(client.getSocketfd(), message.c_str(), message.length(), 0);
 			}
 		}
 	}
 	else if (input.getCMD() == "NICK") {
 		std::string message = ":IRCSERV 001 jschneid :Willkommen in der IRC-Welt, jschneid!\r\n";
+		std::cout << "\n-------------------------------------\n" << "sended message:" << RED << message << RESET << std::endl;
 		send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	}
 	else if (input.getCMD() == "USER") {
 		std::string message = ":IRCSERV 001 jschneid :Benutzerinformationen erfolgreich empfangen.\r\n";
+		std::cout << "\n-------------------------------------\n" << "sended message:" << RED << message << RESET << std::endl;
 		send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	}
 	else if (input.getCMD() == "PING") {
 		std::string message = "PONG :127.0.0.1";
+		std::cout << "\n-------------------------------------\n" << "sended message:" << RED << message << RESET << std::endl;
 		send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	}
 	else if (input.getCMD() == "JOIN") {
-		command.join();
-        // joinChannel(input.getParam()[0], client);
-        // std::string joinMessageClient = ":jschneid JOIN #test\r\n";
-        // std::string switchBuffer = "/buffer #test\r\n";
-        // // std::string message = ":jschneid PRIVMSG #test :Hello, everyone!\r\n";
-        // send(client.getSocketfd(), joinMessageClient.c_str(), joinMessageClient.length(), 0);
-        // send(client.getSocketfd(), switchBuffer.c_str(), switchBuffer.length(), 0);
-        // // send(client, message.c_str(), message.length(), 0);
-    }
+		std::cout << "Join command gets executed" << std::endl;
+		joinChannel(input.getParam()[0], client.getSocketfd());
+		std::string message = ":irc JOIN #test";
+		std::cout << "\n-------------------------------------\n" << "sended message:" << RED << message << RESET << std::endl;
+		send(client.getSocketfd(), message.c_str(), message.length(), 0);
+	}
 	return ;
 }
 
@@ -172,7 +172,7 @@ void Server::joinChannel( std::string channelName, Client user) {
 		this->_channel.end()->addUser( user );
 	}
 	else {
-		if (this->_channel[i].canUserJoin( user )) {
+		if (this->_channel[i].canUserJoin( user )) { 
 			this->_channel[i].addUser( user );
 			// delete user from invite list
 		}
@@ -195,6 +195,8 @@ void Server::readMsg( Client client, int i) {
 	char buffer[1024];
 	ssize_t bytes_read;
 	bytes_read = ::recv(client.getSocketfd(), buffer, sizeof(buffer), 0);
+	std::cout << "\n-------------------------------------" << std::endl;
+	std::cout <<"Recived msg: \n	" << ORANGE << buffer << RESET << std::endl;
 	if (bytes_read == -1)
 		throw serverFailException("recv Error");
 	else if (bytes_read == 0) {

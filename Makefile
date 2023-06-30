@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: dgross <dgross@student.42.fr>              +#+  +:+       +#+         #
+#    By: jschneid <jschneid@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/05/31 08:49:39 by dgross            #+#    #+#              #
-#    Updated: 2023/06/27 10:33:30 by dgross           ###   ########.fr        #
+#    Updated: 2023/06/30 14:10:09 by jschneid         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -18,12 +18,14 @@ SRC				= main.cpp\
 				  Server.cpp\
 				  Client.cpp \
 				  Channel.cpp \
-				  Parser.cpp
+				  Parser.cpp \
+				  Commands.cpp
 
 HEADER			= Channel.hpp \
 				  Client.hpp \
 				  Server.hpp \
-				  Parser.hpp
+				  Parser.hpp \
+				  Commands.hpp
 
 OBJ_DIR			= ./obj/
 
