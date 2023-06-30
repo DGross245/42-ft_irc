@@ -4,14 +4,7 @@
 #include "Constants.hpp"
 #include "Client.hpp"
 #include <vector>
-
-std::string &Parser::getPrefix( void ) {
-	return (this->_prefix);
-}
-
-std::string &Parser::getTrailing( void ) {
-	return (this->_trailing);
-}
+#include <sys/socket.h>
 
 Parser::Parser( std::string buffer, Client client ) {
 	size_t pos = buffer.find("\r\n");
@@ -24,6 +17,19 @@ Parser::Parser( std::string buffer, Client client ) {
 	return ;
 }
 
+
+Parser::~Parser( void ) {
+	return ;
+}
+
+std::string &Parser::getPrefix( void ) {
+	return (this->_prefix);
+}
+
+std::string &Parser::getTrailing( void ) {
+	return (this->_trailing);
+}
+
 std::string &Parser::getCMD( void ) {
 	return (this->_command);
 }
@@ -32,9 +38,6 @@ std::vector<std::string> &Parser::getParam( void ) {
 	return (this->_parameter);
 }
 
-Parser::~Parser( void ) {
-	return ;
-}
 
 void Parser::isValidCommandLine( Client client ) {
 	if (this->getCMD() == "PASS")
@@ -64,97 +67,82 @@ void Parser::isValidCommandLine( Client client ) {
 	return ;
 }
 
+void Parser::sendError( Client client ) {
+	std::string message = SERVER  "" ERR_NEEDMOREPARAMS + client.getNickname() + " " + this->getCMD() + " :Not enough parameters";
+	send(client.getSocketfd(), message.c_str(), message.length(), 0);
+	throw parserErrorException("Invalid Command");
+	return ;
+}
+
 void Parser::checkPASS( Client client ) {
-	if (this->getParam().size() != 1 || this->getTrailing().empty()) {
-		std::string message = SERVER  "" ERR_NEEDMOREPARAMS + client.getNickname() + this->getCMD() + " :Not enough parameters";
-		throw parserErrorException("Invalid Command");
-	}
+	if (this->getParam().size() != 1 || this->getTrailing().empty())
+		sendError( client );
 	return ;
 }
 
 void Parser::checkNICK( Client client ) {
-	if (this->getParam().size() != 1 || this->getTrailing().empty()) {
-		std::string message = SERVER  "" ERR_NEEDMOREPARAMS + client.getNickname() + this->getCMD() + " :Not enough parameters";
-		throw parserErrorException("Invalid Command");
-	}
+	if (this->getParam().size() != 1 || this->getTrailing().empty())
+		sendError( client );
 	return ;
 }
 
 void Parser::checkUSER( Client client ) {
-	if (this->getParam().size() != 3 || this->getTrailing().empty()) {
-		std::string message = SERVER  "" ERR_NEEDMOREPARAMS + client.getNickname() + this->getCMD() + " :Not enough parameters";
-		throw parserErrorException("Invalid Command");
-	}
+	if (this->getParam().size() != 3 || this->getTrailing().empty())
+		sendError( client );
 	return ;
 }
 
 void Parser::checkQUIT( Client client ) {
-	if (!this->getParam().empty()) {
-		std::string message = SERVER  "" ERR_NEEDMOREPARAMS + client.getNickname() + this->getCMD() + " :Not enough parameters";
-		throw parserErrorException("Invalid Command");
-	}
+	if (!this->getParam().empty())
+		sendError( client );
 	return ;
 }
 
 void Parser::checkJOIN( Client client ) {
-	(void)client;
-	// in progress
+	if (this->getParam().size() < 1 || this->getParam().size() > 2 || !this->getTrailing().empty())
+		sendError( client );
 	return ;
 }
 
 void Parser::checkMODE( Client client ) {
-	(void)client;
-	// nochmal gucken ob wir multiple parameters erlauben wie +i +o -k etc.
+	if (this->getParam().size() < 1 || this->getParam().size() > 4 || !this->getTrailing().empty())
+		sendError( client );
 	return ;
 }
 
 void Parser::checkTOPIC( Client client ) {
-	if (this->getParam().size() != 1) {
-		std::string message = SERVER  "" ERR_NEEDMOREPARAMS + client.getNickname() + this->getCMD() + " :Not enough parameters";
-		throw parserErrorException("Invalid Command");
-	}
+	if (this->getParam().size() != 1)
+		sendError( client );
 	return ;
 }
 
 void Parser::checkINVITE( Client client ) {
-	if (this->getParam().size() != 2 || !this->getTrailing().empty()) {
-		std::string message = SERVER  "" ERR_NEEDMOREPARAMS + client.getNickname() + this->getCMD() + " :Not enough parameters";
-		throw parserErrorException("Invalid Command");
-	}
+	if (this->getParam().size() != 2 || !this->getTrailing().empty())
+		sendError( client );
 	return ;
 }
 
 void Parser::checkKICK( Client client ) {
-	if (this->getParam().size() != 2) {
-		std::string message = SERVER  "" ERR_NEEDMOREPARAMS + client.getNickname() + this->getCMD() + " :Not enough parameters";
-		throw parserErrorException("Invalid Command");
-	}
+	if (this->getParam().size() != 2)
+		sendError( client );
 	return ;
 }
 
 void Parser::checkPRIVMSG( Client client ) {
-	if (this->getParam().size() != 1 || this->getTrailing().empty()) {
-		std::string message = SERVER  "" ERR_NEEDMOREPARAMS + client.getNickname() + this->getCMD() + " :Not enough parameters";
-		throw parserErrorException("Invalid Command");
-	}
-	// split parameter if there is mulitple
+	if (this->getParam().size() != 1 || this->getTrailing().empty())
+		sendError( client );
 	return ;
 }
 
 void Parser::checkPING( Client client ) {
-	if (this->getParam().size() != 1 || !this->getTrailing().empty()) {
-		std::string message = SERVER  "" ERR_NEEDMOREPARAMS + client.getNickname() + this->getCMD() + " :Not enough parameters";
-		throw parserErrorException("Invalid Command");
-	}
+	if (this->getParam().size() != 1 || !this->getTrailing().empty())
+		sendError( client );
 	return ;
 }
 
 void Parser::checkPART( Client client ) {
-	if (this->getParam().size() != 1 || !this->getTrailing().empty()) {
-		std::string message = SERVER  "" ERR_NEEDMOREPARAMS + client.getNickname() + this->getCMD() + " :Not enough parameters";
-		throw parserErrorException("Invalid Command");
-	}
-	// split parameter if there is mulitple
+	if (this->getParam().size() != 1 || !this->getTrailing().empty())
+		sendError( client );
 	return ;
 }
 

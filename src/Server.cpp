@@ -131,12 +131,12 @@ void Server::executeMsg( Parser &input, Client client ) {
 		}
 	}
 	else if (input.getCMD() == "NICK") {
-		std::string message = ":IRCSERV 001 jschneid :Willkommen in der IRC-Welt, jschneid!\r\n";
+		std::string message = ":IRCSERV 001 dgross :Willkommen in der IRC-Welt, dgross!\r\n";
 		std::cout << "\n-------------------------------------\n" << "sended message:" << RED << message << RESET << std::endl;
 		send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	}
 	else if (input.getCMD() == "USER") {
-		std::string message = ":IRCSERV 001 jschneid :Benutzerinformationen erfolgreich empfangen.\r\n";
+		std::string message = ":IRCSERV 001 dgross :Benutzerinformationen erfolgreich empfangen.\r\n";
 		std::cout << "\n-------------------------------------\n" << "sended message:" << RED << message << RESET << std::endl;
 		send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	}

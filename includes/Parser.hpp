@@ -19,6 +19,8 @@ public:
 	void paramHandler( std::string Param );
 	void trailingHandler( std::string trailing );
 	void isValidCommandLine( Client client  );
+	void sendError( Client client);
+	void splitParam( void );
 
 	void checkPASS( Client client );
 	void checkNICK( Client client );
