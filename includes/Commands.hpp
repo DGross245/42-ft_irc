@@ -16,7 +16,7 @@ public:
 	~Commands(void);
 
 	//Member functions
-	void	join();
+	void	join(Parser &input, Client client, std::vector<Channel> channels);
 
 	class commandFailException : std::exception {
 

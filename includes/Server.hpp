@@ -29,6 +29,7 @@ public:
 	std::string	getPassword( void );
 	int			getPort( void );
 	int			getMaxfd( fd_set &readfds );
+	std::vector<Channel>	&getChannels(void);
 	void		setPort( int port );
 	void		setPassword( std::string &password );
 	void		setTime( void );

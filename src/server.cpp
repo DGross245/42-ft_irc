@@ -61,6 +61,10 @@ std::string Server::getPassword( void ) {
 	return (this->_password);
 }
 
+std::vector<Channel>	&Server::getChannels(void) {
+	return (this->_channel);
+}
+
 void Server::setPort( int port ) {
 	this->_port = port;
 	return ;
@@ -143,44 +147,47 @@ void Server::executeMsg( Parser &input, Client client ) {
 		send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	}
 	else if (input.getCMD() == "JOIN") {
-		command.join();
+		command.join(input, client, this->getChannels());
         // joinChannel(input.getParam()[0], client);
         // std::string joinMessageClient = ":jschneid JOIN #test\r\n";
         // std::string switchBuffer = "/buffer #test\r\n";
         // // std::string message = ":jschneid PRIVMSG #test :Hello, everyone!\r\n";
         // send(client.getSocketfd(), joinMessageClient.c_str(), joinMessageClient.length(), 0);
         // send(client.getSocketfd(), switchBuffer.c_str(), switchBuffer.length(), 0);
-        // // send(client, message.c_str(), message.length(), 0);
+        // send(client, message.c_str(), message.length(), 0);
     }
 	return ;
 }
 
-int Server::searchForChannel( std::string channelName ) {
-	for (std::vector<Channel>::iterator iterator = this->_channel.begin(); iterator != this->_channel.end(); iterator++ ) {
-		if (iterator->getChannelName() == channelName )
-			return (std::distance(this->_channel.begin(), iterator));
-	}
-	return (-1);
-}
+// !!!!! This functin is moved to commands class !!!!!!!!
+// int Server::searchForChannel( std::string channelName ) {
+// 	for (std::vector<Channel>::iterator iterator = this->_channel.begin(); iterator != this->_channel.end(); iterator++ ) {
+// 		if (iterator->getChannelName() == channelName )
+// 			return (std::distance(this->_channel.begin(), iterator));
+// 	}
+// 	return (-1);
+// }
 
-void Server::joinChannel( std::string channelName, Client user) {
-	int	i = searchForChannel( channelName );
-	if (i < 0) {
-		// creating the channel if the channel does not exist
-		this->_channel.push_back(Channel ( channelName, user ));
-		this->_channel.end()->setSettings();
-		this->_channel.end()->addUser( user );
-	}
-	else {
-		if (this->_channel[i].canUserJoin( user )) {
-			this->_channel[i].addUser( user );
-			// delete user from invite list
-		}
-		else
-			; // Nachricht an Client : Invited only, can't join!
-	}
-	return ;
-}
+// !!!!! This functin is moved to commands class !!!!!!!!
+// void Server::joinChannel( std::string channelName, Client user) {
+// 	int	i = searchForChannel( channelName );
+// 	if (i < 0) {
+// 		// creating the channel if the channel does not exist
+// 		this->_channel.push_back(Channel ( channelName, user ));
+// 		this->_channel.end()->setSettings();
+// 		this->_channel.end()->addUser( user );
+// 	}
+// 	else {
+// 		if (this->_channel[i].canUserJoin( user )) {
+// 			this->_channel[i].addUser( user );
+// 			// delete user from invite list
+// 		}
+// 		else
+// 			; // Nachricht an Client : Invited only, can't join!
+// 	}
+// 	return ;
+// }
+
 static void Sprinter( Parser parser) {
 	std::cout << "Prefix:" << parser.getPrefix() << std::endl;
 	std::cout << "Command:" << parser.getCMD() << std::endl;
