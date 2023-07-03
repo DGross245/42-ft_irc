@@ -66,6 +66,42 @@ void Commands::join(Parser &input, Client client, std::vector<Channel> channels)
 	send(client.getSocketfd(), switchBuffer.c_str(), switchBuffer.length(), 0);
 }
 
+// function handleNickCommand(client, newNickname):
+//     if newNickname is empty:
+//         sendNumericResponse(client, 431, "No nickname given")
+//     else if newNickname is invalid:
+//         sendNumericResponse(client, 432, newNickname + " :Erroneous nickname")
+//     else if newNickname is already in use:
+//         sendNumericResponse(client, 433, newNickname + " :Nickname is already in use")
+//     else:
+//         if client has an existing nickname:
+//             oldNickname = client.nickname
+//             updateClientNickname(client, newNickname)
+//             broadcastNicknameChange(oldNickname, newNickname)
+//         else:
+//             setClientNickname(client, newNickname)
+//             sendWelcomeMessage(client)
+// Numeric Response 431: :No nickname given
+
+// This message indicates that you did not provide a nickname after the NICK command. You need to specify a nickname to set or change.
+// Numeric Response 432: :<nickname> :Erroneous nickname
+
+// If the nickname you provided is invalid (e.g., contains spaces or special characters), the server will respond with this message.
+// Numeric Response 433: :<nickname> :Nickname is already in use
+
+// As mentioned before, this response indicates that the nickname you requested is already in use by another user. You will need to choose a different nickname.
+// Numeric Response 436: :<nickname> :Nickname collision KILL
+
+// In case there is a conflict between two users trying to use the same nickname, the server may force one of them to change their nickname to resolve the collision. This response informs you that your nickname has been changed.
+
+
+void Commands::nick(Parser &input, Client &client){
+	std::cout << "nickname right now: " << client.getNickname() << std::endl;
+	std::cout << "the nickname is set to: " << input.getParam()[0] << std::endl;
+	std::cout << "nickname after: " << client.getNickname() << std::endl;
+	client.setNickname(input.getParam()[0]);
+}
+
 Commands::commandFailException::~commandFailException( void ) throw() { return ;	}
 Commands::commandFailException::commandFailException( std::string error ) : _error(error) { return ; }
 const char *Commands::commandFailException::what() const throw() { return (this->_error.c_str());}
