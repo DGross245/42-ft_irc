@@ -19,7 +19,6 @@
 #include <sstream>
 #include <Client.hpp>
 #include "Constants.hpp"
-#include "Commands.hpp"
 
 Server::Server( std::string port, std::string password ) {
 	if (port.find_first_not_of("0123456789") == std::string::npos) {
