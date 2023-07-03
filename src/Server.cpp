@@ -19,6 +19,7 @@
 #include <sstream>
 #include <Client.hpp>
 #include "Constants.hpp"
+#include "Commands.hpp"
 
 Server::Server( std::string port, std::string password ) {
 	if (port.find_first_not_of("0123456789") == std::string::npos) {
@@ -155,6 +156,9 @@ void Server::executeMsg( Parser &input, Client client ) {
         // send(client.getSocketfd(), switchBuffer.c_str(), switchBuffer.length(), 0);
         // send(client, message.c_str(), message.length(), 0);
     }
+	else if (input.getCMD() == "PASS") {
+		command.pass(input, client , this->getPassword());
+	}
 	return ;
 }
 

@@ -75,7 +75,7 @@ void Parser::sendError( Client client ) {
 }
 
 void Parser::checkPASS( Client client ) {
-	if (this->getParam().size() != 1 || this->getTrailing().empty())
+	if (this->getParam().size() != 1 || !this->getTrailing().empty())
 		sendError( client );
 	return ;
 }

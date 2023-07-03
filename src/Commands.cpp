@@ -1,13 +1,14 @@
-# include <exception>
-# include <iostream>
-# include <string>
-# include <vector>
-# include <sys/types.h>
-# include <Channel.hpp>
-# include <Parser.hpp>
-# include <sys/time.h>
+#include <exception>
+#include <iostream>
+#include <string>
+#include <vector>
+#include <sys/types.h>
+#include <Channel.hpp>
+#include <Parser.hpp>
+#include <sys/time.h>
 #include "Commands.hpp"
 #include <sys/socket.h>
+#include "Constants.hpp"
 
 Commands::Commands() {
 	return ;
@@ -25,7 +26,7 @@ static int	searchForChannel( std::string channelName, std::vector<Channel> chann
 	return (-1);
 }
 
-static void joinChannel( std::string channelName, Client user, std::vector<Channel> channels) {
+void joinChannel( std::string channelName, Client user, std::vector<Channel> channels) {
 	int	i = searchForChannel( channelName, channels);
 	if (i < 0) {
 		// creating the channels if the channels does not exist
@@ -40,6 +41,18 @@ static void joinChannel( std::string channelName, Client user, std::vector<Chann
 		}
 		else
 			; // Nachricht an Client : Invited only, can't join!
+	}
+	return ;
+}
+
+void Commands::pass( Parser &input, Client client, std::string password ) {
+	if (*input.getParam().begin() == password) {
+		std::cout << "PW accepted!" << std::endl;
+		return ;
+	}
+	else {
+		std::string message = SERVER " " ERR_PASSWDMISMATCH " dgross :Wrong Password\r\n";
+		send(client.getSocketfd(), message.c_str(), sizeof(message), 0);
 	}
 	return ;
 }

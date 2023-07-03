@@ -16,7 +16,8 @@ public:
 	~Commands(void);
 
 	//Member functions
-	void	join(Parser &input, Client client, std::vector<Channel> channels);
+	static void	join(Parser &input, Client client, std::vector<Channel> channels);
+	static void	pass(Parser &input, Client client, std::string password);
 
 	class commandFailException : std::exception {
 

@@ -19,6 +19,7 @@ public:
 	void setUsername( std::string username );
 	int getSocketfd( void );
 
+	int Authentication( void );
 	class clientFailException : std::exception {
 	
 	public:

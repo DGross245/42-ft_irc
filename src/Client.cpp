@@ -39,6 +39,17 @@ int Client::getSocketfd( void ) {
 	return (this->_socketfd);
 }
 
+int Client::Authentication( void ) {
+	if (!this->getAuthentication()) {
+		if (this->getNickname().empty())
+			return (0);
+		if (this->getUsername().empty())
+			return (0);
+	}
+	this->setAuthentication( true );
+	return (1);
+}
+
 Client::clientFailException::~clientFailException( void ) throw() { return ;	}
 Client::clientFailException::clientFailException( std::string error ) : _error(error) { return ; }
 const char *Client::clientFailException::what() const throw() { return (this->_error.c_str());}
