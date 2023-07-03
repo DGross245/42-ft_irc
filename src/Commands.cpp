@@ -59,7 +59,7 @@ void Commands::pass( Parser &input, Client client, std::string password ) {
 
 void Commands::join(Parser &input, Client client, std::vector<Channel> channels){
 	// std::cout << "join command called" << std::endl;
-	std::string joinMessageClient = ":jschneid JOIN #test\r\n";
+	std::string joinMessageClient = ":dgross JOIN #test\r\n";
 	std::string switchBuffer = "/buffer #test\r\n";
 	joinChannel(input.getParam()[0], client, channels);
 	send(client.getSocketfd(), joinMessageClient.c_str(), joinMessageClient.length(), 0);

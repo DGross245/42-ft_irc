@@ -121,6 +121,8 @@ void Server::addClient( int serverSocketfd, fd_set &readfds ) {
 // @todo create a own class for the commands
 void Server::executeMsg( Parser &input, Client client ) {
 	Commands	command;
+
+	std::cout << "kek" << std::endl;
 	if (input.getCMD() == "CAP") {
 		std::vector<std::string> params = input.getParam();
 		for (std::vector<std::string>::iterator it = params.begin(); it != params.end(); it++) {
@@ -135,11 +137,11 @@ void Server::executeMsg( Parser &input, Client client ) {
 		}
 	}
 	else if (input.getCMD() == "NICK") {
-		std::string message = ":IRCSERV 001 jschneid :Willkommen in der IRC-Welt, jschneid!\r\n";
+		std::string message = ":IRCSERV 001 dgross :Willkommen in der IRC-Welt, dgross!\r\n";
 		send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	}
 	else if (input.getCMD() == "USER") {
-		std::string message = ":IRCSERV 001 jschneid :Benutzerinformationen erfolgreich empfangen.\r\n";
+		std::string message = ":IRCSERV 001 dgross :Benutzerinformationen erfolgreich empfangen.\r\n";
 		send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	}
 	else if (input.getCMD() == "PING") {
@@ -149,9 +151,9 @@ void Server::executeMsg( Parser &input, Client client ) {
 	else if (input.getCMD() == "JOIN") {
 		command.join(input, client, this->getChannels());
         // joinChannel(input.getParam()[0], client);
-        // std::string joinMessageClient = ":jschneid JOIN #test\r\n";
+        // std::string joinMessageClient = ":dgross JOIN #test\r\n";
         // std::string switchBuffer = "/buffer #test\r\n";
-        // // std::string message = ":jschneid PRIVMSG #test :Hello, everyone!\r\n";
+        // // std::string message = ":dgross PRIVMSG #test :Hello, everyone!\r\n";
         // send(client.getSocketfd(), joinMessageClient.c_str(), joinMessageClient.length(), 0);
         // send(client.getSocketfd(), switchBuffer.c_str(), switchBuffer.length(), 0);
         // send(client, message.c_str(), message.length(), 0);

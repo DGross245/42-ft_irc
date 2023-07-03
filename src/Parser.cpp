@@ -70,7 +70,7 @@ void Parser::isValidCommandLine( Client client ) {
 void Parser::sendError( Client client ) {
 	std::string message = SERVER  "" ERR_NEEDMOREPARAMS + client.getNickname() + " " + this->getCMD() + " :Not enough parameters";
 	send(client.getSocketfd(), message.c_str(), message.length(), 0);
-	throw parserErrorException("Invalid Command");
+	throw parserErrorException("Invalid Command " + this->getCMD());
 	return ;
 }
 
@@ -81,7 +81,7 @@ void Parser::checkPASS( Client client ) {
 }
 
 void Parser::checkNICK( Client client ) {
-	if (this->getParam().size() != 1 || this->getTrailing().empty())
+	if (this->getParam().size() != 1 || !this->getTrailing().empty())
 		sendError( client );
 	return ;
 }
