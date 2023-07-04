@@ -9,6 +9,7 @@
 #include "Commands.hpp"
 #include <sys/socket.h>
 #include "Constants.hpp"
+#include <unistd.h>
 
 Commands::Commands() {
 	return ;
@@ -52,8 +53,50 @@ void Commands::pass( Parser &input, Client client, std::string password ) {
 	}
 	else {
 		std::string message = SERVER " " ERR_PASSWDMISMATCH " dgross :Wrong Password\r\n";
-		send(client.getSocketfd(), message.c_str(), sizeof(message), 0);
+		send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	}
+	return ;
+}
+
+void Commands::privmsg( Parser &input, Client client, std::vector<Client> connections) {
+	std::string receiver = input.getParam()[0];
+	std::string message;
+
+	if (receiver.at(0) == '#') {
+		//send to channel
+		// check for invite only
+		// send msg to Channel
+		message = ERR_NOSUCHCHANNEL " " + receiver + " :No such channel\r\n";
+	}
+	else {
+		for (std::vector<Client>::iterator it = connections.begin(); it != connections.end(); it++) {
+			if (it->getNickname() == receiver) {
+				std::cout << "found" << std::endl;
+				message = input.getTrailing() + "\r\n";
+				send(it->getSocketfd(), message.c_str(), message.length(), 0);
+				return ;
+			}
+		}
+		message = ERR_NOSUCHNICK " " + receiver + " :No such nickname\r\n";
+	}
+	send(client.getSocketfd(), message.c_str(), message.length(), 0);
+	return ;
+}
+
+void Commands::quit( Parser &input, Client client, std::vector<Channel> channels) {
+	for (std::vector<Channel>::iterator channelIterator = channels.begin(); channelIterator != channels.end(); channelIterator++) {
+		std::vector<Client> clientCopy = channelIterator->getClients();
+		for (std::vector<Client>::iterator clientIterator = clientCopy.begin(); clientIterator != clientCopy.end(); clientIterator++) {
+			if (clientIterator->getSocketfd() == client.getSocketfd())
+				clientCopy.erase(clientIterator);
+		}
+		for (std::vector<Client>::iterator invitedIterator = clientCopy.begin(); invitedIterator != clientCopy.end(); invitedIterator++) {
+			if (invitedIterator->getSocketfd() == client.getSocketfd())
+				clientCopy.erase(invitedIterator);
+		}
+	}
+	(void)input;
+	//nachricht an alle schicken im channel
 	return ;
 }
 

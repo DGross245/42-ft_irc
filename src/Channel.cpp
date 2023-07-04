@@ -43,6 +43,14 @@ std::string Channel::getChannelName( void ) {
 	return (this->_name);
 }
 
+std::vector<Client> &Channel::getClients( void ) {
+	return (this->_clients);
+}
+
+std::vector<Client> &Channel::getInviteList( void ) {
+	return (this->_invited);
+}
+
 int	Channel::searchforUser( Client user ) {
 	for (std::vector<Client>::iterator iterator = this->_invited.begin(); iterator != this->_invited.end(); iterator++ ) {
 		if (iterator->getUsername() == user.getUsername() ) { // vlt anstatt username id nehmen (macht vlt auch kein unterschied)

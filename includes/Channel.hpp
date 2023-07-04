@@ -17,12 +17,14 @@ public:
 	void addUser( Client user );
 	void setSettings( void );
 	int searchforUser( Client user );
+	bool canUserJoin( Client user );
+	void setFounder( Client &Founder );
 
 	void setTopic( std::string topic, Client client );
 	std::string getTopic( void );
 	std::string getChannelName( void );
-	bool canUserJoin( Client user );
-	void setFounder( Client &Founder );
+	std::vector<Client> &getClients( void );
+	std::vector<Client> &getInviteList( void );
 
 	class channelFailException : std::exception {
 	

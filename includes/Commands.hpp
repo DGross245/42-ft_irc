@@ -18,6 +18,8 @@ public:
 	//Member functions
 	static void	join(Parser &input, Client client, std::vector<Channel> channels);
 	static void	pass(Parser &input, Client client, std::string password);
+	static void privmsg(Parser &input, Client client, std::vector<Client> connections);
+	static void quit(Parser &input, Client client, std::vector<Channel> channels);
 
 	class commandFailException : std::exception {
 

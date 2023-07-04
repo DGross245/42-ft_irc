@@ -61,8 +61,12 @@ std::string Server::getPassword( void ) {
 	return (this->_password);
 }
 
-std::vector<Channel>	&Server::getChannels(void) {
+std::vector<Channel> &Server::getChannels(void) {
 	return (this->_channel);
+}
+
+std::vector<Client>	&Server::getConnections(void) {
+	return (this->_connections);
 }
 
 void Server::setPort( int port ) {
@@ -122,7 +126,6 @@ void Server::addClient( int serverSocketfd, fd_set &readfds ) {
 void Server::executeMsg( Parser &input, Client client ) {
 	Commands	command;
 
-	std::cout << "kek" << std::endl;
 	if (input.getCMD() == "CAP") {
 		std::vector<std::string> params = input.getParam();
 		for (std::vector<std::string>::iterator it = params.begin(); it != params.end(); it++) {
@@ -160,6 +163,12 @@ void Server::executeMsg( Parser &input, Client client ) {
     }
 	else if (input.getCMD() == "PASS") {
 		command.pass(input, client , this->getPassword());
+	}
+	else if (input.getCMD() == "QUIT") {
+		command.quit(input, client, this->getChannels());
+	}
+	else if (input.getCMD() == "PRIVMSG") {
+		command.privmsg(input, client, this->getConnections());
 	}
 	return ;
 }

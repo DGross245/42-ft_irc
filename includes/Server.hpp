@@ -34,6 +34,7 @@ public:
 	void		setPassword( std::string &password );
 	void		setTime( void );
 	void		setServerfd( int serverSocketfd );
+	std::vector<Client>		&getConnections( void );
 
 	class serverFailException : std::exception {
 
