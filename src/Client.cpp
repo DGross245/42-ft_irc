@@ -22,7 +22,7 @@ std::string Client::getUsername( void ) {
 	return (this->_username) ;
 }
 
-std::string Client::getNickname( void ) {
+std::string Client::getNickname( void ) const{
 	return (this->_nickname);
 }
 

@@ -12,7 +12,7 @@ public:
 	~Client( void );
 
 	std::string getUsername( void );
-	std::string getNickname( void );
+	std::string getNickname( void ) const;
 	bool getAuthentication( void );
 	void setAuthentication( bool authentication );
 	void setNickname( std::string nickname );
@@ -21,7 +21,7 @@ public:
 
 	int Authentication( void );
 	class clientFailException : std::exception {
-	
+
 	public:
 
 		clientFailException( std::string error );

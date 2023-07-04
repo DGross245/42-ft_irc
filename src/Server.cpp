@@ -65,6 +65,10 @@ std::vector<Channel>	&Server::getChannels(void) {
 	return (this->_channel);
 }
 
+std::vector<Client>		&Server::getClients(void) {
+	return (this->_connections);
+}
+
 void Server::setPort( int port ) {
 	this->_port = port;
 	return ;
@@ -134,7 +138,7 @@ void Server::executeMsg( Parser &input, Client &client ) {
 		}
 	}
 	else if (input.getCMD() == "NICK") {
-		command.nick(input, client);
+		command.nick(input, client, this->getClients());
 	}
 	else if (input.getCMD() == "USER") {
 		std::string message = ":IRCSERV 001 dgross :Benutzerinformationen erfolgreich empfangen.\r\n";
@@ -156,6 +160,9 @@ void Server::executeMsg( Parser &input, Client &client ) {
     }
 	else if (input.getCMD() == "PASS") {
 		command.pass(input, client , this->getPassword());
+	}
+	else if (input.getCMD() == "TOPIC") {\
+		command.topic(client);
 	}
 	return ;
 }

@@ -95,11 +95,69 @@ void Commands::join(Parser &input, Client client, std::vector<Channel> channels)
 // In case there is a conflict between two users trying to use the same nickname, the server may force one of them to change their nickname to resolve the collision. This response informs you that your nickname has been changed.
 
 
-void Commands::nick(Parser &input, Client &client){
-	std::cout << "nickname right now: " << client.getNickname() << std::endl;
-	std::cout << "the nickname is set to: " << input.getParam()[0] << std::endl;
-	std::cout << "nickname after: " << client.getNickname() << std::endl;
+
+bool isAlphaNumeric(std::string& str) {
+	for (std::string::const_iterator it = str.begin(); it != str.end(); ++it) {
+		if (!std::isalnum(*it)) {
+			return false;
+		}
+	}
+	return true;
+}
+
+bool isNicknameUnique(const std::vector<Client>& connections, std::string& nickname) {
+	for (std::vector<Client>::size_type i = 0; i < connections.size(); ++i) {
+
+		std::cout << "Connected Clients: " << connections.size() << std::endl;
+		std::cout << connections[i].getNickname() << " == " << nickname << std::endl;
+
+		if (connections[i].getNickname() == nickname) {
+			std::cout << "name is doch schon vergeben hör mal" << std::endl;
+			return true; // Nickname already exists
+		}
+	}
+	std::cout << "alles tippi toppi" << std::endl;
+	return false; // Nickname is unique
+}
+
+bool checkNickname(std::string& nickname, const std::vector<Client>& connections) {
+	if (nickname.size() > 10) {
+		std::cout << "name zu lang" << std::endl;
+		return false;
+	}
+	else if (!isAlphaNumeric(nickname)) {
+		std::cout << "name darf nur aus namen und buchstaaben bestehen" << std::endl;
+		return false;
+	}
+	else if (isNicknameUnique(connections, nickname)) {
+		std::cout << "name schon vergeben" << std::endl;
+		return false;
+	}
+	return true;
+}
+
+// finish the join message with all variables
+void Commands::nick(Parser& input, Client& client, std::vector<Client>& connections) {
+	if (!checkNickname(input.getParam()[0], connections)) {
+		std::cout << "Invalid nickname!" << std::endl;
+		return;
+	}
 	client.setNickname(input.getParam()[0]);
+	std::string servername = "SERVERNAME";
+	std::string user = "USER";
+	std::string host = "HOST";
+	std::string joinMessageClient = ":" + servername + " 001 " + client.getNickname() +
+	" :Welcome to the Internet Relay Network " + client.getNickname() + "!" + user + "@" + host + "\r\n";
+	send(client.getSocketfd(), joinMessageClient.c_str(), joinMessageClient.length(), 0);
+}
+
+void Commands::topic(Client& client){
+	std::string user = "jschneid";
+	std::string channel = "#test";
+	std::string newTopic = "is ja voll kacke hier";
+	std::string topicMessageClient = ":" + user + " TOPIC " + channel + " :" + newTopic;
+	send(client.getSocketfd(), topicMessageClient.c_str(), topicMessageClient.length(), 0);
+	std::cout << "topic command" << std::endl;
 }
 
 Commands::commandFailException::~commandFailException( void ) throw() { return ;	}
