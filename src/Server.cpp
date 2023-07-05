@@ -23,7 +23,7 @@
 
 Server::Server( std::string port, std::string password ) {
 	if (port.find_first_not_of("0123456789") == std::string::npos) {
-		int _port = static_cast<int>( strtod(port.c_str(), nullptr) );
+		int _port = static_cast<int>( strtod(port.c_str(), NULL) );
 		int overflowCheck;
 
 		std::stringstream ss(port);
@@ -168,7 +168,10 @@ void Server::executeMsg( Parser &input, Client client ) {
 		command.quit(input, client, this->getChannels());
 	}
 	else if (input.getCMD() == "PRIVMSG") {
-		command.privmsg(input, client, this->getConnections());
+		command.privmsg(input, client, this->getConnections(), this->getChannels());
+	}
+	else if (input.getCMD() == "KICK") {
+		command.kick(input, client, this->getChannels());
 	}
 	return ;
 }
