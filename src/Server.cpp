@@ -141,8 +141,7 @@ void Server::executeMsg( Parser &input, Client &client ) {
 		command.nick(input, client, this->getClients());
 	}
 	else if (input.getCMD() == "USER") {
-		std::string message = ":IRCSERV 001 dgross :Benutzerinformationen erfolgreich empfangen.\r\n";
-		send(client.getSocketfd(), message.c_str(), message.length(), 0);
+		command.user(input);
 	}
 	else if (input.getCMD() == "PING") {
 		std::string message = "PONG :127.0.0.1";
@@ -162,7 +161,7 @@ void Server::executeMsg( Parser &input, Client &client ) {
 		command.pass(input, client , this->getPassword());
 	}
 	else if (input.getCMD() == "TOPIC") {\
-		command.topic(client);
+		// command.topic(client);
 	}
 	return ;
 }

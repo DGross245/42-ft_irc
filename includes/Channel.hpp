@@ -25,7 +25,7 @@ public:
 	void setFounder( Client &Founder );
 
 	class channelFailException : std::exception {
-	
+
 	public:
 
 		channelFailException( std::string error );
