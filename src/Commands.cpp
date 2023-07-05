@@ -79,6 +79,7 @@ void joinChannel( std::string channelName, Client user, std::vector<Channel> cha
 //     send_numeric_reply(RPL_TOPIC, channel, get_channel_topic(channel))
 //     send_numeric_reply(RPL_NAMREPLY, channel, get_channel_users(channel))
 
+// @todo bevor man joinen kann sollte man einen nickname und user angelegt haben
 void Commands::join(Parser &input, Client client, std::vector<Channel> channels){
 	// std::cout << "join command called" << std::endl;
 	std::string joinMessageClient = ":dgross JOIN #test\r\n";
@@ -175,24 +176,48 @@ void Commands::nick(Parser& input, Client& client, std::vector<Client>& connecti
 //         send_numeric_reply(client, ERR_ALREADYREGISTRED)
 //         return
 
-//     if any_parameter_is_empty(username, hostname, servername, realname):
-//         send_numeric_reply(client, ERR_NEEDMOREPARAMS)
-//         return
-
 //     client.set_user_info(username, hostname, servername, realname)
 
 //     if is_local_connection(client):
 //         send_welcome_messages_to_client(client)
 //         notify_servers_of_new_user(client)
 
-void Commands::user(Parser &input){
+bool isUsernameUnique(const std::vector<Client>& connections, const std::string& Username ) {
+	for (std::vector<Client>::size_type i = 0; i < connections.size(); ++i) {
+		if (connections[i].getConstUsername() == Username) {
+			return true;
+		}
+	}
+	return false;
+}
+
+bool checkName(const std::string& str) {
+	for (std::string::const_iterator it = str.begin(); it != str.end(); ++it) {
+		if (!std::isalnum(*it) && *it != '-' && *it != '_') {
+			return false;
+		}
+	}
+	return true;
+}
+
+void Commands::user(Parser &input, Client &client, std::vector<Client>& connections){
+	if (isUsernameUnique(connections, client.getConstUsername())) {
+		std::cout << "There is already a client with the same username" << std::endl;
+		return ;
+	}
+	if (checkName(client.getConstUsername())) {
+		std::cout << "there a not allowed symbols in the username" << std::endl;
+		return ;
+	}
+	client.setUsername("Du hueeen");
+	std::cout << "The username: " << client.getUsername() << std::endl;
 	std::cout << "The command: " << input.getCMD() << std::endl;
 	std::cout << "The parameters:" << std::endl;
 	for (std::size_t i = 0; i < input.getParam().size(); ++i) {
 		std::cout << input.getParam()[i] << std::endl;
 	}
 	std::cout << "The prefix:" << input.getPrefix() << std::endl;
-	std::cout << "user command" << std::endl;
+	std::cout << "user command: " << input.getTrailing() <<  std::endl;
 }
 
 // function handle_invite_command(inviter, nickname, channel):

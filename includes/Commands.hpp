@@ -19,7 +19,7 @@ public:
 	static void	join(Parser &input, Client client, std::vector<Channel> channels);
 	static void	pass(Parser &input, Client client, std::string password);
 	static void	nick(Parser& input, Client& client, std::vector<Client>& connections);
-	static void	user(Parser& input);
+	static void user(Parser &input, Client &client, std::vector<Client>& connections);
 	static void	invite(Client& client);
 
 	class commandFailException : std::exception {

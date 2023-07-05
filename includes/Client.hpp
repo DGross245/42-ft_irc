@@ -11,7 +11,8 @@ public:
 	Client( int socketfd );
 	~Client( void );
 
-	std::string getUsername( void );
+	std::string getUsername( void ) ;
+	std::string getConstUsername(void) const;
 	std::string getNickname( void ) const;
 	bool getAuthentication( void );
 	void setAuthentication( bool authentication );

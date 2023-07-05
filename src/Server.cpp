@@ -141,7 +141,7 @@ void Server::executeMsg( Parser &input, Client &client ) {
 		command.nick(input, client, this->getClients());
 	}
 	else if (input.getCMD() == "USER") {
-		command.user(input);
+		command.user(input, client, this->getClients());
 	}
 	else if (input.getCMD() == "PING") {
 		std::string message = "PONG :127.0.0.1";
