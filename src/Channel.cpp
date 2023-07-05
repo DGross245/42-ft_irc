@@ -9,10 +9,10 @@
 // im sinne von sucht und returnt den index, gibt es ihn nicht dann -1
 
 Channel::Channel( std::string name, Client user ) : _name(name), _limit(0), _founder(user) {
-	_mode['i'] = false; 
 	_mode['t'] = false;
 	_mode['k'] = false;
 	_mode['l'] = false;
+	_clients.push_back(user);
 	return ;
 }
 

@@ -72,14 +72,19 @@ void Commands::pass( Parser &input, Client client, std::string password ) {
 	return ;
 }
 
-void Commands::kick( Parser &input, Client client, std::vector<Channel> channels ) {
+void Commands::kick( Parser &input, Client client, std::vector<Channel> &channels ) {
 	std::string message;
 	int channelIndex = searchForChannel(input.getParam()[0], channels);
-	int userIndex = searchForUser(input.getParam()[1], channels[channelIndex].getClients());
-	if (channelIndex == -1 || userIndex == -1) {
-		std::cout << "Not found\n";
+	if (channelIndex == -1) {
+		std::cout << "Not found channel\n";
 		return ;
-	} 
+	}
+	std::cout << channels[channelIndex].getChannelName() << "kek\n";
+	int userIndex = searchForUser(input.getParam()[1], channels[channelIndex].getClients());
+	if (userIndex == -1) {
+		std::cout << "Not found clinet\n";
+		return ;
+	}
 	if (client.getSocketfd() == channels[channelIndex].getFounder().getSocketfd()) {
 		message = ":" + client.getNickname() + " KICK " + channels[channelIndex].getChannelName() + " " + client.getNickname() + "\r\n";
 		if (!input.getTrailing().empty())
@@ -140,9 +145,10 @@ void Commands::privmsg( Parser &input, Client client, std::vector<Client> connec
 	return ;
 }
 
-void Commands::quit( Parser &input, Client client, std::vector<Channel> channels) {
+// @attention wenn man einen channel gejoint ist und quited segfaultet es hier
+void Commands::quit( Parser &input, Client client, std::vector<Channel> &channels) {
 	for (std::vector<Channel>::iterator channelIterator = channels.begin(); channelIterator != channels.end(); channelIterator++) {
-		std::vector<Client> clientCopy = channelIterator->getClients();
+		std::vector<Client> &clientCopy = channelIterator->getClients();
 		for (std::vector<Client>::iterator clientIterator = clientCopy.begin(); clientIterator != clientCopy.end(); clientIterator++) {
 			if (clientIterator->getSocketfd() == client.getSocketfd())
 				clientCopy.erase(clientIterator);
@@ -157,7 +163,7 @@ void Commands::quit( Parser &input, Client client, std::vector<Channel> channels
 	return ;
 }
 
-void Commands::join(Parser &input, Client client, std::vector<Channel> channels){
+void Commands::join(Parser &input, Client client, std::vector<Channel> &channels){
 	// std::cout << "join command called" << std::endl;
 	std::string joinMessageClient = ":dgross JOIN " + input.getParam()[0] + "\r\n";;
 	std::string switchBuffer = "/buffer " + input.getParam()[0] + "\r\n";
