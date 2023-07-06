@@ -205,15 +205,12 @@ bool isNameValid(const std::string& name) {
 
 void Commands::user(Parser& input, Client& client, std::vector<Client>& connections) {
 	if (!isNameValid(client.getConstUsername())) {
-		std::cout << "There are not allowed symbols in the username" << std::endl;
 		return;
 	}
 	else if (!isUsernameAvailable(connections, input.getTrailing())) {
-		std::cout << "There is already a client with the same username" << std::endl;
 		return;
 	}
 	client.setUsername(input.getTrailing());
-	std::cout << "Set the username to: " << client.getUsername() << std::endl;
 }
 
 
@@ -232,9 +229,10 @@ void Commands::user(Parser& input, Client& client, std::vector<Client>& connecti
 //     else:
 //         send_numeric_reply(inviter, ERR_NOSUCHNICK, nickname)
 
-// void Commands::invite(Client& client){
-// 	std::cout << "invite command" << std::endl;
-// }
+void Commands::invite(Client& client){
+	(void) client;
+	std::cout << "invite command" << std::endl;
+}
 
 Commands::commandFailException::~commandFailException( void ) throw() { return ;	}
 Commands::commandFailException::commandFailException( std::string error ) : _error(error) { return ; }

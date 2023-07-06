@@ -160,8 +160,8 @@ void Server::executeMsg( Parser &input, Client &client ) {
 	else if (input.getCMD() == "PASS") {
 		command.pass(input, client , this->getPassword());
 	}
-	else if (input.getCMD() == "TOPIC") {\
-		// command.topic(client);
+	else if (input.getCMD() == "INVITE") {
+		command.invite(client);
 	}
 	return ;
 }
