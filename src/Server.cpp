@@ -139,6 +139,7 @@ void Server::executeMsg( Parser &input, Client &client ) {
 	}
 	else if (input.getCMD() == "NICK") {
 		command.nick(input, client, this->getConnections());
+		std::cout << client.getUsername() << "<-" << std::endl;
 	}
 	else if (input.getCMD() == "USER") {
 		command.user(input, client, this->getConnections());
@@ -157,6 +158,15 @@ void Server::executeMsg( Parser &input, Client &client ) {
         // send(client.getSocketfd(), switchBuffer.c_str(), switchBuffer.length(), 0);
         // send(client, message.c_str(), message.length(), 0);
     }
+	else if (input.getCMD() == "QUIT") {
+		command.quit(input, client, this->getChannels());
+	}
+	else if (input.getCMD() == "PRIVMSG") {
+		command.privmsg(input, client, this->getConnections(), this->getChannels());
+	}
+	else if (input.getCMD() == "KICK") {
+		command.kick(input, client, this->getChannels());
+	}
 	else if (input.getCMD() == "PASS") {
 		command.pass(input, client , this->getPassword());
 	}
