@@ -89,9 +89,9 @@ void Commands::join(Parser &input, Client client, std::vector<Channel> channels)
 	send(client.getSocketfd(), switchBuffer.c_str(), switchBuffer.length(), 0);
 }
 
-bool isAlphaNumeric(std::string& str) {
-	for (std::string::const_iterator it = str.begin(); it != str.end(); ++it) {
-		if (!std::isalnum(*it)) {
+bool isAlphaNumeric(std::string& name) {
+	for (std::string::const_iterator iterator = name.begin(); iterator != name.end(); ++iterator) {
+		if (!std::isalnum(*iterator)) {
 			return false;
 		}
 	}
@@ -182,43 +182,40 @@ void Commands::nick(Parser& input, Client& client, std::vector<Client>& connecti
 //         send_welcome_messages_to_client(client)
 //         notify_servers_of_new_user(client)
 
-bool isUsernameUnique(const std::vector<Client>& connections, const std::string& Username ) {
+bool isUsernameAvailable(const std::vector<Client>& connections, const std::string& username) {
+	if (username.empty())
+		return true;
 	for (std::vector<Client>::size_type i = 0; i < connections.size(); ++i) {
-		if (connections[i].getConstUsername() == Username) {
-			return true;
+		std::cout << connections[i].getConstUsername() << " = " << username << std::endl;
+		if (connections[i].getConstUsername() == username) {
+		    return false;
 		}
 	}
-	return false;
+	return true;
 }
 
-bool checkName(const std::string& str) {
-	for (std::string::const_iterator it = str.begin(); it != str.end(); ++it) {
-		if (!std::isalnum(*it) && *it != '-' && *it != '_') {
+bool isNameValid(const std::string& name) {
+	for (std::string::const_iterator iterator = name.begin(); iterator != name.end(); ++iterator) {
+		if (!std::isalnum(*iterator) && *iterator != '-' && *iterator != '_') {
 			return false;
 		}
 	}
 	return true;
 }
 
-void Commands::user(Parser &input, Client &client, std::vector<Client>& connections){
-	if (isUsernameUnique(connections, client.getConstUsername())) {
+void Commands::user(Parser& input, Client& client, std::vector<Client>& connections) {
+	if (!isNameValid(client.getConstUsername())) {
+		std::cout << "There are not allowed symbols in the username" << std::endl;
+		return;
+	}
+	else if (!isUsernameAvailable(connections, input.getTrailing())) {
 		std::cout << "There is already a client with the same username" << std::endl;
-		return ;
+		return;
 	}
-	if (checkName(client.getConstUsername())) {
-		std::cout << "there a not allowed symbols in the username" << std::endl;
-		return ;
-	}
-	client.setUsername("Du hueeen");
-	std::cout << "The username: " << client.getUsername() << std::endl;
-	std::cout << "The command: " << input.getCMD() << std::endl;
-	std::cout << "The parameters:" << std::endl;
-	for (std::size_t i = 0; i < input.getParam().size(); ++i) {
-		std::cout << input.getParam()[i] << std::endl;
-	}
-	std::cout << "The prefix:" << input.getPrefix() << std::endl;
-	std::cout << "user command: " << input.getTrailing() <<  std::endl;
+	client.setUsername(input.getTrailing());
+	std::cout << "Set the username to: " << client.getUsername() << std::endl;
 }
+
 
 // function handle_invite_command(inviter, nickname, channel):
 //     if !channel_exists(channel):
