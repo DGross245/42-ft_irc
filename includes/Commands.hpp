@@ -25,7 +25,14 @@ public:
 	static void joinChannel(std::string channelName, Client user, std::vector<Channel> &channels);
 	static void forwardMsg(std::string message, std::vector<Client> connections);
 	static void kick(Parser &input, Client client, std::vector<Channel> &channels);
-	// static void mode(Parser &inout, Client client, std::vector<Channel> &channels);
+	static void mode(Parser &inout, Client client, std::vector<Channel> &channels);
+
+	//Mode functions
+	static void executeInvite(bool sign, Channel &channel, std::string param);
+	static void executeKey(bool sign, Channel &channel, std::string param);
+	static void executeOperator(bool sign, Channel &channel, std::string param);
+	static void executeLimit(bool sign, Channel &channel, std::string param);
+	static void executeTopic(bool sign, Channel &channel, std::string param);
 
 	class commandFailException : std::exception {
 

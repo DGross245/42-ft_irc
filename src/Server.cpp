@@ -120,9 +120,6 @@ void Server::addClient( int serverSocketfd, fd_set &readfds ) {
 	return ;
 }
 
-// all the data from the server with the connected clients etc is the sever class (there is a vectore which stores all of that informations)
-// @todo add the server class to this function cause all the informations are in that class
-// @todo create a own class for the commands
 void Server::executeMsg( Parser &input, Client client ) {
 	Commands	command;
 
@@ -153,13 +150,6 @@ void Server::executeMsg( Parser &input, Client client ) {
 	}
 	else if (input.getCMD() == "JOIN") {
 		command.join(input, client, this->getChannels());
-        // joinChannel(input.getParam()[0], client);
-        // std::string joinMessageClient = ":dgross JOIN #test\r\n";
-        // std::string switchBuffer = "/buffer #test\r\n";
-        // // std::string message = ":dgross PRIVMSG #test :Hello, everyone!\r\n";
-        // send(client.getSocketfd(), joinMessageClient.c_str(), joinMessageClient.length(), 0);
-        // send(client.getSocketfd(), switchBuffer.c_str(), switchBuffer.length(), 0);
-        // send(client, message.c_str(), message.length(), 0);
     }
 	else if (input.getCMD() == "PASS") {
 		command.pass(input, client , this->getPassword());
@@ -173,40 +163,11 @@ void Server::executeMsg( Parser &input, Client client ) {
 	else if (input.getCMD() == "KICK") {
 		command.kick(input, client, this->getChannels());
 	}
-	// else if (input.getCMD() == "MODE") {
-	// 	command.mode(input, client, this->getChannels());
-	// }
+	else if (input.getCMD() == "MODE") {
+		command.mode(input, client, this->getChannels());
+	}
 	return ;
 }
-
-// !!!!! This functin is moved to commands class !!!!!!!!
-// int Server::searchForChannel( std::string channelName ) {
-// 	for (std::vector<Channel>::iterator iterator = this->_channel.begin(); iterator != this->_channel.end(); iterator++ ) {
-// 		if (iterator->getChannelName() == channelName )
-// 			return (std::distance(this->_channel.begin(), iterator));
-// 	}
-// 	return (-1);
-// }
-
-// !!!!! This functin is moved to commands class !!!!!!!!
-// void Server::joinChannel( std::string channelName, Client user) {
-// 	int	i = searchForChannel( channelName );
-// 	if (i < 0) {
-// 		// creating the channel if the channel does not exist
-// 		this->_channel.push_back(Channel ( channelName, user ));
-// 		this->_channel.end()->setSettings();
-// 		this->_channel.end()->addUser( user );
-// 	}
-// 	else {
-// 		if (this->_channel[i].canUserJoin( user )) {
-// 			this->_channel[i].addUser( user );
-// 			// delete user from invite list
-// 		}
-// 		else
-// 			; // Nachricht an Client : Invited only, can't join!
-// 	}
-// 	return ;
-// }
 
 static void Sprinter( Parser parser) {
 	std::cout << "Prefix:" << parser.getPrefix() << std::endl;

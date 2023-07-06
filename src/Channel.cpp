@@ -87,6 +87,10 @@ std::map<char,bool> &Channel::getMode( void ) {
 	return (this->_mode);
 }
 
+std::string Channel::getPassword( void ) {
+	return (this->_password);
+}
+
 int	Channel::searchforUser( Client user ) {
 	for (std::vector<Client>::iterator iterator = this->_invited.begin(); iterator != this->_invited.end(); iterator++ ) {
 		if (iterator->getUsername() == user.getUsername() ) { // vlt anstatt username id nehmen (macht vlt auch kein unterschied)

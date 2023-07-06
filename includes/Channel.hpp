@@ -30,6 +30,7 @@ public:
 	std::map<char,bool> &getMode( void );
 	std::string getTopic( void );
 	std::string getChannelName( void );
+	std::string getPassword( void );
 	std::vector<Client> &getClients( void );
 	std::vector<Client> &getInviteList( void );
 	std::vector<Client> &getOP( void );

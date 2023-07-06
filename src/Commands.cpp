@@ -10,6 +10,7 @@
 #include <sys/socket.h>
 #include "Constants.hpp"
 #include <unistd.h>
+#include <map>
 
 Commands::Commands() {
 	return ;
@@ -169,14 +170,111 @@ void Commands::quit( Parser &input, Client client, std::vector<Channel> &channel
 	return ;
 }
 
-// void Commands::mode(Parser &input, Client client , std::vector<Channel> &channels) {
-// 	bool sign;
-// 	while() {
-// 		if (input.getParam())
+// mögliche problematik mit bool sign wenn kein sign angegeben ist
+void Commands::mode(Parser &input, Client client , std::vector<Channel> &channels) {
+	bool sign;
+	std::string message;
+	std::string modeLine = input.getParam()[1];
+	std::vector<Channel>::iterator channelIt = searchForChannel(input.getParam()[0], channels);
+	if (channelIt == channels.end()) {
+		message = SERVER " " ERR_NOSUCHCHANNEL + client.getNickname() + " " + input.getParam()[0] + " : No such channel";
+		send(client.getSocketfd(), message.c_str(), message.length(), 0);
+		return ;
+	}
+	// input.getParam()[]
+	std::vector<Client>::iterator clientIt = searchForUser(client.getNickname(), channelIt->getOP());
+	if (clientIt == channelIt->getClients().end()) {
+		message = SERVER " " ERR_NOSUCHNICK + client.getNickname() + " " + input.getParam()[2] + " : No such nickname";
+		send(client.getSocketfd(), message.c_str(), message.length(), 0);
+		return ;
+	}
+	std::map<bool,void(*)(bool ,Channel &,std::string)> modeFuntion;
+	modeFuntion['i'] = &executeInvite;
+	modeFuntion['t'] = &executeTopic;
+	modeFuntion['k'] = &executeKey;
+	modeFuntion['o'] = &executeOperator;
+	modeFuntion['l'] = &executeLimit;
 
-// 	}
-// 	return ;
-// }
+	for (/*loop*/) {
+		if (/*var*/ == '+')
+			sign = true;
+		else if (/*var*/ == '-')
+			sign = false;
+		else {
+			std::map<bool,void(*)(bool ,Channel &,std::string)>::iterator modeIt = modeFuntion.find(/*var*/);
+			if (modeIt == modeFuntion.end())
+				;//Error
+			else
+				modeIt->second(sign, *channelIt, input.getParam()[2]);
+		}
+	}
+	return ;
+}
+
+void Commands::executeInvite( bool sign, Channel &channel, std::string param ) {
+	channel.getMode()['i'] = sign;
+	(void)param;
+	return ;
+}
+
+void Commands::executeKey( bool sign, Channel &channel, std::string param ) {
+	if (sign) {
+		if (!param.empty()) {
+			channel.getMode()['k'] = sign;
+			channel.setPassword(param);
+		}
+		else
+			;//error
+	}
+	else {
+		channel.getMode()['k'] = sign;
+		channel.setPassword("");
+	}
+	return ;
+}
+
+//need requestor here aka client
+void Commands::executeOperator( bool sign, Channel &channel, std::string param ) {
+	std::string message;
+	if (param.empty()) {
+		;//error
+		return ;
+	}
+	std::vector<Client>::iterator clientIt = searchForUser(param, channel.getClients());
+	if (clientIt == channel.getClients().end()) {
+		message = SERVER " " ERR_NOSUCHNICK + client.getNickname() + " " + param + " : No such nickname";
+		send(client.getSocketfd(), message.c_str(), message.length(), 0);
+		return ;
+	}
+	std::vector<Client>::iterator operatorIt = searchForUser(param, channel.getOP());
+	if (sign)
+		if (operatorIt == channel.getOP().end())
+			channel.getOP().push_back(*clientIt);
+	else
+		if (operatorIt != channel.getOP().end())
+			channel.getOP().erase(clientIt);
+	return ;
+}
+
+void Commands::executeLimit( bool sign, Channel &channel, std::string param ) {
+	if (sign) {
+		if (!param.empty()) {
+			channel.getMode()['l'] = sign;
+			channel.setLimit(0);// später gucken was so das limit ist
+		}
+		else
+			;//error ?
+	}
+	else 
+		channel.getMode()['l'] = sign;
+	return ;
+}
+
+void Commands::executeTopic( bool sign, Channel &channel, std::string param ) {
+	channel.getMode()['t'] = sign;
+	(void)param;
+	return ;
+}
 
 void Commands::join(Parser &input, Client client, std::vector<Channel> &channels){
 	// std::cout << "join command called" << std::endl;
