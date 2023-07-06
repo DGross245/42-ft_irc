@@ -19,39 +19,33 @@ Commands::~Commands( void ) {
 	return ;
 }
 
-int	Commands::searchForChannel( std::string channelName, std::vector<Channel> channels ) {
-	if (channels.empty()) {
-		std::cout << "empty channel!\n";
-		return (-1);
-	}
-	for (std::vector<Channel>::iterator iterator = channels.begin(); iterator != channels.end(); iterator++ ) {
+std::vector<Channel>::iterator	Commands::searchForChannel( std::string channelName, std::vector<Channel> &channels ) {
+	std::vector<Channel>::iterator iterator = channels.end();
+	for (iterator = channels.begin(); iterator != channels.end(); iterator++ ) {
 		if (iterator->getChannelName() == channelName )
-			return (std::distance(channels.begin(), iterator));
+			break ;
 	}
-	return (-1);
+	return (iterator);
 }
 
-int	Commands::searchForUser( std::string nickname, std::vector<Client> clients ) {
-	if (clients.empty()) {
-		std::cout << "empty clients!\n";
-		return (-1);
-	}
-	for (std::vector<Client>::iterator iterator = clients.begin(); iterator != clients.end(); iterator++ ) {
+std::vector<Client>::iterator	Commands::searchForUser( std::string nickname, std::vector<Client> &clients ) {
+	std::vector<Client>::iterator iterator = clients.end();
+	for (iterator = clients.begin(); iterator != clients.end(); iterator++ ) {
 		if (iterator->getNickname() == nickname )
-			return (std::distance(clients.begin(), iterator));
+			break ;
 	}
-	return (-1);
+	return (iterator);
 }
 
 void Commands::joinChannel( std::string channelName, Client user, std::vector<Channel> &channels) {
-	int	i = searchForChannel( channelName, channels);
-	if (i < 0) {
+	std::vector<Channel>::iterator channelIt = searchForChannel( channelName, channels);
+	if (channelIt == channels.end()) {
 		// creating the channels if the channels does not exist
 		channels.push_back(Channel ( channelName, user ));
 	}
 	else {
-		if (channels[i].canUserJoin( user )) {
-			channels[i].addUser( user );
+		if (channelIt->canUserJoin( user )) {
+			channelIt->addUser( user );
 			// delete user from invite list
 		}
 		else
@@ -72,35 +66,43 @@ void Commands::pass( Parser &input, Client client, std::string password ) {
 	return ;
 }
 
-void Commands::kick( Parser &input, Client client, std::vector<Channel> &channels ) {
+void Commands::kick( Parser &input, Client requestor, std::vector<Channel> &channels ) {
 	std::string message;
-	int channelIndex = searchForChannel(input.getParam()[0], channels);
-	if (channelIndex == -1) {
-		std::cout << "Not found channel\n";
+	std::vector<Channel>::iterator channelIt = searchForChannel(input.getParam()[0], channels);
+	if (channelIt == channels.end()) {
+		message = SERVER " " ERR_NOSUCHCHANNEL + requestor.getNickname() + " " + input.getParam()[0] + " : No such channel";
+		send(requestor.getSocketfd(), message.c_str(), message.length(), 0);
 		return ;
 	}
-	std::cout << channels[channelIndex].getChannelName() << "kek\n";
-	int userIndex = searchForUser(input.getParam()[1], channels[channelIndex].getClients());
-	if (userIndex == -1) {
-		std::cout << "Not found clinet\n";
+	std::vector<Client>::iterator target = searchForUser(input.getParam()[1], channelIt->getClients());
+	if (target == channelIt->getClients().end()) {
+		message = SERVER " " ERR_NOSUCHNICK + requestor.getNickname() + " " + input.getParam()[1] + " : No such nickname";
+		send(requestor.getSocketfd(), message.c_str(), message.length(), 0);
 		return ;
 	}
-	if (client.getSocketfd() == channels[channelIndex].getFounder().getSocketfd()) {
-		message = ":" + client.getNickname() + " KICK " + channels[channelIndex].getChannelName() + " " + client.getNickname() + "\r\n";
+	if (requestor.getSocketfd() == channelIt->getFounder().getSocketfd()) {
+		message = ":" + requestor.getNickname() + " KICK " + channelIt->getChannelName() + " " + target->getNickname() + "\r\n";
 		if (!input.getTrailing().empty())
 			message += input.getTrailing();
-		send(client.getSocketfd(), message.c_str(), message.length(), 0);
+		send(target->getSocketfd(), message.c_str(), message.length(), 0);
+		channelIt->getClients().erase(target);
 	}
 	else {
-		std::vector<Client> op = channels[channelIndex].getOP();
+		std::vector<Client> op = channelIt->getOP();
 		for (std::vector<Client>::iterator it = op.begin(); it != op.end(); it++) {
-			if (client.getSocketfd() == it->getSocketfd()) {
-				message = ":" + client.getNickname() + " KICK " + channels[channelIndex].getChannelName() + " " + client.getNickname();
+			if (requestor.getSocketfd() == it->getSocketfd()) {
+				if (target->getSocketfd() == channelIt->getFounder().getSocketfd()) {
+					message = "ERROR";
+					send(target->getSocketfd(), message.c_str(), message.length(), 0);
+					return ;
+				}
+				message = ":" + requestor.getNickname() + " KICK " + channelIt->getChannelName() + " " + target->getNickname();
 				if (!input.getTrailing().empty())
 					message += input.getTrailing() + + "\r\n";
 				else
 					message += "\r\n";
-				send(client.getSocketfd(), message.c_str(), message.length(), 0);
+				send(target->getSocketfd(), message.c_str(), message.length(), 0);
+				channelIt->getClients().erase(target);
 			}
 		}
 	}
@@ -116,17 +118,16 @@ void Commands::forwardMsg( std::string message, std::vector<Client> connections)
 void Commands::privmsg( Parser &input, Client client, std::vector<Client> connections, std::vector<Channel> channels) {
 	std::string receiver = input.getParam()[0];
 	std::string message = input.getTrailing() + "\r\n";;
-	int index;
 
 	if (receiver.at(0) == '#') {
-		index = searchForChannel(receiver, channels);
-		if (index != -1) {
+		std::vector<Channel>::iterator channelIt = searchForChannel(receiver, channels);
+		if (channelIt != channels.end()) {
 			// wenn nicht gucken obs invite only oder passwort geschützt ist
-			if (channels[index].searchforUser(client)) {
+			if (channelIt->searchforUser(client)) {
 				forwardMsg(message, connections);
 				return ;
 			}
-			else if (channels[index].getMode()['i'] == true || channels[index].getMode()['k'] == true)
+			else if (channelIt->getMode()['i'] == true || channelIt->getMode()['k'] == true)
 				message = ERR_CANNOTSENDTOCHAN " " + receiver + " :No pemissions";
 		}
 		message = ERR_NOSUCHCHANNEL " " + receiver + " :No such channel\r\n";
@@ -150,18 +151,32 @@ void Commands::quit( Parser &input, Client client, std::vector<Channel> &channel
 	for (std::vector<Channel>::iterator channelIterator = channels.begin(); channelIterator != channels.end(); channelIterator++) {
 		std::vector<Client> &clientCopy = channelIterator->getClients();
 		for (std::vector<Client>::iterator clientIterator = clientCopy.begin(); clientIterator != clientCopy.end(); clientIterator++) {
-			if (clientIterator->getSocketfd() == client.getSocketfd())
+			if (clientIterator->getSocketfd() == client.getSocketfd()) {
 				clientCopy.erase(clientIterator);
+				return ;
+			}
+			std::cout << "Done:" << clientIterator->getSocketfd()  << std::endl;
 		}
 		for (std::vector<Client>::iterator invitedIterator = clientCopy.begin(); invitedIterator != clientCopy.end(); invitedIterator++) {
-			if (invitedIterator->getSocketfd() == client.getSocketfd())
+			if (invitedIterator->getSocketfd() == client.getSocketfd()) {
 				clientCopy.erase(invitedIterator);
+				return ;
+			}
 		}
 	}
 	(void)input;
 	//nachricht an alle schicken im channel
 	return ;
 }
+
+// void Commands::mode(Parser &input, Client client , std::vector<Channel> &channels) {
+// 	bool sign;
+// 	while() {
+// 		if (input.getParam())
+
+// 	}
+// 	return ;
+// }
 
 void Commands::join(Parser &input, Client client, std::vector<Channel> &channels){
 	// std::cout << "join command called" << std::endl;

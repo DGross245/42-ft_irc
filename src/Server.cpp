@@ -173,6 +173,9 @@ void Server::executeMsg( Parser &input, Client client ) {
 	else if (input.getCMD() == "KICK") {
 		command.kick(input, client, this->getChannels());
 	}
+	// else if (input.getCMD() == "MODE") {
+	// 	command.mode(input, client, this->getChannels());
+	// }
 	return ;
 }
 
