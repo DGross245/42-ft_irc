@@ -35,7 +35,7 @@ public:
 	std::vector<Client> &getOP( void );
 
 	class channelFailException : std::exception {
-	
+
 	public:
 
 		channelFailException( std::string error );

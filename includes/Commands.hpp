@@ -26,17 +26,18 @@ public:
 	static void forwardMsg(std::string message, std::vector<Client> connections);
 	static void kick(Parser &input, Client client, std::vector<Channel> &channels);
 	// static void mode(Parser &inout, Client client, std::vector<Channel> &channels);
+	static void	nick(Parser& input, Client& client, std::vector<Client>& connections);
+	static void user(Parser &input, Client &client, std::vector<Client>& connections);
+	static void	invite(Client& client);
 
 	class commandFailException : std::exception {
 
 	public:
-
 		commandFailException( std::string error );
 		~commandFailException( void ) throw();
 		virtual const char *what() const throw();
 
 	private:
-
 		std::string _error;
 
 	};

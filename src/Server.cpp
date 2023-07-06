@@ -65,10 +65,6 @@ std::vector<Channel> &Server::getChannels(void) {
 	return (this->_channel);
 }
 
-std::vector<Client>	&Server::getConnections(void) {
-	return (this->_connections);
-}
-
 void Server::setPort( int port ) {
 	this->_port = port;
 	return ;
@@ -121,9 +117,7 @@ void Server::addClient( int serverSocketfd, fd_set &readfds ) {
 }
 
 // all the data from the server with the connected clients etc is the sever class (there is a vectore which stores all of that informations)
-// @todo add the server class to this function cause all the informations are in that class
-// @todo create a own class for the commands
-void Server::executeMsg( Parser &input, Client client ) {
+void Server::executeMsg( Parser &input, Client &client ) {
 	Commands	command;
 
 	if (input.getCMD() == "CAP") {
@@ -140,12 +134,10 @@ void Server::executeMsg( Parser &input, Client client ) {
 		}
 	}
 	else if (input.getCMD() == "NICK") {
-		std::string message = ":IRCSERV 001 dgross :Willkommen in der IRC-Welt, dgross!\r\n";
-		send(client.getSocketfd(), message.c_str(), message.length(), 0);
+		command.nick(input, client, this->getClients());
 	}
 	else if (input.getCMD() == "USER") {
-		std::string message = ":IRCSERV 001 dgross :Benutzerinformationen erfolgreich empfangen.\r\n";
-		send(client.getSocketfd(), message.c_str(), message.length(), 0);
+		command.user(input, client, this->getClients());
 	}
 	else if (input.getCMD() == "PING") {
 		std::string message = "PONG :127.0.0.1";
@@ -164,18 +156,6 @@ void Server::executeMsg( Parser &input, Client client ) {
 	else if (input.getCMD() == "PASS") {
 		command.pass(input, client , this->getPassword());
 	}
-	else if (input.getCMD() == "QUIT") {
-		command.quit(input, client, this->getChannels());
-	}
-	else if (input.getCMD() == "PRIVMSG") {
-		command.privmsg(input, client, this->getConnections(), this->getChannels());
-	}
-	else if (input.getCMD() == "KICK") {
-		command.kick(input, client, this->getChannels());
-	}
-	// else if (input.getCMD() == "MODE") {
-	// 	command.mode(input, client, this->getChannels());
-	// }
 	return ;
 }
 
@@ -209,16 +189,16 @@ void Server::executeMsg( Parser &input, Client client ) {
 // }
 
 static void Sprinter( Parser parser) {
-	std::cout << "Prefix:" << parser.getPrefix() << std::endl;
-	std::cout << "Command:" << parser.getCMD() << std::endl;
+	// std::cout << "Prefix:" << parser.getPrefix() << std::endl;
+	// std::cout << "Command:" << parser.getCMD() << std::endl;
 	std::vector<std::string> test = parser.getParam();
 	for (std::vector<std::string>::iterator it = test.begin(); it != test.end(); it++)
-		std::cout << "Param :" << *it << std::endl;
-	std::cout << "trailing :" << parser.getTrailing() << std::endl;
+		// std::cout << "Param :" << *it << std::endl;
+	// std::cout << "trailing :" << parser.getTrailing() << std::endl;
 	return ;
 }
 
-void Server::readMsg( Client client, int i) {
+void Server::readMsg( Client &client, int i) {
 	char buffer[1024];
 	ssize_t bytes_read;
 	bytes_read = ::recv(client.getSocketfd(), buffer, sizeof(buffer), 0);
