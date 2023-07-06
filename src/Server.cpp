@@ -70,6 +70,10 @@ void Server::setPort( int port ) {
 	return ;
 }
 
+std::vector<Client> &Server::getConnections(void) {
+	return (this->_connections);
+}
+
 void Server::setPassword( std::string &password ) {
 	this->_password = password;
 	return ;
@@ -134,10 +138,10 @@ void Server::executeMsg( Parser &input, Client &client ) {
 		}
 	}
 	else if (input.getCMD() == "NICK") {
-		command.nick(input, client, this->getClients());
+		command.nick(input, client, this->getConnections());
 	}
 	else if (input.getCMD() == "USER") {
-		command.user(input, client, this->getClients());
+		command.user(input, client, this->getConnections());
 	}
 	else if (input.getCMD() == "PING") {
 		std::string message = "PONG :127.0.0.1";

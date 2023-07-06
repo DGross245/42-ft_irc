@@ -35,15 +35,15 @@ public:
 	std::string				getPassword( void );
 	std::vector<Client>		&getConnections( void );
 	std::vector<Channel>	&getChannels(void);
-	std::string				getPassword( void );
-	int						getPort( void );
-	int						getMaxfd( fd_set &readfds );
-	std::vector<Channel>	&getChannels(void);
-	std::vector<Client>		&getClients(void);
-	void					setPort( int port );
-	void					setPassword( std::string &password );
-	void					setTime( void );
-	void					setServerfd( int serverSocketfd );
+	// std::string				getPassword( void );
+	// int						getPort( void );
+	// int						getMaxfd( fd_set &readfds );
+	// std::vector<Channel>	&getChannels(void);
+	// std::vector<Client>		&getClients(void);
+	// void					setPort( int port );
+	// void					setPassword( std::string &password );
+	// void					setTime( void );
+	// void					setServerfd( int serverSocketfd );
 
 	class serverFailException : std::exception {
 

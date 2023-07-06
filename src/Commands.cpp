@@ -67,18 +67,6 @@ void Commands::joinChannel( std::string channelName, Client user, std::vector<Ch
 	return ;
 }
 
-void Commands::pass( Parser &input, Client client, std::string password ) {
-	if (*input.getParam().begin() == password) {
-		std::cout << "PW accepted!" << std::endl;
-		return ;
-	}
-	else {
-		std::string message = SERVER " " ERR_PASSWDMISMATCH " dgross :Wrong Password\r\n";
-		send(client.getSocketfd(), message.c_str(), message.length(), 0);
-	}
-	return ;
-}
-
 void Commands::kick( Parser &input, Client requestor, std::vector<Channel> &channels ) {
 	std::string message;
 	std::vector<Channel>::iterator channelIt = searchForChannel(input.getParam()[0], channels);
@@ -143,7 +131,6 @@ void Commands::kick( Parser &input, Client requestor, std::vector<Channel> &chan
 //     send_numeric_reply(RPL_NAMREPLY, channel, get_channel_users(channel))
 
 // @todo bevor man joinen kann sollte man einen nickname und user angelegt haben
-void Commands::join(Parser &input, Client client, std::vector<Channel> channels){
 void Commands::forwardMsg( std::string message, std::vector<Client> connections) {
 	for (std::vector<Client>::iterator it = connections.begin(); it != connections.end(); it++)
 		send(it->getSocketfd(), message.c_str(), message.length(), 0);
