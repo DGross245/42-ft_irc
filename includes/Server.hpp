@@ -20,8 +20,8 @@ public:
 	void	closeALLConnections( void );
 	void	clientIOHandler( void );
 	void 	addClient( int serverSocketfd, fd_set &readfds );
-	void	readMsg( Client client, int i);
-	void	executeMsg( Parser &input, Client client );
+	void	readMsg( Client &client, int i);
+	void	executeMsg( Parser &input, Client &client );
 	int		searchForChannel( std::string channelName );
 	void	joinChannel( std::string channelName , Client user );
 	void	launchServer( void );
@@ -35,6 +35,15 @@ public:
 	std::string				getPassword( void );
 	std::vector<Client>		&getConnections( void );
 	std::vector<Channel>	&getChannels(void);
+	// std::string				getPassword( void );
+	// int						getPort( void );
+	// int						getMaxfd( fd_set &readfds );
+	// std::vector<Channel>	&getChannels(void);
+	// std::vector<Client>		&getClients(void);
+	// void					setPort( int port );
+	// void					setPassword( std::string &password );
+	// void					setTime( void );
+	// void					setServerfd( int serverSocketfd );
 
 	class serverFailException : std::exception {
 
@@ -52,7 +61,7 @@ public:
 
 private:
 
-	std::vector<Client> _connections;
+	std::vector<Client> _connections; // all clients on the server
 	std::vector<Channel> _channel; // how many channels on the server
 	int _serverfd;
 	int _port;
