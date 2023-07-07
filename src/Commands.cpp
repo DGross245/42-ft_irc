@@ -123,13 +123,15 @@ void Commands::part( Parser &input, Client client, std::vector<Channel> &channel
 	}
 	std::vector<Client>::iterator target = searchForUser(client.getNickname(), channelIt->getClients());
 	if (target == channelIt->getClients().end()) {
-		message = SERVER " " ERR_NOSUCHNICK + client.getNickname() + " " + input.getParam()[1] + " : No such nickname\r\n";
+		message = SERVER " " ERR_NOSUCHNICK + client.getNickname() + " " + input.getParam()[0] + " : No such nickname\r\n";
 		send(client.getSocketfd(), message.c_str(), message.length(), 0);
 		return ;
 	}
 	channelIt->getClients().erase(target);
 	if (!input.getTrailing().empty())
 		forwardMsg(input.getTrailing() + "\r\n", channelIt->getClients());
+	message = ":" + client.getNickname() + " PART " + channelIt->getChannelName() + "\r\n";
+	send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	return ;
 }
 
@@ -307,7 +309,7 @@ void Commands::executeTopic( bool sign, Channel &channel, std::string param, Cli
 
 void Commands::join(Parser &input, Client client, std::vector<Channel> &channels){
 	// std::cout << "join command called" << std::endl;
-	std::string joinMessageClient = ":dgross JOIN " + input.getParam()[0] + "\r\n";;
+	std::string joinMessageClient = ":" + client.getNickname() + " JOIN " + input.getParam()[0] + "\r\n";;
 	std::string switchBuffer = "/buffer " + input.getParam()[0] + "\r\n";
 	joinChannel(input.getParam()[0], client, channels);
 	send(client.getSocketfd(), joinMessageClient.c_str(), joinMessageClient.length(), 0);

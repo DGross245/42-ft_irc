@@ -184,7 +184,6 @@ void Server::readMsg( Client &client, int i) {
 	char buffer[1024];
 	ssize_t bytes_read;
 	bytes_read = ::recv(client.getSocketfd(), buffer, sizeof(buffer), 0);
-	std::cout << buffer << "<-buffer" << std::endl;
 	if (bytes_read == -1)
 		throw serverFailException("recv Error");
 	else if (bytes_read == 0) {

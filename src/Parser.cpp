@@ -141,7 +141,7 @@ void Parser::checkPING( Client client ) {
 }
 
 void Parser::checkPART( Client client ) {
-	if (this->getParam().size() != 1 || !this->getTrailing().empty())
+	if (this->getParam().size() != 1)
 		sendError( client );
 	return ;
 }
