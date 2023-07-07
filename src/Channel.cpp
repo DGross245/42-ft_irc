@@ -30,6 +30,7 @@ void Channel::leaveChannel( std::string username ) { // vlt username mit einer i
 			return ;
 		}
 	}
+	std::cout << "error in leaveserver" << std::endl;
 	throw channelFailException("Error: User not found");
 	return ;
 }
@@ -93,11 +94,10 @@ std::string Channel::getPassword( void ) {
 
 int	Channel::searchforUser( Client user ) {
 	for (std::vector<Client>::iterator iterator = this->_invited.begin(); iterator != this->_invited.end(); iterator++ ) {
-		if (iterator->getUsername() == user.getUsername() ) { // vlt anstatt username id nehmen (macht vlt auch kein unterschied)
+		if (iterator->getSocketfd() == user.getSocketfd() ) { // vlt anstatt username id nehmen (macht vlt auch kein unterschied)
 			return (1);
 		}
 	}
-	throw channelFailException("Error: User not found");
 	return (0);
 }
 
@@ -106,9 +106,7 @@ bool Channel::canUserJoin( Client user ) {
 		if (searchforUser( user ))
 			return (true);
 	}
-	else
-		return (true);
-	return (false);
+	return (true);
 }
 
 void Channel::setFounder( Client &founder ) {

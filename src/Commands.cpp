@@ -123,15 +123,17 @@ void Commands::privmsg( Parser &input, Client client, std::vector<Client> connec
 	if (receiver.at(0) == '#') {
 		std::vector<Channel>::iterator channelIt = searchForChannel(receiver, channels);
 		if (channelIt != channels.end()) {
-			// wenn nicht gucken obs invite only oder passwort geschützt ist
 			if (channelIt->searchforUser(client)) {
 				forwardMsg(message, connections);
 				return ;
 			}
 			else if (channelIt->getMode()['i'] == true || channelIt->getMode()['k'] == true)
 				message = ERR_CANNOTSENDTOCHAN " " + receiver + " :No pemissions";
+			else
+				forwardMsg(message, connections);
 		}
-		message = ERR_NOSUCHCHANNEL " " + receiver + " :No such channel\r\n";
+		else
+			message = ERR_NOSUCHCHANNEL " " + receiver + " :No such channel\r\n";
 	}
 	else {
 		for (std::vector<Client>::iterator it = connections.begin(); it != connections.end(); it++) {
@@ -154,9 +156,9 @@ void Commands::quit( Parser &input, Client client, std::vector<Channel> &channel
 		for (std::vector<Client>::iterator clientIterator = clientCopy.begin(); clientIterator != clientCopy.end(); clientIterator++) {
 			if (clientIterator->getSocketfd() == client.getSocketfd()) {
 				clientCopy.erase(clientIterator);
+				//forwardMsg(message, client, );
 				return ;
 			}
-			std::cout << "Done:" << clientIterator->getSocketfd()  << std::endl;
 		}
 		for (std::vector<Client>::iterator invitedIterator = clientCopy.begin(); invitedIterator != clientCopy.end(); invitedIterator++) {
 			if (invitedIterator->getSocketfd() == client.getSocketfd()) {
@@ -166,7 +168,6 @@ void Commands::quit( Parser &input, Client client, std::vector<Channel> &channel
 		}
 	}
 	(void)input;
-	//nachricht an alle schicken im channel
 	return ;
 }
 
@@ -175,69 +176,71 @@ void Commands::mode(Parser &input, Client client , std::vector<Channel> &channel
 	bool sign;
 	std::string message;
 	std::string modeLine = input.getParam()[1];
+	char mode;
 	std::vector<Channel>::iterator channelIt = searchForChannel(input.getParam()[0], channels);
 	if (channelIt == channels.end()) {
 		message = SERVER " " ERR_NOSUCHCHANNEL + client.getNickname() + " " + input.getParam()[0] + " : No such channel";
 		send(client.getSocketfd(), message.c_str(), message.length(), 0);
 		return ;
 	}
-	// input.getParam()[]
 	std::vector<Client>::iterator clientIt = searchForUser(client.getNickname(), channelIt->getOP());
 	if (clientIt == channelIt->getClients().end()) {
 		message = SERVER " " ERR_NOSUCHNICK + client.getNickname() + " " + input.getParam()[2] + " : No such nickname";
 		send(client.getSocketfd(), message.c_str(), message.length(), 0);
 		return ;
 	}
-	std::map<bool,void(*)(bool ,Channel &,std::string)> modeFuntion;
+	std::map<bool,void(*)(bool ,Channel &,std::string, Client)> modeFuntion;
 	modeFuntion['i'] = &executeInvite;
 	modeFuntion['t'] = &executeTopic;
 	modeFuntion['k'] = &executeKey;
 	modeFuntion['o'] = &executeOperator;
 	modeFuntion['l'] = &executeLimit;
 
-	for (/*loop*/) {
-		if (/*var*/ == '+')
+	for (size_t i = 0; i < modeLine.length(); i++) {
+		mode = modeLine[i];
+		if (mode == '+')
 			sign = true;
-		else if (/*var*/ == '-')
+		else if (mode == '-')
 			sign = false;
 		else {
-			std::map<bool,void(*)(bool ,Channel &,std::string)>::iterator modeIt = modeFuntion.find(/*var*/);
+			std::map<bool,void(*)(bool,Channel &,std::string,Client)>::iterator modeIt = modeFuntion.find(mode);
 			if (modeIt == modeFuntion.end())
-				;//Error
+				std::cout << "Mode: ERROR!" << std::endl;
 			else
-				modeIt->second(sign, *channelIt, input.getParam()[2]);
+				modeIt->second(sign, *channelIt, input.getParam().size() == 3 ? input.getParam()[2] : std::string(), client);
 		}
 	}
 	return ;
 }
 
-void Commands::executeInvite( bool sign, Channel &channel, std::string param ) {
+void Commands::executeInvite( bool sign, Channel &channel, std::string param, Client client ) {
 	channel.getMode()['i'] = sign;
 	(void)param;
+	(void)client;
 	return ;
 }
 
-void Commands::executeKey( bool sign, Channel &channel, std::string param ) {
+void Commands::executeKey( bool sign, Channel &channel, std::string param, Client client ) {
 	if (sign) {
 		if (!param.empty()) {
 			channel.getMode()['k'] = sign;
 			channel.setPassword(param);
 		}
 		else
-			;//error
+			std::cout << "Mode: ERROR!" << std::endl;
 	}
 	else {
 		channel.getMode()['k'] = sign;
 		channel.setPassword("");
 	}
+	(void)client;
 	return ;
 }
 
-//need requestor here aka client
-void Commands::executeOperator( bool sign, Channel &channel, std::string param ) {
+void Commands::executeOperator( bool sign, Channel &channel, std::string param, Client client ) {
 	std::string message;
 	if (param.empty()) {
-		;//error
+		std::cout << "Mode: ERROR!" << std::endl;
 		return ;
 	}
 	std::vector<Client>::iterator clientIt = searchForUser(param, channel.getClients());
@@ -247,32 +250,37 @@ void Commands::executeOperator( bool sign, Channel &channel, std::string param )
 		return ;
 	}
 	std::vector<Client>::iterator operatorIt = searchForUser(param, channel.getOP());
-	if (sign)
+	if (sign) {
 		if (operatorIt == channel.getOP().end())
 			channel.getOP().push_back(*clientIt);
-	else
+	}
+	else {
 		if (operatorIt != channel.getOP().end())
 			channel.getOP().erase(clientIt);
+	}
+	(void)client;
 	return ;
 }
 
-void Commands::executeLimit( bool sign, Channel &channel, std::string param ) {
+void Commands::executeLimit( bool sign, Channel &channel, std::string param, Client client ) {
 	if (sign) {
 		if (!param.empty()) {
 			channel.getMode()['l'] = sign;
-			channel.setLimit(0);// später gucken was so das limit ist
+			channel.setLimit(0);
 		}
 		else
-			;//error ?
+			std::cout << "Mode: ERROR!" << std::endl;
 	}
 	else 
 		channel.getMode()['l'] = sign;
+	(void)client;
 	return ;
 }
 
-void Commands::executeTopic( bool sign, Channel &channel, std::string param ) {
+void Commands::executeTopic( bool sign, Channel &channel, std::string param, Client client ) {
 	channel.getMode()['t'] = sign;
 	(void)param;
+	(void)client;
 	return ;
 }
 
