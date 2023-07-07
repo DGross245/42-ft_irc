@@ -54,16 +54,18 @@ void Commands::pass( Parser &input, Client client, std::string password ) {
 void Commands::joinChannel( std::string channelName, Client user, std::vector<Channel> &channels) {
 	std::vector<Channel>::iterator channelIt = searchForChannel( channelName, channels);
 	if (channelIt == channels.end()) {
-		// creating the channels if the channels does not exist
 		channels.push_back(Channel ( channelName, user ));
 	}
 	else {
 		if (channelIt->canUserJoin( user )) {
 			channelIt->addUser( user );
-			// delete user from invite list
+			std::vector<Client>::iterator clientIt = searchForUser(user.getNickname(), channelIt->getClients());
+			channelIt->getClients().erase(clientIt);
 		}
-		else
-			(void)channelName; // Nachricht an Client : Invited only, can't join!
+		else {
+			std::string message = "Error in joinChannel\r\n";
+			send(user.getSocketfd(), message.c_str(), message.length(), 0);
+		}
 	}
 	return ;
 }
@@ -72,13 +74,13 @@ void Commands::kick( Parser &input, Client requestor, std::vector<Channel> &chan
 	std::string message;
 	std::vector<Channel>::iterator channelIt = searchForChannel(input.getParam()[0], channels);
 	if (channelIt == channels.end()) {
-		message = SERVER " " ERR_NOSUCHCHANNEL + requestor.getNickname() + " " + input.getParam()[0] + " : No such channel";
+		message = SERVER " " ERR_NOSUCHCHANNEL + requestor.getNickname() + " " + input.getParam()[0] + " : No such channel\r\n";
 		send(requestor.getSocketfd(), message.c_str(), message.length(), 0);
 		return ;
 	}
 	std::vector<Client>::iterator target = searchForUser(input.getParam()[1], channelIt->getClients());
 	if (target == channelIt->getClients().end()) {
-		message = SERVER " " ERR_NOSUCHNICK + requestor.getNickname() + " " + input.getParam()[1] + " : No such nickname";
+		message = SERVER " " ERR_NOSUCHNICK + requestor.getNickname() + " " + input.getParam()[1] + " : No such nickname\r\n";
 		send(requestor.getSocketfd(), message.c_str(), message.length(), 0);
 		return ;
 	}
@@ -110,28 +112,27 @@ void Commands::kick( Parser &input, Client requestor, std::vector<Channel> &chan
 	}
 	return ;
 }
-// function join(channel, keys):
-//     if !channel_exists(channel):
-//         send_numeric_reply(ERR_NOSUCHCHANNEL)
-//         return
 
-//     if channel_is_invite_only(channel) and !user_is_invited(channel):
-//         send_numeric_reply(ERR_CHANNELISFULL)
-//         return
+void Commands::part( Parser &input, Client client, std::vector<Channel> &channels) {
+	std::string message;
+	std::vector<Channel>::iterator channelIt = searchForChannel(input.getParam()[0], channels);
+	if (channelIt == channels.end()) {
+		message = SERVER " " ERR_NOSUCHCHANNEL + client.getNickname() + " " + input.getParam()[0] + " : No such channel\r\n";
+		send(client.getSocketfd(), message.c_str(), message.length(), 0);
+		return ;
+	}
+	std::vector<Client>::iterator target = searchForUser(client.getNickname(), channelIt->getClients());
+	if (target == channelIt->getClients().end()) {
+		message = SERVER " " ERR_NOSUCHNICK + client.getNickname() + " " + input.getParam()[1] + " : No such nickname\r\n";
+		send(client.getSocketfd(), message.c_str(), message.length(), 0);
+		return ;
+	}
+	channelIt->getClients().erase(target);
+	if (!input.getTrailing().empty())
+		forwardMsg(input.getTrailing() + "\r\n", channelIt->getClients());
+	return ;
+}
 
-//     if user_is_banned(user):
-//         send_numeric_reply(ERR_INVITEONLYCHAN)
-//         return
-
-//     if channel_is_password_protected(channel) and !correct_key_provided(channel, keys):
-//         send_numeric_reply(ERR_NEEDMOREPARAMS)
-//         return
-
-//     add_user_to_channel(channel, user)
-//     send_numeric_reply(RPL_TOPIC, channel, get_channel_topic(channel))
-//     send_numeric_reply(RPL_NAMREPLY, channel, get_channel_users(channel))
-
-// @todo bevor man joinen kann sollte man einen nickname und user angelegt haben
 void Commands::forwardMsg( std::string message, std::vector<Client> connections) {
 	for (std::vector<Client>::iterator it = connections.begin(); it != connections.end(); it++)
 		send(it->getSocketfd(), message.c_str(), message.length(), 0);
@@ -150,7 +151,7 @@ void Commands::privmsg( Parser &input, Client client, std::vector<Client> connec
 				return ;
 			}
 			else if (channelIt->getMode()['i'] == true || channelIt->getMode()['k'] == true)
-				message = ERR_CANNOTSENDTOCHAN " " + receiver + " :No pemissions";
+				message = ERR_CANNOTSENDTOCHAN " " + receiver + " :No pemissions\r\n";
 			else
 				forwardMsg(message, connections);
 		}
@@ -171,14 +172,12 @@ void Commands::privmsg( Parser &input, Client client, std::vector<Client> connec
 	return ;
 }
 
-// @attention wenn man einen channel gejoint ist und quited segfaultet es hier
 void Commands::quit( Parser &input, Client client, std::vector<Channel> &channels) {
 	for (std::vector<Channel>::iterator channelIterator = channels.begin(); channelIterator != channels.end(); channelIterator++) {
 		std::vector<Client> &clientCopy = channelIterator->getClients();
 		for (std::vector<Client>::iterator clientIterator = clientCopy.begin(); clientIterator != clientCopy.end(); clientIterator++) {
 			if (clientIterator->getSocketfd() == client.getSocketfd()) {
 				clientCopy.erase(clientIterator);
-				//forwardMsg(message, client, );
 				return ;
 			}
 		}
@@ -201,13 +200,13 @@ void Commands::mode(Parser &input, Client client , std::vector<Channel> &channel
 	char mode;
 	std::vector<Channel>::iterator channelIt = searchForChannel(input.getParam()[0], channels);
 	if (channelIt == channels.end()) {
-		message = SERVER " " ERR_NOSUCHCHANNEL + client.getNickname() + " " + input.getParam()[0] + " : No such channel";
+		message = SERVER " " ERR_NOSUCHCHANNEL + client.getNickname() + " " + input.getParam()[0] + " : No such channel\r\n";
 		send(client.getSocketfd(), message.c_str(), message.length(), 0);
 		return ;
 	}
 	std::vector<Client>::iterator clientIt = searchForUser(client.getNickname(), channelIt->getOP());
 	if (clientIt == channelIt->getClients().end()) {
-		message = SERVER " " ERR_NOSUCHNICK + client.getNickname() + " " + input.getParam()[2] + " : No such nickname";
+		message = SERVER " " ERR_NOSUCHNICK + client.getNickname() + " " + input.getParam()[2] + " : No such nickname\r\n";
 		send(client.getSocketfd(), message.c_str(), message.length(), 0);
 		return ;
 	}
