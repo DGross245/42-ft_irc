@@ -145,6 +145,8 @@ void Server::executeMsg( Parser &input, Client &client ) {
 		command.pass(input, client , this->getPassword());
 	else if (input.getCMD() == "PART")
 		command.part(input, client, this->getChannels());
+	else if (input.getCMD() == "TOPIC")
+		command.topic(input, client, this->getChannels());
 	return ;
 }
 

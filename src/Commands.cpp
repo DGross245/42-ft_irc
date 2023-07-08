@@ -60,6 +60,26 @@ void Commands::pass( Parser &input, Client client, std::string password ) {
 	return ;
 }
 
+void Commands::topic( Parser &input, Client client, std::vector<Channel> &channels) {
+	std::string message;
+	std::vector<Channel>::iterator channelIt = searchForChannel(input.getParam()[0], channels);
+	if (channelIt == channels.end()) {
+		message = SERVER " " ERR_NOSUCHCHANNEL " " + client.getNickname() + " " + input.getParam()[0] + " : No such channel\r\n";
+		send(client.getSocketfd(), message.c_str(), message.length(), 0);
+		return ;
+	}
+	if (input.getTrailing().empty()) {
+		if (channelIt->getTopic().empty())
+			message = SERVER " " RPL_NOTOPIC " " + client.getNickname() + " " + channelIt->getChannelName() + " :No topic set\r\n";
+		else
+			message = SERVER " " RPL_TOPIC " " + client.getNickname() + " " + channelIt->getChannelName() + " :" + channelIt->getTopic() + "\r\n";
+		send(client.getSocketfd(), message.c_str(), message.length(), 0);
+	}
+	else
+		channelIt->setTopic(input.getTrailing(), client);
+	return ;
+}
+
 void Commands::joinChannel( std::string channelName, Client user, std::vector<Channel> &channels) {
 	std::vector<Channel>::iterator channelIt = searchForChannel( channelName, channels);
 	if (channelIt == channels.end()) {

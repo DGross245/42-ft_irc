@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 #include <sys/socket.h>
+#include "Constants.hpp"
 
 Channel::Channel( std::string name, Client user ) : _name(name), _limit(0), _founder(user) {
 	_mode['t'] = false;
@@ -50,24 +51,25 @@ void Channel::setMode( std::map<char,bool> mode )  {
 void Channel::setTopic( std::string topic, Client client ) {
 	std::string message;
 	if (this->getMode()['t'] == true) {
-		if (this->_founder.getSocketfd() == client.getSocketfd())
+		std::cout << "kek";
+		if (this->getFounder().getSocketfd() == client.getSocketfd())
 			this->_topic = topic;
 		else {
-			for (std::vector<Client>::iterator it = this->_op.begin(); it != this->_op.end(); it++ ) {
+			for (std::vector<Client>::iterator it = this->getOP().begin(); it != this->getOP().end(); it++ ) {
 				if (it->getSocketfd() == client.getSocketfd() ) {
 					this->_topic = topic;
-					message = ":IRCSERV 332" + client.getNickname() + this->getChannelName() + ":" + this->_topic;
+					message = SERVER " " RPL_TOPIC " " + client.getNickname() + this->getChannelName() + ":" + this->getTopic() + "\r\n";
 					send(client.getSocketfd(), message.c_str(), message.length(), 0);
 					return ;
 				}
 			}
-			message = ":IRCSERV 482" + client.getNickname() + this->getChannelName() + ":You're not a channel operator";
+			message = SERVER " " ERR_CHANOPRIVSNEEDED " " + client.getNickname() + " " + this->getChannelName() + ":You're not a channel operator\r\n";
 			send(client.getSocketfd(), message.c_str(), message.length(), 0);
 		}
 	}
 	else {
 		this->_topic = topic;
-		message = ":IRCSERV 332" + client.getNickname() + this->getChannelName() + ":" + this->_topic;
+		message = SERVER " " RPL_TOPIC " " + client.getNickname() + " " + this->getChannelName() + ":" + this->getTopic() + "\r\n";
 		send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	}
 	return ;
