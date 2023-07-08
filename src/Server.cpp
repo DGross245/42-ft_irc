@@ -23,7 +23,7 @@
 
 Server::Server( std::string port, std::string password ) {
 	if (port.find_first_not_of("0123456789") == std::string::npos) {
-		int _port = static_cast<int>( strtod(port.c_str(), nullptr) );
+		int _port = static_cast<int>( strtod(port.c_str(), NULL) );
 		int overflowCheck;
 
 		std::stringstream ss(port);
@@ -61,17 +61,17 @@ std::string Server::getPassword( void ) {
 	return (this->_password);
 }
 
-std::vector<Channel>	&Server::getChannels(void) {
+std::vector<Channel> &Server::getChannels(void) {
 	return (this->_channel);
-}
-
-std::vector<Client>		&Server::getClients(void) {
-	return (this->_connections);
 }
 
 void Server::setPort( int port ) {
 	this->_port = port;
 	return ;
+}
+
+std::vector<Client> &Server::getConnections(void) {
+	return (this->_connections);
 }
 
 void Server::setPassword( std::string &password ) {
@@ -89,7 +89,7 @@ void Server::initServer( void ) {
 	struct sockaddr_in serverAddress;
 	memset(&serverAddress, 0, sizeof(serverAddress));
 	serverAddress.sin_family = AF_INET;
-	serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1"); // später IP noch ändern
+	serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
 	serverAddress.sin_port = htons(this->getPort());
 	fcntl(serverSocketfd, F_SETFL, O_NONBLOCK);
 	bind(serverSocketfd, reinterpret_cast<struct sockaddr *>(&serverAddress), sizeof(serverAddress));
@@ -120,7 +120,6 @@ void Server::addClient( int serverSocketfd, fd_set &readfds ) {
 	return ;
 }
 
-// all the data from the server with the connected clients etc is the sever class (there is a vectore which stores all of that informations)
 void Server::executeMsg( Parser &input, Client &client ) {
 	Commands	command;
 
@@ -138,10 +137,10 @@ void Server::executeMsg( Parser &input, Client &client ) {
 		}
 	}
 	else if (input.getCMD() == "NICK") {
-		command.nick(input, client, this->getClients());
+		command.nick(input, client, this->getConnections());
 	}
 	else if (input.getCMD() == "USER") {
-		command.user(input, client, this->getClients());
+		command.user(input, client, this->getConnections());
 	}
 	else if (input.getCMD() == "PING") {
 		std::string message = "PONG :127.0.0.1";
@@ -149,59 +148,38 @@ void Server::executeMsg( Parser &input, Client &client ) {
 	}
 	else if (input.getCMD() == "JOIN") {
 		command.join(input, client, this->getChannels());
-        // joinChannel(input.getParam()[0], client);
-        // std::string joinMessageClient = ":dgross JOIN #test\r\n";
-        // std::string switchBuffer = "/buffer #test\r\n";
-        // // std::string message = ":dgross PRIVMSG #test :Hello, everyone!\r\n";
-        // send(client.getSocketfd(), joinMessageClient.c_str(), joinMessageClient.length(), 0);
-        // send(client.getSocketfd(), switchBuffer.c_str(), switchBuffer.length(), 0);
-        // send(client, message.c_str(), message.length(), 0);
     }
+	else if (input.getCMD() == "QUIT") {
+		command.quit(input, client, this->getChannels());
+	}
+	else if (input.getCMD() == "PRIVMSG") {
+		command.privmsg(input, client, this->getConnections(), this->getChannels());
+	}
+	else if (input.getCMD() == "KICK") {
+		command.kick(input, client, this->getChannels());
+	}
+	else if (input.getCMD() == "MODE") {
+		command.mode(input, client, this->getChannels());
+	}
 	else if (input.getCMD() == "PASS") {
 		command.pass(input, client , this->getPassword());
 	}
+<<<<<<< HEAD
 	else if (input.getCMD() == "INVITE") {
 		command.invite(client, input);
 	}
+=======
+>>>>>>> dev-branch
 	return ;
 }
 
-// !!!!! This functin is moved to commands class !!!!!!!!
-// int Server::searchForChannel( std::string channelName ) {
-// 	for (std::vector<Channel>::iterator iterator = this->_channel.begin(); iterator != this->_channel.end(); iterator++ ) {
-// 		if (iterator->getChannelName() == channelName )
-// 			return (std::distance(this->_channel.begin(), iterator));
-// 	}
-// 	return (-1);
-// }
-
-// !!!!! This functin is moved to commands class !!!!!!!!
-// void Server::joinChannel( std::string channelName, Client user) {
-// 	int	i = searchForChannel( channelName );
-// 	if (i < 0) {
-// 		// creating the channel if the channel does not exist
-// 		this->_channel.push_back(Channel ( channelName, user ));
-// 		this->_channel.end()->setSettings();
-// 		this->_channel.end()->addUser( user );
-// 	}
-// 	else {
-// 		if (this->_channel[i].canUserJoin( user )) {
-// 			this->_channel[i].addUser( user );
-// 			// delete user from invite list
-// 		}
-// 		else
-// 			; // Nachricht an Client : Invited only, can't join!
-// 	}
-// 	return ;
-// }
-
 static void Sprinter( Parser parser) {
 	// std::cout << "Prefix:" << parser.getPrefix() << std::endl;
-	// std::cout << "Command:" << parser.getCMD() << std::endl;
+	std::cout << "Command:" << parser.getCMD() << std::endl;
 	std::vector<std::string> test = parser.getParam();
 	for (std::vector<std::string>::iterator it = test.begin(); it != test.end(); it++)
-		// std::cout << "Param :" << *it << std::endl;
-	// std::cout << "trailing :" << parser.getTrailing() << std::endl;
+		 std::cout << "Param :" << *it << std::endl;
+	 std::cout << "trailing :" << parser.getTrailing() << std::endl;
 	return ;
 }
 
@@ -209,6 +187,7 @@ void Server::readMsg( Client &client, int i) {
 	char buffer[1024];
 	ssize_t bytes_read;
 	bytes_read = ::recv(client.getSocketfd(), buffer, sizeof(buffer), 0);
+	std::cout << buffer << "<-buffer" << std::endl;
 	if (bytes_read == -1)
 		throw serverFailException("recv Error");
 	else if (bytes_read == 0) {

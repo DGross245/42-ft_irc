@@ -8,7 +8,11 @@
 // SearchforUser und Leavechannel vlt zu einem Template umcoden, weil benutze es doppelt
 // im sinne von sucht und returnt den index, gibt es ihn nicht dann -1
 
-Channel::Channel( std::string name, Client user ) : _name(name), _isTopicRestricted(false), _isInviteOnly(false), _founder(user) {
+Channel::Channel( std::string name, Client user ) : _name(name), _limit(0), _founder(user) {
+	_mode['t'] = false;
+	_mode['k'] = false;
+	_mode['l'] = false;
+	_clients.push_back(user);
 	return ;
 }
 
@@ -20,18 +24,19 @@ void Channel::leaveChannel( std::string username ) { // vlt username mit einer i
 	for (std::vector<Client>::iterator iterator = this->_clients.begin(); iterator != this->_clients.end(); iterator++ ) {
 		if (iterator->getUsername() == username ) { // vlt anstatt username id nehmen (macht vlt auch kein unterschied)
 			if (this->_founder.getSocketfd() == iterator->getSocketfd()) // Vllt dort socket vergleichen
-				;//Promote some to founder
-			this->_clients.erase(iterator); 
+				(void)username;//Promote some to founder
+			this->_clients.erase(iterator);
 			// invited liste auch löschen
 			return ;
 		}
 	}
+	std::cout << "error in leaveserver" << std::endl;
 	throw channelFailException("Error: User not found");
 	return ;
 }
 
 void Channel::addUser( Client user ) {
-	this->_clients.push_back(Client ( user ));
+	this->_clients.push_back( user );
 	return ;
 }
 
@@ -43,25 +48,65 @@ std::string Channel::getChannelName( void ) {
 	return (this->_name);
 }
 
+std::vector<Client> &Channel::getClients( void ) {
+	return (this->_clients);
+}
+
+std::vector<Client> &Channel::getInviteList( void ) {
+	return (this->_invited);
+}
+
+std::vector<Client> &Channel::getOP( void ) {
+	return (this->_op);
+}
+
+void Channel::setFounder( Client client ) {
+	this->_founder = client;
+	return ;
+}
+
+Client Channel::getFounder( void ) {
+	return (this->_founder);
+}
+
+void Channel::setLimit( int limit ) {
+	this->_limit = limit;
+	return ;
+}
+
+void Channel::setPassword( std::string password ) {
+	this->_password = password;
+	return ;
+}
+
+void Channel::setMode( std::map<char,bool> mode )  {
+	this->_mode = mode;
+	return ;
+}
+
+std::map<char,bool> &Channel::getMode( void ) {
+	return (this->_mode);
+}
+
+std::string Channel::getPassword( void ) {
+	return (this->_password);
+}
+
 int	Channel::searchforUser( Client user ) {
 	for (std::vector<Client>::iterator iterator = this->_invited.begin(); iterator != this->_invited.end(); iterator++ ) {
-		if (iterator->getUsername() == user.getUsername() ) { // vlt anstatt username id nehmen (macht vlt auch kein unterschied)
-			this->_invited.erase(iterator); 
+		if (iterator->getSocketfd() == user.getSocketfd() ) { // vlt anstatt username id nehmen (macht vlt auch kein unterschied)
 			return (1);
 		}
 	}
-	throw channelFailException("Error: User not found");
 	return (0);
 }
 
 bool Channel::canUserJoin( Client user ) {
-	if (this->_isInviteOnly == 1) {
+	if (this->getMode()['i'] == true) {
 		if (searchforUser( user ))
 			return (true);
 	}
-	else
-		return (true);
-	return (false);
+	return (true);
 }
 
 void Channel::setFounder( Client &founder ) {
@@ -74,7 +119,7 @@ std::string Channel::getTopic( void ) {
 }
 void Channel::setTopic( std::string topic, Client client ) {
 	std::string message;
-	if (this->_isTopicRestricted) {
+	if (this->getMode()['t'] == true) {
 		if (this->_founder.getSocketfd() == client.getSocketfd())
 			this->_topic = topic;
 		else {

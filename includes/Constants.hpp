@@ -24,6 +24,7 @@
 # define ERR_NORECIPIEN			"411"
 # define ERR_NOTEXTTOSEND		"412"
 # define ERR_NOSUCHSERVER		"402"
+# define ERR_CANNOTSENDTOCHAN   "404"
 
 //COLOURS
 # define RESET   "\033[0m"
