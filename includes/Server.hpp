@@ -35,15 +35,6 @@ public:
 	std::string				getPassword( void );
 	std::vector<Client>		&getConnections( void );
 	std::vector<Channel>	&getChannels(void);
-	// std::string				getPassword( void );
-	// int						getPort( void );
-	// int						getMaxfd( fd_set &readfds );
-	// std::vector<Channel>	&getChannels(void);
-	// std::vector<Client>		&getClients(void);
-	// void					setPort( int port );
-	// void					setPassword( std::string &password );
-	// void					setTime( void );
-	// void					setServerfd( int serverSocketfd );
 
 	class serverFailException : std::exception {
 
@@ -61,12 +52,12 @@ public:
 
 private:
 
-	std::vector<Client> _connections; // all clients on the server
-	std::vector<Channel> _channel; // how many channels on the server
-	int _serverfd;
-	int _port;
-	std::string _password;
-	struct timeval _tv;
+	std::vector<Client>		_connections;
+	std::vector<Channel>	_channels;
+	int						_serverfd;
+	int						_port;
+	std::string				_password;
+	struct timeval			_tv;
 };
 
 #endif

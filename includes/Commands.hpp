@@ -26,10 +26,11 @@ public:
 	static void kick(Parser &input, Client requestor, std::vector<Channel> &channels);
 	static void mode(Parser &input, Client client, std::vector<Channel> &channels);
 	static void part(Parser &input, Client client, std::vector<Channel> &channels);
+	static void ping(Parser &input, Client client);
+	static void cap(Parser &input, Client client);
 	static void	nick(Parser& input, Client& client, std::vector<Client>& connections);
 	static void user(Parser &input, Client &client, std::vector<Client>& connections);
 	static void	invite(Client& client);
-
 	//Mode functions
 	static void executeInvite(bool sign, Channel &channel, std::string param, Client client);
 	static void executeKey(bool sign, Channel &channel, std::string param, Client client);

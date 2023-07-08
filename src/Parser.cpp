@@ -64,11 +64,19 @@ void Parser::isValidCommandLine( Client client ) {
 		checkPING( client );
 	else if (this->getCMD() == "PART")
 		checkPART( client );
+	else if (this->getCMD() == "CAP")
+		checkCAP( client );
+	return ;
+}
+
+void Parser::checkCAP( Client client) {
+	if (this->getParam().size() < 1 || !this->getTrailing().empty())
+		sendError( client );
 	return ;
 }
 
 void Parser::sendError( Client client ) {
-	std::string message = SERVER  "" ERR_NEEDMOREPARAMS + client.getNickname() + " " + this->getCMD() + " :Not enough parameters";
+	std::string message = SERVER  " " ERR_NEEDMOREPARAMS " " + client.getNickname() + " " + this->getCMD() + " :Not enough parameters";
 	send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	throw parserErrorException("Invalid Command " + this->getCMD());
 	return ;

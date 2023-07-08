@@ -28,7 +28,26 @@ std::vector<Channel>::iterator	Commands::searchForChannel( std::string channelNa
 	}
 	return (iterator);
 }
+void Commands::ping( Parser &input, Client client ) {
+	std::string message = "PONG :" + input.getParam()[0] + "\r\n";
+	send(client.getSocketfd(), message.c_str(), message.length(), 0);
+	return ;
+}
 
+void Commands::cap( Parser &input, Client client ) {
+	if (input.getParam()[0] == "LS") {
+			std::string message = "CAP * LS :JOIN\r\n";
+			send(client.getSocketfd(), message.c_str(), message.length(), 0);
+	}
+	else if (input.getParam()[0] == "END") {
+		std::string message = "CAP * ACK :JOIN\r\n";
+		send(client.getSocketfd(), message.c_str(), message.length(), 0);
+	}
+	else {
+		std::cout << "Invalid cap\n";
+	}
+	return ;
+}
 void Commands::pass( Parser &input, Client client, std::string password ) {
 	if (*input.getParam().begin() == password) {
 		std::cout << "PW accepted!" << std::endl;

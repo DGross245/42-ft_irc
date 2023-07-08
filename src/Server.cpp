@@ -62,7 +62,7 @@ std::string Server::getPassword( void ) {
 }
 
 std::vector<Channel> &Server::getChannels(void) {
-	return (this->_channel);
+	return (this->_channels);
 }
 
 void Server::setPort( int port ) {
@@ -123,50 +123,28 @@ void Server::addClient( int serverSocketfd, fd_set &readfds ) {
 void Server::executeMsg( Parser &input, Client &client ) {
 	Commands	command;
 
-	if (input.getCMD() == "CAP") {
-		std::vector<std::string> params = input.getParam();
-		for (std::vector<std::string>::iterator it = params.begin(); it != params.end(); it++) {
-			if (*it == "END") {
-				std::string message = "CAP * ACK :JOIN\r\n";
-				send(client.getSocketfd(), message.c_str(), message.length(), 0);
-			}
-			else if (*it == "LS") {
-				std::string message = "CAP * LS :JOIN\r\n";
-				send(client.getSocketfd(), message.c_str(), message.length(), 0);
-			}
-		}
-	}
-	else if (input.getCMD() == "NICK") {
+	if (input.getCMD() == "CAP")
+		command.cap(input, client);
+	else if (input.getCMD() == "NICK")
 		command.nick(input, client, this->getConnections());
-	}
-	else if (input.getCMD() == "USER") {
+	else if (input.getCMD() == "USER")
 		command.user(input, client, this->getConnections());
-	}
-	else if (input.getCMD() == "PING") {
-		std::string message = "PONG :127.0.0.1";
-		send(client.getSocketfd(), message.c_str(), message.length(), 0);
-	}
-	else if (input.getCMD() == "JOIN") {
+	else if (input.getCMD() == "PING")
+		command.ping(input, client);
+	else if (input.getCMD() == "JOIN")
 		command.join(input, client, this->getChannels());
-    }
-	else if (input.getCMD() == "QUIT") {
+	else if (input.getCMD() == "QUIT")
 		command.quit(input, client, this->getChannels());
-	}
-	else if (input.getCMD() == "PRIVMSG") {
+	else if (input.getCMD() == "PRIVMSG")
 		command.privmsg(input, client, this->getConnections(), this->getChannels());
-	}
-	else if (input.getCMD() == "KICK") {
+	else if (input.getCMD() == "KICK")
 		command.kick(input, client, this->getChannels());
-	}
-	else if (input.getCMD() == "MODE") {
+	else if (input.getCMD() == "MODE")
 		command.mode(input, client, this->getChannels());
-	}
-	else if (input.getCMD() == "PASS") {
+	else if (input.getCMD() == "PASS")
 		command.pass(input, client , this->getPassword());
-	}
-	else if (input.getCMD() == "PART") {
+	else if (input.getCMD() == "PART")
 		command.part(input, client, this->getChannels());
-	}
 	return ;
 }
 
