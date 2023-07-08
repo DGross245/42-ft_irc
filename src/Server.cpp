@@ -161,7 +161,7 @@ void Server::executeMsg( Parser &input, Client &client ) {
 		command.pass(input, client , this->getPassword());
 	}
 	else if (input.getCMD() == "INVITE") {
-		command.invite(client);
+		command.invite(client, input);
 	}
 	return ;
 }

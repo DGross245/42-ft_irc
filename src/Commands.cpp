@@ -214,25 +214,57 @@ void Commands::user(Parser& input, Client& client, std::vector<Client>& connecti
 }
 
 
-// function handle_invite_command(inviter, nickname, channel):
-//     if !channel_exists(channel):
-//         send_numeric_reply(inviter, ERR_NOTONCHANNEL, channel)
-//         return
+// INVITE <nickname> <channel>
 
-//     if !user_has_channel_operator_privileges(inviter, channel):
-//         send_numeric_reply(inviter, ERR_CHANOPRIVSNEEDED, channel)
-//         return
+// // <nickname>: The nickname of the user being invited.
+// // <channel>: The name of the channel to which the user is being invited.
 
-//     if user_is_online(nickname):
-//         send_invite_to_user(nickname, inviter, channel)
-//         send_numeric_reply(inviter, RPL_INVITING, nickname, channel)
-//     else:
-//         send_numeric_reply(inviter, ERR_NOSUCHNICK, nickname)
+// 1. Check if the invoker has the necessary permissions to send invitations.
 
-void Commands::invite(Client& client){
-	(void) client;
-	std::cout << "invite command" << std::endl;
+// 2. Check if the <nickname> and <channel> parameters are valid and exist.
+
+// 3. Retrieve the connection details of the user associated with <nickname>.
+
+// 4. Send an INVITE message to the target user using their connection details:
+//    - Command: INVITE
+//    - Parameters: <nickname> <channel>
+
+// 5. The target user receives the invitation and may choose to accept or decline.
+
+// 6. If the invitation is accepted:
+//    - Add the user to the list of channel members.
+//    - Notify the channel members about the user's arrival.
+
+// 7. If the invitation is declined or not responded to within a timeout period:
+//    - Notify the invoker of the declined invitation or lack of response.
+
+bool checkRights(std::string name, std::vector<Client> channelRights) {
+	for (size_t i = 0; i < channelRights.size(); ++i) {
+		if (channelRights[i] == name)
+			return true;
+	}
+	return false;
 }
+
+bool checkChannel()
+
+void Commands::invite(Client& client, Parser& input, Channel &channel, ) {
+	std::cout << "Command: " << input.getCMD() << std::endl;
+	std::cout << "Parameters: ";
+	const std::vector<std::string>& params = input.getParam();
+	for (std::vector<std::string>::const_iterator it = params.begin(); it != params.end(); ++it) {
+		std::cout << *it << " ";
+	}
+	std::cout << std::endl;
+	std::cout << "invite command" << std::endl;
+
+	if(checkRights(input.getParam()[0], channel.get)) {
+		return ;
+	}
+	else if ()
+}
+
+
 
 Commands::commandFailException::~commandFailException( void ) throw() { return ;	}
 Commands::commandFailException::commandFailException( std::string error ) : _error(error) { return ; }
