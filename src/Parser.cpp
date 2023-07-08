@@ -154,6 +154,8 @@ void Parser::checkPART( Client client ) {
 	return ;
 }
 
+// @todo Have to rework parser, mulitple cmd in one line are ignored
+// @todo Have to add more error messages to better replay on erros using the ERR_... codes
 void Parser::parseMsg( Client client ) {
 	if (this->_input[0] == ':')
 		prefixHandler(this->_input.substr(1, this->_input.find_first_of(' ')));

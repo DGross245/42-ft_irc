@@ -22,8 +22,6 @@ public:
 	void 	addClient( int serverSocketfd, fd_set &readfds );
 	void	readMsg( Client &client, int i);
 	void	executeMsg( Parser &input, Client &client );
-	int		searchForChannel( std::string channelName );
-	void	joinChannel( std::string channelName , Client user );
 	void	launchServer( void );
 
 	int						getPort( void );

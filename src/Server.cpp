@@ -120,6 +120,7 @@ void Server::addClient( int serverSocketfd, fd_set &readfds ) {
 	return ;
 }
 
+// @todo JOIN CMD excepts channelnames without # (need to be fixed)
 void Server::executeMsg( Parser &input, Client &client ) {
 	Commands	command;
 
