@@ -293,7 +293,7 @@ void Commands::executeLimit( bool sign, Channel &channel, std::string param, Cli
 		else
 			std::cout << "Mode: ERROR!" << std::endl;
 	}
-	else 
+	else
 		channel.getMode()['l'] = sign;
 	(void)client;
 	return ;
@@ -440,54 +440,54 @@ void Commands::user(Parser& input, Client& client, std::vector<Client>& connecti
 }
 
 
-// INVITE <nickname> <channel>
-
-// // <nickname>: The nickname of the user being invited.
-// // <channel>: The name of the channel to which the user is being invited.
-
 // 1. Check if the invoker has the necessary permissions to send invitations.
 
-// 2. Check if the <nickname> and <channel> parameters are valid and exist.
+// 2. Check if the <nickname> is available on server
 
-// 3. Retrieve the connection details of the user associated with <nickname>.
+// 3. Check if <channel>  valid and exist.
 
 // 4. Send an INVITE message to the target user using their connection details:
 //    - Command: INVITE
 //    - Parameters: <nickname> <channel>
 
-// 5. The target user receives the invitation and may choose to accept or decline.
+// 5. The target user receives the invitation
 
 // 6. If the invitation is accepted:
 //    - Add the user to the list of channel members.
 //    - Notify the channel members about the user's arrival.
 
-// 7. If the invitation is declined or not responded to within a timeout period:
-//    - Notify the invoker of the declined invitation or lack of response.
-
-bool checkRights(std::string name, std::vector<Client> channelRights) {
-	for (size_t i = 0; i < channelRights.size(); ++i) {
-		if (channelRights[i] == name)
+bool checkForClient(std::string Username, std::vector<Client> &operatorMembers) {
+	for (size_t i = 0; i < operatorMembers.size(); ++i) {
+		if (operatorMembers[i].getUsername() == Username)
 			return true;
 	}
 	return false;
 }
 
-bool checkChannel()
+// bool searchNickname() {
 
-void Commands::invite(Client& client, Parser& input, Channel &channel, ) {
+// }
+
+void Commands::invite(Client& client, Parser& input, std::vector<Client> &operatorMembers) {
+	(void) client;
 	std::cout << "Command: " << input.getCMD() << std::endl;
 	std::cout << "Parameters: ";
 	const std::vector<std::string>& params = input.getParam();
 	for (std::vector<std::string>::const_iterator it = params.begin(); it != params.end(); ++it) {
 		std::cout << *it << " ";
 	}
-	std::cout << std::endl;
 	std::cout << "invite command" << std::endl;
 
-	if(checkRights(input.getParam()[0], channel.get)) {
+	// if (checkPermission()){
+
+	// }
+	if (checkForClient(input.getParam()[0], operatorMembers)) {
 		return ;
 	}
-	else if ()
+	// if (checkForChannel()) {
+
+	// }
+	// if (sendInviteToClient())
 }
 
 

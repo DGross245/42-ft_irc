@@ -38,8 +38,7 @@ public:
 	// std::string				getPassword( void );
 	// int						getPort( void );
 	// int						getMaxfd( fd_set &readfds );
-	// std::vector<Channel>	&getChannels(void);
-	// std::vector<Client>		&getClients(void);
+	std::vector<Client>		&getClients(void);
 	// void					setPort( int port );
 	// void					setPassword( std::string &password );
 	// void					setTime( void );

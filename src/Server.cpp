@@ -148,7 +148,7 @@ void Server::executeMsg( Parser &input, Client &client ) {
 	}
 	else if (input.getCMD() == "JOIN") {
 		command.join(input, client, this->getChannels());
-    }
+	}
 	else if (input.getCMD() == "QUIT") {
 		command.quit(input, client, this->getChannels());
 	}
@@ -164,12 +164,11 @@ void Server::executeMsg( Parser &input, Client &client ) {
 	else if (input.getCMD() == "PASS") {
 		command.pass(input, client , this->getPassword());
 	}
-<<<<<<< HEAD
 	else if (input.getCMD() == "INVITE") {
-		command.invite(client, input);
+		std::cout << "Username: " << client.getUsername() << std::endl;
+		std::cout << "Nickname: " << client.getNickname() << std::endl;
+		command.invite(client, input, this->getConnections());
 	}
-=======
->>>>>>> dev-branch
 	return ;
 }
 

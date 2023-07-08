@@ -30,7 +30,6 @@ public:
 	std::map<char,bool> &getMode( void );
 	std::string getTopic( void );
 	std::string getChannelName( void );
-	std::vector<Client>
 	std::string getPassword( void );
 	std::vector<Client> &getClients( void );
 	std::vector<Client> &getInviteList( void );
@@ -54,22 +53,15 @@ private:
 
 	std::string _name;
 	std::vector<Client> _clients;
-	std::vector<Client> _invited; //invited clients
 	std::map<char, bool> _mode;
 	int _limit;
 	std::string _topic; // of the channel
 	std::string _password;
 	std::vector<Client> _op; // vlt doch kein vector aber mal gucken // clients which got admin rights
 	Client _founder; // the founder of the channel
-	bool				_isTopicRestricted; // if true only the founder can change the topic of the channel
-	bool				_isInviteOnly;
-	Client				_founder; // the founder of the channel
-	std::string			_name;
-	std::string			_topic; // of the channel
-	std::string			_password;
-	std::vector<Client>	_clients;
+	// bool				_isTopicRestricted; // if true only the founder can change the topic of the channel
+	// bool				_isInviteOnly;
 	std::vector<Client>	_invited; //invited clients
-	std::vector<Client>	_operatorChannelMembers; // vlt doch kein vector aber mal gucken // clients which got admin rights
 
 };
 
