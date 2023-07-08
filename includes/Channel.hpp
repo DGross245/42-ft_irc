@@ -14,10 +14,9 @@ public:
 	Channel( std::string name, Client user );
 	~Channel( void );
 
-	void leaveChannel( std::string username );
 	void addUser( Client user );
 	void setSettings( void );
-	int searchforUser( Client user );
+	std::vector<Client>::iterator searchForUser( std::string nickname, std::vector<Client> &clients );
 	bool canUserJoin( Client user );
 	void setFounder( Client &Founder );
 

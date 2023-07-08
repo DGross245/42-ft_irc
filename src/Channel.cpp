@@ -20,21 +20,6 @@ Channel::~Channel( void ) {
 	return ;
 }
 
-void Channel::leaveChannel( std::string username ) { // vlt username mit einer instanz umtauschen
-	for (std::vector<Client>::iterator iterator = this->_clients.begin(); iterator != this->_clients.end(); iterator++ ) {
-		if (iterator->getUsername() == username ) { // vlt anstatt username id nehmen (macht vlt auch kein unterschied)
-			if (this->_founder.getSocketfd() == iterator->getSocketfd()) // Vllt dort socket vergleichen
-				(void)username;//Promote some to founder
-			this->_clients.erase(iterator);
-			// invited liste auch löschen
-			return ;
-		}
-	}
-	std::cout << "error in leaveserver" << std::endl;
-	throw channelFailException("Error: User not found");
-	return ;
-}
-
 void Channel::addUser( Client user ) {
 	this->_clients.push_back( user );
 	return ;
@@ -92,19 +77,23 @@ std::string Channel::getPassword( void ) {
 	return (this->_password);
 }
 
-int	Channel::searchforUser( Client user ) {
-	for (std::vector<Client>::iterator iterator = this->_invited.begin(); iterator != this->_invited.end(); iterator++ ) {
-		if (iterator->getSocketfd() == user.getSocketfd() ) { // vlt anstatt username id nehmen (macht vlt auch kein unterschied)
-			return (1);
+std::vector<Client>::iterator Channel::searchForUser( std::string nickname, std::vector<Client> &clients ) {
+	std::vector<Client>::iterator clientIt;
+	for (clientIt = clients.begin(); clientIt != clients.end(); clientIt++ ) {
+		if (clientIt->getNickname() == nickname ) {
+			break ;
 		}
 	}
-	return (0);
+	return (clientIt);
 }
 
 bool Channel::canUserJoin( Client user ) {
 	if (this->getMode()['i'] == true) {
-		if (searchforUser( user ))
+		std::vector<Client>::iterator inviteIt = this->searchForUser( user.getNickname(), this->getInviteList());
+		if (inviteIt != this->getInviteList().end())
 			return (true);
+		else
+			return (false);
 	}
 	return (true);
 }
