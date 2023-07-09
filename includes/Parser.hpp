@@ -10,7 +10,7 @@ class Parser {
 
 public:
 
-	Parser( std::string Buffer, Client client );
+	Parser( std::string &buffer, Client client );
 	~Parser( void );
 
 	void parseMsg( Client client );

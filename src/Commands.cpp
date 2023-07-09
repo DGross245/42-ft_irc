@@ -54,8 +54,8 @@ void Commands::pass( Parser &input, Client client, std::string password ) {
 		return ;
 	}
 	else {
-		std::string message = SERVER " " ERR_PASSWDMISMATCH " dgross :Wrong Password\r\n";
-		send(client.getSocketfd(), message.c_str(), sizeof(message), 0);
+		std::string message = SERVER " " ERR_PASSWDMISMATCH " " + client.getNickname() + " :Wrong Password\r\n";
+		send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	}
 	return ;
 }

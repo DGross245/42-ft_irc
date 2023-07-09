@@ -162,9 +162,9 @@ static void Sprinter( Parser parser) {
 }
 
 void Server::readMsg( Client &client, int i) {
-	char buffer[1024];
+	std::string buffer(1024, '\0');
 	ssize_t bytes_read;
-	bytes_read = ::recv(client.getSocketfd(), buffer, sizeof(buffer), 0);
+	bytes_read = ::recv(client.getSocketfd(), &buffer[0], sizeof(buffer), 0);
 	if (bytes_read == -1)
 		throw serverFailException("recv Error");
 	else if (bytes_read == 0) {
@@ -175,9 +175,11 @@ void Server::readMsg( Client &client, int i) {
 	else {
 		try
 		{
-			Parser input( buffer, client );
-			Sprinter( input );
-			executeMsg( input, client );
+			while (!buffer.empty() && buffer.find("\r\n") != std::string::npos) {
+				Parser input( buffer, client );
+				Sprinter( input );
+				executeMsg( input, client );
+			}
 		}
 		catch(const Parser::parserErrorException &e)
 		{

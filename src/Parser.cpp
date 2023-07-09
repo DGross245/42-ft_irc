@@ -6,11 +6,12 @@
 #include <vector>
 #include <sys/socket.h>
 
-Parser::Parser( std::string buffer, Client client ) {
+Parser::Parser( std::string &buffer, Client client ) {
 	size_t pos = buffer.find("\r\n");
 	if (pos != std::string::npos ) {
 		this->_input = buffer.substr(0, pos);
 		parseMsg( client );
+		buffer.erase(0, pos + 2);
 	}
 	else
 		std::cerr << "Parsing Error" << std::endl;
