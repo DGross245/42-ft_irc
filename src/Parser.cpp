@@ -40,6 +40,7 @@ std::vector<std::string> &Parser::getParam( void ) {
 }
 
 // @todo problem bei nachrichten mit mehreren spacesseses ca 3 wörter gehen nicht
+// @todo wenn jmd anders join wird das erste nick abgehackt kp warum
 void Parser::isValidCommandLine( Client client ) {
 	if (this->getCMD() == "PASS")
 		checkPASS( client );

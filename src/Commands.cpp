@@ -33,7 +33,7 @@ void Commands::ping( Parser &input, Client client ) {
 	send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	return ;
 }
-
+// gibt auch irgendwie nen error manchmal also vllt schicken wir was falsches
 void Commands::cap( Parser &input, Client client ) {
 	if (input.getParam()[0] == "LS") {
 			std::string message = "CAP * LS :JOIN\r\n";
@@ -80,6 +80,7 @@ void Commands::topic( Parser &input, Client client, std::vector<Channel> &channe
 	return ;
 }
 
+// @todo channelname without # works (has to be fixed)
 void Commands::joinChannel( std::string channelName, Client user, std::vector<Channel> &channels) {
 	std::vector<Channel>::iterator channelIt = searchForChannel( channelName, channels);
 	if (channelIt == channels.end()) {
@@ -345,6 +346,7 @@ void Commands::executeTopic( bool sign, Channel &channel, std::string param, Cli
 	return ;
 }
 
+// @todo join noch nicht ganz fertig, channelname ohne # gehen nocht
 void Commands::join(Parser &input, Client client, std::vector<Channel> &channels){
 	// std::cout << "join command called" << std::endl;
 	std::string joinMessageClient = ":" + client.getNickname() + " JOIN " + input.getParam()[0] + "\r\n";;
