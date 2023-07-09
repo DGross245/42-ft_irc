@@ -160,18 +160,22 @@ void Commands::part( Parser &input, Client client, std::vector<Channel> &channel
 	}
 	channelIt->getClients().erase(target);
 	if (!input.getTrailing().empty())
-		forwardMsg(input.getTrailing() + "\r\n", channelIt->getClients());
+		forwardMsg(input.getTrailing() + "\r\n", channelIt->getChannelName(), client.getNickname(), channelIt->getClients());
 	message = ":" + client.getNickname() + " PART " + channelIt->getChannelName() + "\r\n";
 	send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	return ;
 }
 
-void Commands::forwardMsg( std::string message, std::vector<Client> connections) {
-	for (std::vector<Client>::iterator it = connections.begin(); it != connections.end(); it++)
+void Commands::forwardMsg( std::string trailing, std::string channelName,  std::string senderName, std::vector<Client> connections) {
+	for (std::vector<Client>::iterator it = connections.begin(); it != connections.end(); ++it) {
+		std::string message = ":" + senderName + " PRIVMSG " + channelName + " :" + trailing; 
+		std::cout << "Send:" << message << std::endl;
 		send(it->getSocketfd(), message.c_str(), message.length(), 0);
+	}
 	return ;
 }
 
+// @todo clients msg are not being send or didnt reach their target
 void Commands::privmsg( Parser &input, Client client, std::vector<Client> connections, std::vector<Channel> channels) {
 	std::string receiver = input.getParam()[0];
 	std::string message = input.getTrailing() + "\r\n";;
@@ -181,16 +185,17 @@ void Commands::privmsg( Parser &input, Client client, std::vector<Client> connec
 		if (channelIt != channels.end()) {
 			std::vector<Client>::iterator clientIt = channelIt->searchForUser(client.getNickname(), channelIt->getClients());
 			if (clientIt != channelIt->getClients().end()) {
-				forwardMsg(message, connections);
+				std::cout << "USER IN CHANNEL:" << channelIt->getClients().size() << std::endl;
+				forwardMsg(message, channelIt->getChannelName(), client.getNickname(), channelIt->getClients());
 				return ;
 			}
 			else if (channelIt->getMode()['i'] == true || channelIt->getMode()['k'] == true)
 				message = ERR_CANNOTSENDTOCHAN " " + receiver + " :No pemissions\r\n";
 			else
-				forwardMsg(message, connections);
+				forwardMsg(message, channelIt->getChannelName(), client.getNickname(), channelIt->getClients());
 		}
 		else
-			message = ERR_NOSUCHCHANNEL " " " " + receiver + " :No such channel\r\n";
+			message = ERR_NOSUCHCHANNEL " " + receiver + " :No such channel\r\n";
 	}
 	else {
 		for (std::vector<Client>::iterator it = connections.begin(); it != connections.end(); it++) {
@@ -200,7 +205,7 @@ void Commands::privmsg( Parser &input, Client client, std::vector<Client> connec
 				return ;
 			}
 		}
-		message = ERR_NOSUCHNICK " " " " + receiver + " :No such nickname\r\n";
+		message = ERR_NOSUCHNICK " " + receiver + " :No such nickname\r\n";
 	}
 	send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	return ;

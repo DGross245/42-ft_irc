@@ -39,7 +39,7 @@ std::vector<std::string> &Parser::getParam( void ) {
 	return (this->_parameter);
 }
 
-
+// @todo problem bei nachrichten mit mehreren spacesseses ca 3 wörter gehen nicht
 void Parser::isValidCommandLine( Client client ) {
 	if (this->getCMD() == "PASS")
 		checkPASS( client );
@@ -155,10 +155,8 @@ void Parser::checkPART( Client client ) {
 	return ;
 }
 
-// @todo Have to rework parser, mulitple cmd in one line are ignored
 // @todo Have to add more error messages to better replay on erros using the ERR_... codes
 void Parser::parseMsg( Client client ) {
-	//while loop here
 	if (this->_input[0] == ':')
 		prefixHandler(this->_input.substr(1, this->_input.find_first_of(' ')));
 	commandHandler(this->_input.substr(0, this->_input.find_first_of(' ')));
@@ -167,7 +165,6 @@ void Parser::parseMsg( Client client ) {
 	else
 		trailingHandler(this->_input.substr(1, this->_input.find_first_of("\r\n")));
 	isValidCommandLine( client );
-	//hier dann auch executen 
 	return ;
 }
 

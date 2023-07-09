@@ -23,7 +23,7 @@ public:
 	static void quit(Parser &input, Client client, std::vector<Channel> &channels);
 	static std::vector<Channel>::iterator searchForChannel(std::string channelName, std::vector<Channel> &channels);
 	static void joinChannel(std::string channelName, Client user, std::vector<Channel> &channels);
-	static void forwardMsg(std::string message, std::vector<Client> connections);
+	static void forwardMsg(std::string message, std::string channelName, std::string senderName, std::vector<Client> connections);
 	static void kick(Parser &input, Client requestor, std::vector<Channel> &channels);
 	static void mode(Parser &input, Client client, std::vector<Channel> &channels);
 	static void part(Parser &input, Client client, std::vector<Channel> &channels);
