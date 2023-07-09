@@ -5,6 +5,7 @@
 # include <string>
 # include <vector>
 
+// @todo Commands zu einer richtige static classe machen also auch constructor und destructor in privat
 class Commands {
 
 public:
