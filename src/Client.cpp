@@ -8,6 +8,7 @@ Client::~Client( void ) {
 	return ;
 }
 
+//SETTER FUNCTIONS
 void Client::setUsername( std::string username ) {
 	this->_username = username;
 	return ;
@@ -18,6 +19,12 @@ void Client::setNickname( std::string nickname ) {
 	return ;
 }
 
+void Client::setAuthentication( bool authentication ) {
+	this->_isAuthenticated = authentication;
+	return ;
+}
+
+//GETTER FUNCTIONS
 std::string Client::getUsername( void ) {
 	return (this->_username) ;
 }
@@ -34,10 +41,6 @@ bool Client::getAuthentication( void ) {
 	return (this->_isAuthenticated);
 }
 
-void Client::setAuthentication( bool authentication ) {
-	this->_isAuthenticated = authentication;
-	return ;
-}
 
 int Client::getSocketfd( void ) {
 	return (this->_socketfd);

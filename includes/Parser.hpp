@@ -17,7 +17,6 @@ public:
 	void prefixHandler( std::string Prefix );
 	void commandHandler( std::string Command );
 	void paramHandler( std::string Param );
-	void trailingHandler( std::string trailing );
 	void isValidCommandLine( Client client  );
 	void sendError( Client client);
 
@@ -39,7 +38,11 @@ public:
 	std::vector<std::string> &getParam( void );
 	std::string &getPrefix( void );
 	std::string &getTrailing( void );
-
+	std::string &getInput( void );
+	void setPrefix( std::string prefix );
+	void setCMD( std::string command );
+	void setParameter( std::string parameter );
+	void setTrailing( std::string trailing );
 	class parserErrorException : std::exception {
 
 	public:

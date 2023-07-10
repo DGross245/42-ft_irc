@@ -33,7 +33,7 @@ void Commands::ping( Parser &input, Client client ) {
 	send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	return ;
 }
-// gibt auch irgendwie nen error manchmal also vllt schicken wir was falsches
+// @todo gibt auch irgendwie nen error manchmal also vllt schicken wir was falsches
 void Commands::cap( Parser &input, Client client ) {
 	if (input.getParam()[0] == "LS") {
 			std::string message = "CAP * LS :JOIN\r\n";

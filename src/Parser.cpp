@@ -6,21 +6,51 @@
 #include <vector>
 #include <sys/socket.h>
 
+// @todo problem bei nachrichten mit mehreren spacesseses ca 3 wörter gehen nicht
+// @todo wenn jmd anders join wird das erste nick abgehackt kp warum
+// @todo Have to add more error messages to better replay on erros using the ERR_... codes
+// @todo research how delevoper set their vectors
+// @todo something till doesnt work maybe the cutting of the buffer
 Parser::Parser( std::string &buffer, Client client ) {
 	size_t pos = buffer.find("\r\n");
 	if (pos != std::string::npos ) {
 		this->_input = buffer.substr(0, pos);
 		parseMsg( client );
-		buffer.erase(0, pos + 2);
+		buffer.erase(0, pos + 1);
 	}
 	else
 		std::cerr << "Parsing Error" << std::endl;
 	return ;
 }
 
-
 Parser::~Parser( void ) {
 	return ;
+}
+
+// SETTER FUNCTIONS
+void Parser::setPrefix( std::string prefix ) {
+	this->_prefix = prefix;
+	return ;
+}
+
+void Parser::setCMD( std::string command ) {
+	this->_command = command;
+	return ;
+}
+
+void Parser::setParameter( std::string parameter ) {
+	this->_parameter.push_back(parameter);
+	return ;
+}
+
+void Parser::setTrailing( std::string trailing ) {
+	this->_trailing = trailing;
+	return ;
+}
+
+// GETTER FUNCTIONS
+std::string &Parser::getInput( void ) {
+	return (this->_input);
 }
 
 std::string &Parser::getPrefix( void ) {
@@ -39,8 +69,6 @@ std::vector<std::string> &Parser::getParam( void ) {
 	return (this->_parameter);
 }
 
-// @todo problem bei nachrichten mit mehreren spacesseses ca 3 wörter gehen nicht
-// @todo wenn jmd anders join wird das erste nick abgehackt kp warum
 void Parser::isValidCommandLine( Client client ) {
 	if (this->getCMD() == "PASS")
 		checkPASS( client );
@@ -156,7 +184,6 @@ void Parser::checkPART( Client client ) {
 	return ;
 }
 
-// @todo Have to add more error messages to better replay on erros using the ERR_... codes
 void Parser::parseMsg( Client client ) {
 	if (this->_input[0] == ':')
 		prefixHandler(this->_input.substr(1, this->_input.find_first_of(' ')));
@@ -164,19 +191,19 @@ void Parser::parseMsg( Client client ) {
 	if (this->_input[0] != ':')
 		paramHandler(this->_input.substr(0, this->_input.find_first_of("\r\n") ));
 	else
-		trailingHandler(this->_input.substr(1, this->_input.find_first_of("\r\n")));
+		setTrailing(this->_input.substr(1, this->_input.find_first_of("\r\n")));
 	isValidCommandLine( client );
 	return ;
 }
 
 void Parser::prefixHandler( std::string prefix ) {
-	this->_prefix = prefix;
-	this->_input.erase(0, this->_input.find_first_of(' ') + 1);
+	this->setPrefix(prefix);
+	this->getInput().erase(0, this->_input.find_first_of(' ') + 1);
 }
 
 void Parser::commandHandler( std::string command ) {
-	this->_command = command;
-	this->_input.erase(0, this->_input.find_first_of(' ') + 1);
+	this->setCMD(command);
+	this->getInput().erase(0, this->_input.find_first_of(' ') + 1);
 }
 
 void Parser::paramHandler( std::string param ) {
@@ -187,22 +214,17 @@ void Parser::paramHandler( std::string param ) {
 			return ;
 		found = param.find_first_of(": ");
 		if (found != std::string::npos && param[found] == ':') {
-			trailingHandler(param.substr(1, param.find("\r\n")));
+			setTrailing(param.substr(1, param.find("\r\n")));
 			return ;
 		}
 		else if (found == std::string::npos) {
-			this->_parameter.push_back(param.substr(0, param.find("\r\n")));
+			this->getParam().push_back(param.substr(0, param.find("\r\n")));
 			return ;
 		}
 		else
-			this->_parameter.push_back(param.substr(0, found));
+			this->getParam().push_back(param.substr(0, found));
 		param.erase(0, found + 1);
 	}
-}
-
-void Parser::trailingHandler( std::string trailing ) {
-	this->_trailing = trailing;
-	return ;
 }
 
 Parser::parserErrorException::~parserErrorException( void ) throw() { return ; }
