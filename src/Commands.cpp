@@ -190,6 +190,7 @@ void Commands::privmsg( Parser &input, Client client, std::vector<Client> connec
 	return ;
 }
 
+// @funktionier nicht ganz. user wissen nicht wenn er geleavt ist etc
 void Commands::quit( Parser &input, Client client, std::vector<Channel> &channels) {
 	for (std::vector<Channel>::iterator channelIterator = channels.begin(); channelIterator != channels.end(); channelIterator++) {
 		std::vector<Client> &clientCopy = channelIterator->getClients();
@@ -211,6 +212,9 @@ void Commands::quit( Parser &input, Client client, std::vector<Channel> &channel
 }
 
 // mögliche problematik mit bool sign wenn kein sign angegeben ist
+// @todo segfault if Founder tries to demote him self
+// @todo K doesnt work, user can still join without a pw
+// @todo L doesnt work aswell, user can still join after reaching the limit
 void Commands::mode(Parser &input, Client client , std::vector<Channel> &channels) {
 	bool sign;
 	std::string message;
@@ -255,6 +259,10 @@ void Commands::mode(Parser &input, Client client , std::vector<Channel> &channel
 
 void Commands::executeInvite( bool sign, Channel &channel, std::string param, Client client ) {
 	channel.getMode()['i'] = sign;
+	if (sign)
+		std::cout << channel.getChannelName() << " modus was set to: +i" << std::endl;
+	else
+		std::cout << channel.getChannelName() << " modus was set to: -i" << std::endl;
 	(void)param;
 	(void)client;
 	return ;
@@ -265,6 +273,7 @@ void Commands::executeKey( bool sign, Channel &channel, std::string param, Clien
 		if (!param.empty()) {
 			channel.getMode()['k'] = sign;
 			channel.setPassword(param);
+			std::cout << channel.getChannelName() << " modus was set to: +k" << std::endl;
 		}
 		else
 			std::cout << "Mode: ERROR! K" << std::endl;
@@ -272,6 +281,7 @@ void Commands::executeKey( bool sign, Channel &channel, std::string param, Clien
 	else {
 		channel.getMode()['k'] = sign;
 		channel.setPassword("");
+		std::cout << channel.getChannelName() << " modus was set to: -k" << std::endl;
 	}
 	(void)client;
 	return ;
@@ -293,10 +303,12 @@ void Commands::executeOperator( bool sign, Channel &channel, std::string param, 
 	if (sign) {
 		if (operatorIt == channel.getOP().end())
 			channel.getOP().push_back(*clientIt);
+		std::cout << channel.getChannelName() << " " << clientIt->getNickname() << " was promoted to operator" << std::endl;
 	}
 	else {
 		if (operatorIt != channel.getOP().end())
 			channel.getOP().erase(clientIt);
+		std::cout << channel.getChannelName() << " " << clientIt->getNickname() << " was demoted" << std::endl;
 	}
 	(void)client;
 	return ;
@@ -307,24 +319,30 @@ void Commands::executeLimit( bool sign, Channel &channel, std::string param, Cli
 		if (!param.empty()) {
 			channel.getMode()['l'] = sign;
 			channel.setLimit(0);
+			std::cout << channel.getChannelName() << " modus was set to: +l" << std::endl;
 		}
 		else
 			std::cout << "Mode: ERROR! l" << std::endl;
 	}
-	else 
+	else {
 		channel.getMode()['l'] = sign;
+		std::cout << channel.getChannelName() << " modus was set to: -l" << std::endl;
+	}
 	(void)client;
 	return ;
 }
 
 void Commands::executeTopic( bool sign, Channel &channel, std::string param, Client client ) {
 	channel.getMode()['t'] = sign;
+	if (sign)
+		std::cout << channel.getChannelName() << " modus was set to: +t" << std::endl;
+	else
+		std::cout << channel.getChannelName() << " modus was set to: -t" << std::endl;
 	(void)param;
 	(void)client;
 	return ;
 }
-
-// @todo join noch nicht ganz fertig, channelname ohne # gehen nocht
+// @todo join wird irgendwie 2x gesendet
 void Commands::join(Parser &input, Client client, std::vector<Channel> &channels){
 	std::string message;
 	if (input.getParam()[0].at(0) == '#')
