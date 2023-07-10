@@ -12,6 +12,9 @@
 #include <unistd.h>
 #include <map>
 
+// @todo change channel founder to owner
+// @todo error message bei Modi noch fixen und anpassen
+// @todo executeOperator nachricht wenn owner versuch sich zu demoten geht nicht oder kommt nicht an
 Commands::Commands() {
 	return ;
 }
@@ -226,7 +229,7 @@ void Commands::mode(Parser &input, Client client , std::vector<Channel> &channel
 	}
 	std::vector<Client>::iterator clientIt = channelIt->searchForUser(client.getNickname(), channelIt->getOP());
 	if (clientIt == channelIt->getClients().end()) {
-		message = SERVER " " ERR_NOSUCHNICK " " + client.getNickname() + " " + input.getParam()[2] + " : No such nickname\r\n";
+		message = SERVER " " ERR_CHANOPRIVSNEEDED " " + client.getNickname() + " " + input.getParam()[2] + " :Channel privileges needed\r\n";
 		send(client.getSocketfd(), message.c_str(), message.length(), 0);
 		return ;
 	}
@@ -293,20 +296,29 @@ void Commands::executeOperator( bool sign, Channel &channel, std::string param, 
 	}
 	std::vector<Client>::iterator clientIt = channel.searchForUser(param, channel.getClients());
 	if (clientIt == channel.getClients().end()) {
-		message = SERVER " " ERR_NOSUCHNICK " " + client.getNickname() + " " + param + " : No such nickname";
+		message = SERVER " " ERR_NOSUCHNICK " " + client.getNickname() + " " + param + " : No such nickname\r\n";
 		send(client.getSocketfd(), message.c_str(), message.length(), 0);
 		return ;
 	}
 	std::vector<Client>::iterator operatorIt = channel.searchForUser(param, channel.getOP());
 	if (sign) {
-		if (operatorIt == channel.getOP().end())
+		if (operatorIt == channel.getOP().end()) {
 			channel.getOP().push_back(*clientIt);
-		std::cout << channel.getChannelName() << " " << clientIt->getNickname() << " was promoted to operator" << std::endl;
+			std::cout << channel.getChannelName() << " " << clientIt->getNickname() << " was promoted to operator" << std::endl;
+		}
 	}
 	else {
-		if (operatorIt != channel.getOP().end())
-			channel.getOP().erase(clientIt);
-		std::cout << channel.getChannelName() << " " << clientIt->getNickname() << " was demoted" << std::endl;
+		if (operatorIt != channel.getOP().end()) {
+			if (operatorIt->getSocketfd() == channel.getFounder().getSocketfd()) {
+				message = SERVER " " ERR_NOPRIVLIEGES " " + client.getNickname() + " " + channel.getChannelName() + " :You can't demote yourself as the channel owner\r\n";
+				send(client.getSocketfd(), message.c_str(), message.length(), 0);
+			}
+			else {
+				channel.getOP().erase(clientIt);
+				std::cout << channel.getChannelName() << " " << clientIt->getNickname() << " was demoted" << std::endl;
+			}
+		}
+
 	}
 	(void)client;
 	return ;

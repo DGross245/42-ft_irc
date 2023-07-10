@@ -52,7 +52,6 @@ void Channel::setMode( std::map<char,bool> mode )  {
 void Channel::setTopic( std::string topic, Client client ) {
 	std::string message;
 	if (this->getMode()['t'] == true) {
-		std::cout << "kek";
 		if (this->getFounder().getSocketfd() == client.getSocketfd())
 			this->_topic = topic;
 		else {

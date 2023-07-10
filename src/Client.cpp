@@ -48,6 +48,7 @@ int Client::getSocketfd( void ) {
 	return (this->_socketfd);
 }
 
+// @todo my also pw ??
 int Client::Authentication( void ) {
 	if (!this->getAuthentication()) {
 		if (this->getNickname().empty())
