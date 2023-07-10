@@ -89,7 +89,7 @@ void Server::initServer( void ) {
 	struct sockaddr_in serverAddress;
 	memset(&serverAddress, 0, sizeof(serverAddress));
 	serverAddress.sin_family = AF_INET;
-	serverAddress.sin_addr.s_addr = inet_addr("10.12.6.6");
+	serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
 	serverAddress.sin_port = htons(this->getPort());
 	fcntl(serverSocketfd, F_SETFL, O_NONBLOCK);
 	bind(serverSocketfd, reinterpret_cast<struct sockaddr *>(&serverAddress), sizeof(serverAddress));
@@ -120,7 +120,6 @@ void Server::addClient( int serverSocketfd, fd_set &readfds ) {
 	return ;
 }
 
-// @todo JOIN CMD excepts channelnames without # (need to be fixed)
 void Server::executeMsg( Parser &input, Client &client ) {
 	Commands	command;
 
@@ -153,18 +152,18 @@ void Server::executeMsg( Parser &input, Client &client ) {
 
 static void Sprinter( Parser parser) {
 	// std::cout << "Prefix:" << parser.getPrefix() << std::endl;
-	std::cout << "Command:" << parser.getCMD() << std::endl;
+	std::cout << "\nCommand:" << parser.getCMD() << std::endl;
 	std::vector<std::string> test = parser.getParam();
 	for (std::vector<std::string>::iterator it = test.begin(); it != test.end(); it++)
-		 std::cout << "Param :" << *it << std::endl;
-	 std::cout << "trailing :" << parser.getTrailing() << std::endl;
+		std::cout << "Param :" << *it << std::endl;
+	std::cout << "trailing :" << parser.getTrailing() << std::endl;
 	return ;
 }
 
 void Server::readMsg( Client &client, int i) {
 	std::string buffer(1024, '\0');
 	ssize_t bytes_read;
-	bytes_read = ::recv(client.getSocketfd(), &buffer[0], sizeof(buffer), 0);
+	bytes_read = ::recv(client.getSocketfd(), &buffer[0], buffer.size(), 0);
 	if (bytes_read == -1)
 		throw serverFailException("recv Error");
 	else if (bytes_read == 0) {
@@ -176,7 +175,6 @@ void Server::readMsg( Client &client, int i) {
 		try
 		{
 			buffer.resize(bytes_read);
-			std::cout << buffer << "\n";
 			while (!buffer.empty() || buffer.find("\r\n") != std::string::npos) {
 				Parser input( buffer, client );
 				Sprinter( input );

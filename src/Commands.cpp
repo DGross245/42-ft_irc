@@ -33,19 +33,18 @@ void Commands::ping( Parser &input, Client client ) {
 	send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	return ;
 }
-// @todo gibt auch irgendwie nen error manchmal also vllt schicken wir was falsches
+
 void Commands::cap( Parser &input, Client client ) {
-	if (input.getParam()[0] == "LS") {
-			std::string message = "CAP * LS :JOIN\r\n";
-			send(client.getSocketfd(), message.c_str(), message.length(), 0);
-	}
-	else if (input.getParam()[0] == "END") {
-		std::string message = "CAP * ACK :JOIN\r\n";
-		send(client.getSocketfd(), message.c_str(), message.length(), 0);
-	}
+	std::string message;
+	if (input.getParam()[0] == "LS")
+		message = "CAP * LS :JOIN\r\n";
+	else if (input.getParam()[0] == "END")
+		message = "CAP * ACK :JOIN\r\n";
 	else {
-		std::cout << "Invalid cap\n";
+		message = SERVER " 410 " + client.getNickname() + " " + input.getParam()[0] + " :Invalid CAP command";
+		std::cout << "User send a invalid CAP request\n";
 	}
+	send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	return ;
 }
 void Commands::pass( Parser &input, Client client, std::string password ) {
@@ -268,6 +267,7 @@ void Commands::executeInvite( bool sign, Channel &channel, std::string param, Cl
 	return ;
 }
 
+// @todo key wird tzd ignoriert
 void Commands::executeKey( bool sign, Channel &channel, std::string param, Client client ) {
 	if (sign) {
 		if (!param.empty()) {
@@ -314,6 +314,7 @@ void Commands::executeOperator( bool sign, Channel &channel, std::string param, 
 	return ;
 }
 
+// @todo limit wird tzd ignoriert
 void Commands::executeLimit( bool sign, Channel &channel, std::string param, Client client ) {
 	if (sign) {
 		if (!param.empty()) {

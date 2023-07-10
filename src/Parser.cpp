@@ -6,11 +6,7 @@
 #include <vector>
 #include <sys/socket.h>
 
-// @todo problem bei nachrichten mit mehreren spacesseses ca 3 wörter gehen nicht
-// @todo wenn jmd anders join wird das erste nick abgehackt kp warum
 // @todo Have to add more error messages to better replay on erros using the ERR_... codes
-// @todo research how delevoper set their vectors
-// @todo something till doesnt work maybe the cutting of the buffer
 Parser::Parser( std::string &buffer, Client client ) {
 	size_t pos = buffer.find("\r\n");
 	if (pos != std::string::npos  || !buffer.empty()) {
@@ -31,6 +27,7 @@ Parser::~Parser( void ) {
 }
 
 // SETTER FUNCTIONS
+
 void Parser::setPrefix( std::string prefix ) {
 	this->_prefix = prefix;
 	return ;
@@ -52,6 +49,7 @@ void Parser::setTrailing( std::string trailing ) {
 }
 
 // GETTER FUNCTIONS
+
 std::string &Parser::getInput( void ) {
 	return (this->_input);
 }

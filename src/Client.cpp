@@ -9,6 +9,7 @@ Client::~Client( void ) {
 }
 
 //SETTER FUNCTIONS
+
 void Client::setUsername( std::string username ) {
 	this->_username = username;
 	return ;
@@ -25,6 +26,7 @@ void Client::setAuthentication( bool authentication ) {
 }
 
 //GETTER FUNCTIONS
+
 std::string Client::getUsername( void ) {
 	return (this->_username) ;
 }
