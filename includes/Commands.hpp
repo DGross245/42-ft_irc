@@ -4,6 +4,8 @@
 # include <exception>
 # include <string>
 # include <vector>
+# include "Channel.hpp"
+# include "Client.hpp"
 
 // @todo Commands zu einer richtige static classe machen also auch constructor und destructor in privat
 class Commands {
