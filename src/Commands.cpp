@@ -80,28 +80,6 @@ void Commands::topic( Parser &input, Client client, std::vector<Channel> &channe
 	return ;
 }
 
-// @todo channelname without # works (has to be fixed)
-void Commands::joinChannel( std::string channelName, Client user, std::vector<Channel> &channels) {
-	std::vector<Channel>::iterator channelIt = searchForChannel( channelName, channels);
-	if (channelIt == channels.end()) {
-		channels.push_back(Channel ( channelName, user ));
-	}
-	else {
-		if (channelIt->canUserJoin( user )) {
-			channelIt->addUser( user );
-			std::vector<Client>::iterator clientIt = channelIt->searchForUser(user.getNickname(), channelIt->getInviteList());
-			if (clientIt != channelIt->getInviteList().end())
-				channelIt->getInviteList().erase(clientIt);
-		}
-		else {
-			std::cout << "Erro cant join\n";
-			std::string message = SERVER " " ERR_INVITEONLYCHAN " " + user.getNickname() + channelName + "is Invite only restricted\r\n";
-			send(user.getSocketfd(), message.c_str(), message.length(), 0);
-		}
-	}
-	return ;
-}
-
 void Commands::kick( Parser &input, Client requestor, std::vector<Channel> &channels ) {
 	std::string message;
 	std::vector<Channel>::iterator channelIt = searchForChannel(input.getParam()[0], channels);
@@ -161,17 +139,18 @@ void Commands::part( Parser &input, Client client, std::vector<Channel> &channel
 	}
 	channelIt->getClients().erase(target);
 	if (!input.getTrailing().empty())
-		forwardMsg(input.getTrailing() + "\r\n", channelIt->getChannelName(), client.getNickname(), channelIt->getClients());
+		forwardMsg(input.getTrailing() + "\r\n", channelIt->getChannelName(), client, channelIt->getClients());
 	message = ":" + client.getNickname() + " PART " + channelIt->getChannelName() + "\r\n";
 	send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	return ;
 }
 
-void Commands::forwardMsg( std::string trailing, std::string channelName,  std::string senderName, std::vector<Client> connections) {
+void Commands::forwardMsg( std::string trailing, std::string channelName, Client client, std::vector<Client> connections) {
 	for (std::vector<Client>::iterator it = connections.begin(); it != connections.end(); ++it) {
-		std::string message = ":" + senderName + " PRIVMSG " + channelName + " :" + trailing; 
-		std::cout << "Send:" << message << std::endl;
-		send(it->getSocketfd(), message.c_str(), message.length(), 0);
+		if (it->getSocketfd() != client.getSocketfd()) {
+			std::string message = ":" + client.getNickname() + " PRIVMSG " + channelName + " :" + trailing; 
+			send(it->getSocketfd(), message.c_str(), message.length(), 0);
+		}
 	}
 	return ;
 }
@@ -186,14 +165,13 @@ void Commands::privmsg( Parser &input, Client client, std::vector<Client> connec
 		if (channelIt != channels.end()) {
 			std::vector<Client>::iterator clientIt = channelIt->searchForUser(client.getNickname(), channelIt->getClients());
 			if (clientIt != channelIt->getClients().end()) {
-				std::cout << "USER IN CHANNEL:" << channelIt->getClients().size() << std::endl;
-				forwardMsg(message, channelIt->getChannelName(), client.getNickname(), channelIt->getClients());
+				forwardMsg(message, channelIt->getChannelName(), client, channelIt->getClients());
 				return ;
 			}
 			else if (channelIt->getMode()['i'] == true || channelIt->getMode()['k'] == true)
 				message = ERR_CANNOTSENDTOCHAN " " + receiver + " :No pemissions\r\n";
 			else
-				forwardMsg(message, channelIt->getChannelName(), client.getNickname(), channelIt->getClients());
+				forwardMsg(message, channelIt->getChannelName(), client, channelIt->getClients());
 		}
 		else
 			message = ERR_NOSUCHCHANNEL " " + receiver + " :No such channel\r\n";
@@ -348,12 +326,37 @@ void Commands::executeTopic( bool sign, Channel &channel, std::string param, Cli
 
 // @todo join noch nicht ganz fertig, channelname ohne # gehen nocht
 void Commands::join(Parser &input, Client client, std::vector<Channel> &channels){
-	// std::cout << "join command called" << std::endl;
-	std::string joinMessageClient = ":" + client.getNickname() + " JOIN " + input.getParam()[0] + "\r\n";;
-	std::string switchBuffer = "/buffer " + input.getParam()[0] + "\r\n";
-	joinChannel(input.getParam()[0], client, channels);
-	send(client.getSocketfd(), joinMessageClient.c_str(), joinMessageClient.length(), 0);
-	send(client.getSocketfd(), switchBuffer.c_str(), switchBuffer.length(), 0);
+	std::string message;
+	if (input.getParam()[0].at(0) == '#')
+	{
+		std::vector<Channel>::iterator channelIt = searchForChannel( input.getParam()[0], channels);
+		if (channelIt == channels.end()) {
+			channels.push_back(Channel ( input.getParam()[0], client ));
+			message = ":" + client.getNickname() + " JOIN " + input.getParam()[0] + "\r\n";;
+			send(client.getSocketfd(), message.c_str(), message.length(), 0);
+			message = "/buffer " + input.getParam()[0] + "\r\n";
+			send(client.getSocketfd(), message.c_str(), message.length(), 0);
+		}
+		else {
+			if (channelIt->canUserJoin( client )) {
+				channelIt->addUser( client );
+				std::vector<Client>::iterator clientIt = channelIt->searchForUser(client.getNickname(), channelIt->getInviteList());
+				if (clientIt != channelIt->getInviteList().end())
+					channelIt->getInviteList().erase(clientIt);
+				for (std::vector<Client>::iterator it = channelIt->getClients().begin(); it != channelIt->getClients().end(); ++it) {
+					message = ":" + client.getNickname() + " JOIN " + input.getParam()[0] + "\r\n";;
+					send(it->getSocketfd(), message.c_str(), message.length(), 0);
+				}
+				message = "/buffer " + input.getParam()[0] + "\r\n";
+				send(client.getSocketfd(), message.c_str(), message.length(), 0);
+			}
+			else {
+				std::cout << "Erro cant join\n";
+				message = SERVER " " ERR_INVITEONLYCHAN " " + client.getNickname() + input.getParam()[0] + "is Invite only restricted\r\n";
+				send(client.getSocketfd(), message.c_str(), message.length(), 0);
+			}
+		}
+	}
 }
 
 bool isAlphaNumeric(std::string& name) {

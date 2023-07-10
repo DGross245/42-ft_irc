@@ -19,6 +19,7 @@ Channel::~Channel( void ) {
 }
 
 // SETTER FUNCTIONS
+
 void Channel::setSettings( void ) {
 	return ;
 }
@@ -76,6 +77,7 @@ void Channel::setTopic( std::string topic, Client client ) {
 }
 
 // GETTER FUNCTIONS
+
 std::string Channel::getChannelName( void ) {
 	return (this->_name);
 }
@@ -109,8 +111,9 @@ std::string Channel::getTopic( void ) {
 }
 
 // NORMAL CODE
+
 void Channel::addUser( Client user ) {
-	this->_clients.push_back( user );
+	this->getClients().push_back( user );
 	return ;
 }
 

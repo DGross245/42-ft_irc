@@ -13,10 +13,13 @@
 // @todo something till doesnt work maybe the cutting of the buffer
 Parser::Parser( std::string &buffer, Client client ) {
 	size_t pos = buffer.find("\r\n");
-	if (pos != std::string::npos ) {
+	if (pos != std::string::npos  || !buffer.empty()) {
 		this->_input = buffer.substr(0, pos);
 		parseMsg( client );
-		buffer.erase(0, pos + 1);
+		if (std::string::npos != buffer.find("\r\n"))
+			buffer.erase(0, pos + 2);
+		else
+			buffer.erase(0, buffer.length());
 	}
 	else
 		std::cerr << "Parsing Error" << std::endl;
@@ -218,7 +221,7 @@ void Parser::paramHandler( std::string param ) {
 			return ;
 		}
 		else if (found == std::string::npos) {
-			this->getParam().push_back(param.substr(0, param.find("\r\n")));
+			this->getParam().push_back(param.substr(0, param.find("\r\n") - 1));
 			return ;
 		}
 		else

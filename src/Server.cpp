@@ -175,7 +175,9 @@ void Server::readMsg( Client &client, int i) {
 	else {
 		try
 		{
-			while (!buffer.empty() && buffer.find("\r\n") != std::string::npos) {
+			buffer.resize(bytes_read);
+			std::cout << buffer << "\n";
+			while (!buffer.empty() || buffer.find("\r\n") != std::string::npos) {
 				Parser input( buffer, client );
 				Sprinter( input );
 				executeMsg( input, client );
@@ -183,7 +185,7 @@ void Server::readMsg( Client &client, int i) {
 		}
 		catch(const Parser::parserErrorException &e)
 		{
-				std::cerr << e.what() << '\n';
+			std::cerr << e.what() << '\n';
 		}
 	}
 	return ;
