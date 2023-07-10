@@ -47,6 +47,7 @@ void Commands::cap( Parser &input, Client client ) {
 	send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	return ;
 }
+
 void Commands::pass( Parser &input, Client client, std::string password ) {
 	if (*input.getParam().begin() == password) {
 		std::cout << "PW accepted!" << std::endl;
@@ -212,8 +213,6 @@ void Commands::quit( Parser &input, Client client, std::vector<Channel> &channel
 
 // mögliche problematik mit bool sign wenn kein sign angegeben ist
 // @todo segfault if Founder tries to demote him self
-// @todo K doesnt work, user can still join without a pw
-// @todo L doesnt work aswell, user can still join after reaching the limit
 void Commands::mode(Parser &input, Client client , std::vector<Channel> &channels) {
 	bool sign;
 	std::string message;
@@ -267,7 +266,6 @@ void Commands::executeInvite( bool sign, Channel &channel, std::string param, Cl
 	return ;
 }
 
-// @todo key wird tzd ignoriert
 void Commands::executeKey( bool sign, Channel &channel, std::string param, Client client ) {
 	if (sign) {
 		if (!param.empty()) {
@@ -314,7 +312,6 @@ void Commands::executeOperator( bool sign, Channel &channel, std::string param, 
 	return ;
 }
 
-// @todo limit wird tzd ignoriert
 void Commands::executeLimit( bool sign, Channel &channel, std::string param, Client client ) {
 	if (sign) {
 		if (!param.empty()) {
@@ -357,7 +354,7 @@ void Commands::join(Parser &input, Client client, std::vector<Channel> &channels
 			send(client.getSocketfd(), message.c_str(), message.length(), 0);
 		}
 		else {
-			if (channelIt->canUserJoin( client )) {
+			if (channelIt->canUserJoin( client, input )) {
 				channelIt->addUser( client );
 				std::vector<Client>::iterator clientIt = channelIt->searchForUser(client.getNickname(), channelIt->getInviteList());
 				if (clientIt != channelIt->getInviteList().end())
@@ -369,13 +366,9 @@ void Commands::join(Parser &input, Client client, std::vector<Channel> &channels
 				message = "/buffer " + input.getParam()[0] + "\r\n";
 				send(client.getSocketfd(), message.c_str(), message.length(), 0);
 			}
-			else {
-				std::cout << "Erro cant join\n";
-				message = SERVER " " ERR_INVITEONLYCHAN " " + client.getNickname() + input.getParam()[0] + "is Invite only restricted\r\n";
-				send(client.getSocketfd(), message.c_str(), message.length(), 0);
-			}
 		}
 	}
+	return ;
 }
 
 bool isAlphaNumeric(std::string& name) {

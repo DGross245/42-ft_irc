@@ -29,7 +29,7 @@ void Channel::setFounder( Client client ) {
 	return ;
 }
 
-void Channel::setLimit( int limit ) {
+void Channel::setLimit( size_t limit ) {
 	this->_limit = limit;
 	return ;
 }
@@ -82,6 +82,10 @@ std::string Channel::getChannelName( void ) {
 	return (this->_name);
 }
 
+size_t Channel::getLimit( void ) {
+	return (this->_limit);
+}
+
 std::vector<Client> &Channel::getClients( void ) {
 	return (this->_clients);
 }
@@ -127,13 +131,29 @@ std::vector<Client>::iterator Channel::searchForUser( std::string nickname, std:
 	return (clientIt);
 }
 
-bool Channel::canUserJoin( Client user ) {
+bool Channel::canUserJoin( Client client, Parser &input ) {
+	std::string message;
 	if (this->getMode()['i'] == true) {
-		std::vector<Client>::iterator inviteIt = this->searchForUser( user.getNickname(), this->getInviteList());
-		if (inviteIt != this->getInviteList().end())
-			return (true);
-		else
+		std::vector<Client>::iterator inviteIt = this->searchForUser( client.getNickname(), this->getInviteList());
+		if (inviteIt == this->getInviteList().end()) {
+			message = SERVER " " ERR_INVITEONLYCHAN " " + client.getNickname() + " " + input.getParam()[0] + " :is Invite only restricted\r\n";
+			send(client.getSocketfd(), message.c_str(), message.length(), 0);
 			return (false);
+		}
+	}
+	if (this->getMode()['k'] == true) {
+		if (input.getParam()[1].empty() || this->getPassword() != input.getParam()[1]) {
+			message = SERVER " " ERR_BADCHANNELKEY " " + client.getNickname() + " " + input.getParam()[0] + " :Missing or wrong channel key\r\n";
+			send(client.getSocketfd(), message.c_str(), message.length(), 0);
+			return (false);
+		}
+	}
+	if (this->getMode()['l'] == true) {
+		if (this->getClients().size() >= this->getLimit()) {
+			message = SERVER " " ERR_CHANNELISFULL " " + client.getNickname() + " " + input.getParam()[0] + " :Limit reached, channel is to full\r\n";
+			send(client.getSocketfd(), message.c_str(), message.length(), 0);
+			return (false);
+		}
 	}
 	return (true);
 }
