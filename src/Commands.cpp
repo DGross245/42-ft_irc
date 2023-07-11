@@ -519,14 +519,18 @@ bool checkInvitedPerson(std::vector<Client> &connections, std::string invitedPer
 	return false;
 }
 
-void sendInvitation(Client &client, std::string nickname, std::string channelName,  std::vector<Channel> &channels) {
-	std::string inviteMessageClient = ":" + nickname + " INVITE " + nickname + " " + channelName + "\r\n";
+void sendInvitation(Client &client, std::string nickname, std::string channelName,  std::vector<Channel> &channels, std::vector<Client> &connections) {
+	std::string inviteMessageClient = ":" + client.getNickname() + " INVITE " + nickname + " " + channelName + "\r\n";
 	std::cout << "Send: " << inviteMessageClient << std::endl;
 	send(client.getSocketfd(), inviteMessageClient.c_str(), inviteMessageClient.length(), 0);
 	std::vector<Channel>::iterator channelIt = Commands::searchForChannel(channelName, channels);
 	if (channelIt != channels.end()) {
 		std::cout << "Found the channel: " << channelName << std::endl;
-		channelIt->getInviteList().push_back(client);
+		for(std::vector<Client>::iterator clientIt = connections.begin(); clientIt != connections.end(); clientIt++) {
+			if (clientIt->getNickname() == nickname)
+				channelIt->getInviteList().push_back(*clientIt);
+			// Error wenn nickname nicht gefunden wurde
+		}
 	}
 }
 
@@ -540,7 +544,7 @@ void Commands::invite(Client& client, Parser& input, std::vector<Client> &connec
 	if (checkInvitedPerson(connections, input.getParam()[1])) {
 		return ;
 	}
-	sendInvitation(client, input.getParam()[0], input.getParam()[1], channels);
+	sendInvitation(client, input.getParam()[0], input.getParam()[1], channels, connections);
 }
 
 

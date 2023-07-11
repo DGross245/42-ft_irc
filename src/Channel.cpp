@@ -125,7 +125,7 @@ std::vector<Client>::iterator Channel::searchForUser( std::string nickname, std:
 bool Channel::canUserJoin( Client client, Parser &input ) {
 	std::string message;
 	if (this->getMode()['i'] == true) {
-		std::vector<Client>::iterator inviteIt = this->searchForUser( client.getNickname(), this->getInviteList());
+		std::vector<Client>::iterator inviteIt = searchForUser( client.getNickname(), this->getInviteList());
 		if (inviteIt == this->getInviteList().end()) {
 			message = SERVER " " ERR_INVITEONLYCHAN " " + client.getNickname() + " " + input.getParam()[0] + " :is Invite only restricted\r\n";
 			send(client.getSocketfd(), message.c_str(), message.length(), 0);
