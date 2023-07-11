@@ -181,7 +181,7 @@ void Commands::privmsg( Parser &input, Client client, std::vector<Client> connec
 	else {
 		for (std::vector<Client>::iterator targetIt = connections.begin(); targetIt != connections.end(); targetIt++) {
 			if (targetIt->getNickname() == receiver) {
-				message = ":" + client.getNickname() + " PRIVMSG :" + input.getTrailing() + "\r\n";
+				message = "PRIVMSG " + client.getNickname() + " :" + input.getTrailing() + "\r\n";
 				send(targetIt->getSocketfd(), message.c_str(), message.length(), 0);
 				return ;
 			}
