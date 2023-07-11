@@ -18,10 +18,12 @@ public:
 	std::string getUsername( void ) ;
 	std::string getConstUsername(void) const;
 	std::string getNickname( void ) const;
+	bool		getPasswordAccepted( void );
 
 	void		setAuthentication( bool authentication );
 	void		setNickname( std::string nickname );
 	void		setUsername( std::string username );
+	void		setPasswordAccepted( bool status );
 
 	class clientFailException : std::exception {
 
@@ -43,7 +45,7 @@ private:
 	std::string	_nickname;
 	int			_socketfd;
 	bool		_isAuthenticated;
-
+	bool 		_passwordAccepted;
 };
 
 #endif
