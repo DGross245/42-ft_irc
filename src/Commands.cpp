@@ -12,7 +12,6 @@
 #include <unistd.h>
 #include <map>
 
-// @todo executeOperator nachricht wenn owner versuch sich zu demoten geht nicht oder kommt nicht an
 Commands::Commands() {
 	return ;
 }
@@ -179,8 +178,8 @@ void Commands::privmsg( Parser &input, Client client, std::vector<Client> connec
 	}
 	else {
 		for (std::vector<Client>::iterator targetIt = connections.begin(); targetIt != connections.end(); targetIt++) {
-			if (targetIt->getNickname() == receiver) {
-				message = "PRIVMSG " + client.getNickname() + " :" + input.getTrailing() + "\r\n";
+			if (targetIt != connections.end() && targetIt->getNickname() == receiver) {
+				message = ":" + client.getNickname() + " PRIVMSG :" + input.getTrailing() + "\r\n";
 				send(targetIt->getSocketfd(), message.c_str(), message.length(), 0);
 				return ;
 			}
