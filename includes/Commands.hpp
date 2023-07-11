@@ -20,7 +20,7 @@ public:
 
 	//Member functions
 	static void	join(Parser &input, Client client, std::vector<Channel> &channels);
-	static void	pass(Parser &input, Client client, std::string password);
+	static void	pass(Parser &input, Client &client, std::string password);
 	static void privmsg(Parser &input, Client client, std::vector<Client> connections, std::vector<Channel> channels);
 	static void quit(Parser &input, Client client, std::vector<Channel> &channels);
 	static std::vector<Channel>::iterator searchForChannel(std::string channelName, std::vector<Channel> &channels);

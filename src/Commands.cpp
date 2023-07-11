@@ -49,13 +49,15 @@ void Commands::cap( Parser &input, Client client ) {
 	return ;
 }
 
-void Commands::pass( Parser &input, Client client, std::string password ) {
+// @todo falsche passwörter gehen tzd durch
+void Commands::pass( Parser &input, Client &client, std::string password ) {
 	if (*input.getParam().begin() == password) {
 		std::cout << "PW accepted!" << std::endl;
+		client.setPasswordAccepted(true);
 		return ;
 	}
 	else {
-		std::string message = SERVER " " ERR_PASSWDMISMATCH " " + client.getNickname() + " :Wrong Password\r\n";
+		std::string message = ERR_PASSWDMISMATCH " :Wrong Password\r\n";
 		send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	}
 	return ;
@@ -180,7 +182,7 @@ void Commands::privmsg( Parser &input, Client client, std::vector<Client> connec
 	else {
 		for (std::vector<Client>::iterator targetIt = connections.begin(); targetIt != connections.end(); targetIt++) {
 			if (targetIt != connections.end() && targetIt->getNickname() == receiver) {
-				message = ":" + client.getNickname() + " PRIVMSG :" + input.getTrailing() + "\r\n";
+				message = "PRIVMSG " + client.getNickname() + " :" + input.getTrailing() + "\r\n";
 				send(targetIt->getSocketfd(), message.c_str(), message.length(), 0);
 				return ;
 			}
@@ -193,11 +195,14 @@ void Commands::privmsg( Parser &input, Client client, std::vector<Client> connec
 
 // @funktionier nicht ganz. user wissen nicht wenn er geleavt ist etc
 void Commands::quit( Parser &input, Client client, std::vector<Channel> &channels) {
-	for (std::vector<Channel>::iterator channelIterator = channels.begin(); channelIterator != channels.end(); channelIterator++) {
-		std::vector<Client> &clientCopy = channelIterator->getClients();
+	std::string message;
+	for (std::vector<Channel>::iterator channelIt = channels.begin(); channelIt != channels.end(); channelIt++) {
+		std::vector<Client> &clientCopy = channelIt->getClients();
 		for (std::vector<Client>::iterator clientIterator = clientCopy.begin(); clientIterator != clientCopy.end(); clientIterator++) {
 			if (clientIterator->getSocketfd() == client.getSocketfd()) {
 				clientCopy.erase(clientIterator);
+				//message = "";
+				//forwardMsg(message, channelIt->getChannelName(), client, channelIt->getClients());
 				return ;
 			}
 		}

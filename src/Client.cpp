@@ -1,6 +1,6 @@
 #include "Client.hpp"
 
-Client::Client( int clientfd ) : _socketfd(clientfd) {
+Client::Client( int clientfd ) : _socketfd(clientfd), _isAuthenticated(false), _passwordAccepted(false) {
 	return ;
 }
 
@@ -25,7 +25,16 @@ void Client::setAuthentication( bool authentication ) {
 	return ;
 }
 
+void Client::setPasswordAccepted( bool status ) {
+	this->_passwordAccepted = status;
+	return ;
+}
+
 //GETTER FUNCTIONS
+
+bool Client::getPasswordAccepted( void ) {
+	return (this->_passwordAccepted);
+}
 
 std::string Client::getUsername( void ) {
 	return (this->_username) ;
@@ -51,6 +60,8 @@ int Client::getSocketfd( void ) {
 // @todo my also pw ??
 int Client::Authentication( void ) {
 	if (!this->getAuthentication()) {
+		if (this->getPasswordAccepted() == false)
+			return (0);
 		if (this->getNickname().empty())
 			return (0);
 		if (this->getUsername().empty())
