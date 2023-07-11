@@ -89,7 +89,7 @@ void Server::initServer( void ) {
 	struct sockaddr_in serverAddress;
 	memset(&serverAddress, 0, sizeof(serverAddress));
 	serverAddress.sin_family = AF_INET;
-	serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
+	serverAddress.sin_addr.s_addr = inet_addr("10.12.6.6");
 	serverAddress.sin_port = htons(this->getPort());
 	fcntl(serverSocketfd, F_SETFL, O_NONBLOCK);
 	bind(serverSocketfd, reinterpret_cast<struct sockaddr *>(&serverAddress), sizeof(serverAddress));
@@ -121,6 +121,7 @@ void Server::addClient( int serverSocketfd, fd_set &readfds ) {
 }
 
 void Server::executeMsg( Parser &input, Client &client ) {
+<<<<<<< HEAD
 	if (input.getCMD() == "CAP")
 		Commands::cap(input, client);
 	else if (input.getCMD() == "NICK")
@@ -149,6 +150,43 @@ void Server::executeMsg( Parser &input, Client &client ) {
 		std::cout << "Username: " << client.getUsername() << std::endl;
 		std::cout << "Nickname: " << client.getNickname() << std::endl;
 		Commands::invite(client, input, this->getConnections(), this->getChannels());
+=======
+	Commands	command;
+
+	if (input.getCMD() == "PASS")
+		command.pass(input, client , this->getPassword());
+	if (client.getPasswordAccepted()) {
+		if (input.getCMD() == "CAP")
+			command.cap(input, client);
+		else if (input.getCMD() == "NICK")
+			command.nick(input, client, this->getConnections());
+		else if (input.getCMD() == "USER")
+			command.user(input, client, this->getConnections());
+		else if (client.Authentication()) {
+			std::cout << "geht durch\n";
+			if (input.getCMD() == "PING")
+				command.ping(input, client);
+			else if (input.getCMD() == "JOIN")
+				command.join(input, client, this->getChannels());
+			else if (input.getCMD() == "QUIT")
+				command.quit(input, client, this->getChannels());
+			else if (input.getCMD() == "PRIVMSG")
+				command.privmsg(input, client, this->getConnections(), this->getChannels());
+			else if (input.getCMD() == "KICK")
+				command.kick(input, client, this->getChannels());
+			else if (input.getCMD() == "MODE")
+				command.mode(input, client, this->getChannels());
+			else if (input.getCMD() == "PART")
+				command.part(input, client, this->getChannels());
+			else if (input.getCMD() == "TOPIC")
+				command.topic(input, client, this->getChannels());
+			else if (input.getCMD() == "INVITE") {
+				std::cout << "Username: " << client.getUsername() << std::endl;
+				std::cout << "Nickname: " << client.getNickname() << std::endl;
+				command.invite(client, input, this->getConnections(), this->getChannels());
+			}
+		}
+>>>>>>> 5d2db2576734d4ad2fd4063cc0e3c16b4dc38819
 	}
 	return ;
 }
