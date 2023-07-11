@@ -121,34 +121,38 @@ void Server::addClient( int serverSocketfd, fd_set &readfds ) {
 }
 
 void Server::executeMsg( Parser &input, Client &client ) {
-	if (input.getCMD() == "CAP")
-		Commands::cap(input, client);
-	else if (input.getCMD() == "NICK")
-		Commands::nick(input, client, this->getConnections());
-	else if (input.getCMD() == "USER")
-		Commands::user(input, client, this->getConnections());
-	else if (input.getCMD() == "PING")
-		Commands::ping(input, client);
-	else if (input.getCMD() == "JOIN")
-		Commands::join(input, client, this->getChannels());
-	else if (input.getCMD() == "QUIT")
-		Commands::quit(input, client, this->getChannels());
-	else if (input.getCMD() == "PRIVMSG")
-		Commands::privmsg(input, client, this->getConnections(), this->getChannels());
-	else if (input.getCMD() == "KICK")
-		Commands::kick(input, client, this->getChannels());
-	else if (input.getCMD() == "MODE")
-		Commands::mode(input, client, this->getChannels());
-	else if (input.getCMD() == "PASS")
+	if (input.getCMD() == "PASS")
 		Commands::pass(input, client , this->getPassword());
-	else if (input.getCMD() == "PART")
-		Commands::part(input, client, this->getChannels());
-	else if (input.getCMD() == "TOPIC")
-		Commands::topic(input, client, this->getChannels());
-	else if (input.getCMD() == "INVITE") {
-		std::cout << "Username: " << client.getUsername() << std::endl;
-		std::cout << "Nickname: " << client.getNickname() << std::endl;
-		Commands::invite(client, input, this->getConnections(), this->getChannels());
+	if (client.getPasswordAccepted()) {
+		if (input.getCMD() == "CAP")
+			Commands::cap(input, client);
+		else if (input.getCMD() == "NICK")
+			Commands::nick(input, client, this->getConnections());
+		else if (input.getCMD() == "USER")
+			Commands::user(input, client, this->getConnections());
+		else if (client.Authentication()) {
+			if (input.getCMD() == "PING")
+				Commands::ping(input, client);
+			else if (input.getCMD() == "JOIN")
+				Commands::join(input, client, this->getChannels());
+			else if (input.getCMD() == "QUIT")
+				Commands::quit(input, client, this->getChannels());
+			else if (input.getCMD() == "PRIVMSG")
+				Commands::privmsg(input, client, this->getConnections(), this->getChannels());
+			else if (input.getCMD() == "KICK")
+				Commands::kick(input, client, this->getChannels());
+			else if (input.getCMD() == "MODE")
+				Commands::mode(input, client, this->getChannels());
+			else if (input.getCMD() == "PART")
+				Commands::part(input, client, this->getChannels());
+			else if (input.getCMD() == "TOPIC")
+				Commands::topic(input, client, this->getChannels());
+			else if (input.getCMD() == "INVITE") {
+				std::cout << "Username: " << client.getUsername() << std::endl;
+				std::cout << "Nickname: " << client.getNickname() << std::endl;
+				Commands::invite(client, input, this->getConnections(), this->getChannels());
+			}
+		}
 	}
 	return ;
 }
