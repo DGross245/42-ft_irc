@@ -324,6 +324,7 @@ void Commands::executeOperator( bool sign, Channel &channel, std::string param, 
 }
 
 void Commands::executeLimit( bool sign, Channel &channel, std::string param, Client client ) {
+	(void) client;
 	if (sign) {
 		if (!param.empty()) {
 			channel.getMode()['l'] = sign;
@@ -333,11 +334,10 @@ void Commands::executeLimit( bool sign, Channel &channel, std::string param, Cli
 		else
 			std::cout << "Mode: ERROR! l" << std::endl;
 	}
-	else
+	else {
 		channel.getMode()['l'] = sign;
 		std::cout << channel.getChannelName() << " modus was set to: -l" << std::endl;
 	}
-	(void)client;
 	return ;
 }
 
@@ -525,6 +525,7 @@ void Commands::user(Parser& input, Client& client, std::vector<Client>& connecti
 
 bool checkPermission(std::string channelName, std::string username, std::vector<Channel> &channels) {
 	(void) channels;
+	(void) username;
 	for (size_t i = 0; i < channels.size(); ++i) {
 		std::cout << channelName << " = " << channels[i].getChannelName();
 		if (channels[i].getChannelName() == channelName) {
@@ -535,13 +536,6 @@ bool checkPermission(std::string channelName, std::string username, std::vector<
 	return false;
 }
 
-<<<<<<< HEAD
-//     if user_is_online(nickname):
-//         send_invite_to_user(nickname, inviter, channel)
-//         send_numeric_reply(inviter, RPL_INVITING, nickname, channel)
-//     else:
-//         send_numeric_reply(inviter, ERR_NOSUCHNICK " ", nickname)
-=======
 // bool checkInvitedPerson() {
 // 	for (size_t i = 0; i < serverMembers.size(); ++i) {
 // 		if (serverMembers[i].getNickname() == InvitedPerson)
@@ -549,7 +543,6 @@ bool checkPermission(std::string channelName, std::string username, std::vector<
 // 	}
 // 	return false;
 // }
->>>>>>> commands
 
 void Commands::invite(Client& client, Parser& input, std::vector<Client> &connections, std::vector<Channel> &channels) {
 	(void) client;

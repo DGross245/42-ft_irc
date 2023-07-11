@@ -57,7 +57,7 @@ private:
 	std::string _topic; // of the channel
 	std::string _password;
 	std::vector<Client> _op;  // clients which got admin rights
-	Client _founder; // the founder of the channel
+	Client _owner; // the founder of the channel
 	// bool				_isTopicRestricted; // if true only the founder can change the topic of the channel
 	// bool				_isInviteOnly;
 	std::vector<Client>	_invited; //invited clients
