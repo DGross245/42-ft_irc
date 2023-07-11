@@ -11,6 +11,7 @@
 #include "Constants.hpp"
 #include <unistd.h>
 #include <map>
+#include "Client.hpp"
 
 // @todo error message bei Modi noch fixen und anpassen
 // @todo executeOperator nachricht wenn owner versuch sich zu demoten geht nicht oder kommt nicht an
@@ -522,13 +523,20 @@ void Commands::user(Parser& input, Client& client, std::vector<Client>& connecti
 // 6. If the invitation is accepted:
 //    - Add the user to the list of channel members.
 //    - Notify the channel members about the user's arrival.
+bool checkInvokerRights(std::vector<Client> &operators, std::string username) {
+	(void) username;
+	std::cout << "Amount of op: " << operators.size() << std::endl;
+	for (size_t i = 0; i < operators.size(); i++) {
+		std::cout << "Nickname of the Operators: " << operators[i].getNickname() << std::endl;
+	}
+	return true;
+}
 
 bool checkPermission(std::string channelName, std::string username, std::vector<Channel> &channels) {
-	(void) channels;
-	(void) username;
 	for (size_t i = 0; i < channels.size(); ++i) {
-		std::cout << channelName << " = " << channels[i].getChannelName();
-		if (channels[i].getChannelName() == channelName) {
+		std::cout << "Bin heir" << std::endl;
+		std::cout << channelName << " = " << channels[i].getChannelName() << std::endl;
+		if (channels[i].getChannelName() == channelName && checkInvokerRights(channels[i].getOP(), username)) {
 			std::cout << "Found the channel: " << channelName << std::endl;
 			return true;
 		}
@@ -548,6 +556,7 @@ void Commands::invite(Client& client, Parser& input, std::vector<Client> &connec
 	(void) client;
 	(void) input;
 	(void) connections;
+	std::cout << "------------------------------------" << std::endl;
 	std::cout << "invite command" << std::endl;
 	// Check if the invoker has the necessary permissions to send invitations.
 	if (checkPermission(input.getParam()[1], client.getNickname(), channels)) {
