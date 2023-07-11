@@ -481,20 +481,21 @@ void Commands::user(Parser& input, Client& client, std::vector<Client>& connecti
 // 6. If the invitation is accepted:
 //    - Add the user to the list of channel members.
 //    - Notify the channel members about the user's arrival.
-bool checkInvokerRights(std::vector<Client> &operators, std::string username) {
-	(void) username;
-	std::cout << "Amount of op: " << operators.size() << std::endl;
+bool checkInvokerRights(std::vector<Client> &operators, std::string nickname) {
 	for (size_t i = 0; i < operators.size(); i++) {
 		std::cout << "Nickname of the Operators: " << operators[i].getNickname() << std::endl;
+		std::cout << nickname << " == " << operators[i].getNickname() << std::endl;
+		if (operators[i].getNickname() == nickname)
+			return true;
 	}
-	return true;
-}
+		std::cout << "return flase" << std::endl;
+	return false;
 
-bool checkPermission(std::string channelName, std::string username, std::vector<Channel> &channels) {
+}
+bool checkPermission(std::string channelName, std::string nickname, std::vector<Channel> &channels) {
 	for (size_t i = 0; i < channels.size(); ++i) {
-		std::cout << "Bin heir" << std::endl;
 		std::cout << channelName << " = " << channels[i].getChannelName() << std::endl;
-		if (channels[i].getChannelName() == channelName && checkInvokerRights(channels[i].getOperator(), username)) {
+		if (channels[i].getChannelName() == channelName && checkInvokerRights(channels[i].getOperator(), nickname)) {
 			std::cout << "Found the channel: " << channelName << std::endl;
 			return true;
 		}
@@ -502,31 +503,37 @@ bool checkPermission(std::string channelName, std::string username, std::vector<
 	return false;
 }
 
-// bool checkInvitedPerson() {
-// 	for (size_t i = 0; i < serverMembers.size(); ++i) {
-// 		if (serverMembers[i].getNickname() == InvitedPerson)
-// 			return true;
-// 	}
-// 	return false;
-// }
+bool checkInvitedPerson(std::vector<Client> &connections, std::string invitedPerson) {
+	std::cout << "Bin in checkInvitedPerson" << std::endl;
+	for (size_t i = 0; i < connections.size(); ++i) {
+		if (connections[i].getNickname() == invitedPerson) {
+			std::cout << "got it" << std::endl;
+			return true;
+		}
+	}
+	return false;
+}
+
+void sendInvitation(Client &client, std::string nickname, std::string channelName) {
+	std::string inviteMessageClient = ":" + nickname + " INVITE " + nickname + " " + channelName + "\r\n";
+	std::cout << "Send: " << inviteMessageClient << std::endl;
+	send(client.getSocketfd(), inviteMessageClient.c_str(), inviteMessageClient.length(), 0);
+}
 
 void Commands::invite(Client& client, Parser& input, std::vector<Client> &connections, std::vector<Channel> &channels) {
-	(void) client;
-	(void) input;
-	(void) connections;
 	std::cout << "------------------------------------" << std::endl;
-	std::cout << "invite command" << std::endl;
-	// Check if the invoker has the necessary permissions to send invitations.
-	if (checkPermission(input.getParam()[1], client.getNickname(), channels)) {
+	// Check if the invoker has the necessary permissions to send invitations on the channel .
+	if (!checkPermission(input.getParam()[1], client.getNickname(), channels)) {
 		return ;
 	}
-	// if (checkFor()) {
-	// 	return ;
-	// }
-	// if (checkForChannel()) {
-
-	// }
-	// if (sendInviteToClient())
+	// Check if the <nickname> is available on server
+	if (checkInvitedPerson(connections, input.getParam()[1])) {
+		return ;
+	}
+	for (size_t i = 0; i < input.getParam().size(); ++i) {
+		std::cout << "Param: " << input.getParam()[i] << std::endl;
+	}
+	sendInvitation(client, input.getParam()[0], input.getParam()[1]);
 }
 
 
