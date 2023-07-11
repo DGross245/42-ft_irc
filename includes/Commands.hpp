@@ -41,7 +41,10 @@ public:
 	static void executeOperator(bool sign, Channel &channel, std::string param, Client client);
 	static void executeLimit(bool sign, Channel &channel, std::string param, Client client);
 	static void executeTopic(bool sign, Channel &channel, std::string param, Client client);
-
+	// static void mode(Parser &inout, Client client, std::vector<Channel> &channels);
+	static void	nick(Parser& input, Client& client, std::vector<Client>& connections);
+	static void user(Parser &input, Client &client, std::vector<Client>& connections);
+	static void invite(Client& client, Parser& input, std::vector<Client> &connections, std::vector<Channel> &channels);
 
 	class commandFailException : std::exception {
 

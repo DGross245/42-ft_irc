@@ -133,7 +133,8 @@ void Server::executeMsg( Parser &input, Client &client ) {
 		command.ping(input, client);
 	else if (input.getCMD() == "JOIN")
 		command.join(input, client, this->getChannels());
-	else if (input.getCMD() == "QUIT")
+	}
+	else if (input.getCMD() == "QUIT") {
 		command.quit(input, client, this->getChannels());
 	else if (input.getCMD() == "PRIVMSG")
 		command.privmsg(input, client, this->getConnections(), this->getChannels());
@@ -143,10 +144,12 @@ void Server::executeMsg( Parser &input, Client &client ) {
 		command.mode(input, client, this->getChannels());
 	else if (input.getCMD() == "PASS")
 		command.pass(input, client , this->getPassword());
-	else if (input.getCMD() == "PART")
-		command.part(input, client, this->getChannels());
-	else if (input.getCMD() == "TOPIC")
-		command.topic(input, client, this->getChannels());
+	}
+	else if (input.getCMD() == "INVITE") {
+		std::cout << "Username: " << client.getUsername() << std::endl;
+		std::cout << "Nickname: " << client.getNickname() << std::endl;
+		command.invite(client, input, this->getConnections(), this->getChannels());
+	}
 	return ;
 }
 
