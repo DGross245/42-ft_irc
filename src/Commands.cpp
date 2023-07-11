@@ -12,7 +12,6 @@
 #include <unistd.h>
 #include <map>
 
-// @todo change channel founder to owner
 // @todo error message bei Modi noch fixen und anpassen
 // @todo executeOperator nachricht wenn owner versuch sich zu demoten geht nicht oder kommt nicht an
 Commands::Commands() {
@@ -97,7 +96,7 @@ void Commands::kick( Parser &input, Client requestor, std::vector<Channel> &chan
 		send(requestor.getSocketfd(), message.c_str(), message.length(), 0);
 		return ;
 	}
-	if (requestor.getSocketfd() == channelIt->getFounder().getSocketfd()) {
+	if (requestor.getSocketfd() == channelIt->getOwner().getSocketfd()) {
 		message = ":" + requestor.getNickname() + " KICK " + channelIt->getChannelName() + " " + target->getNickname() + "\r\n";
 		if (!input.getTrailing().empty())
 			message += input.getTrailing();
@@ -108,7 +107,7 @@ void Commands::kick( Parser &input, Client requestor, std::vector<Channel> &chan
 		std::vector<Client> op = channelIt->getOP();
 		for (std::vector<Client>::iterator it = op.begin(); it != op.end(); it++) {
 			if (requestor.getSocketfd() == it->getSocketfd()) {
-				if (target->getSocketfd() == channelIt->getFounder().getSocketfd()) {
+				if (target->getSocketfd() == channelIt->getOwner().getSocketfd()) {
 					message = "ERROR";
 					send(target->getSocketfd(), message.c_str(), message.length(), 0);
 					return ;
@@ -180,10 +179,10 @@ void Commands::privmsg( Parser &input, Client client, std::vector<Client> connec
 			message = ERR_NOSUCHCHANNEL " " + receiver + " :No such channel\r\n";
 	}
 	else {
-		for (std::vector<Client>::iterator it = connections.begin(); it != connections.end(); it++) {
-			if (it->getNickname() == receiver) {
-				message = input.getTrailing() + "\r\n";
-				send(it->getSocketfd(), message.c_str(), message.length(), 0);
+		for (std::vector<Client>::iterator targetIt = connections.begin(); targetIt != connections.end(); targetIt++) {
+			if (targetIt->getNickname() == receiver) {
+				message = ":" + client.getNickname() + " PRIVMSG :" + input.getTrailing() + "\r\n";
+				send(targetIt->getSocketfd(), message.c_str(), message.length(), 0);
 				return ;
 			}
 		}
@@ -309,7 +308,7 @@ void Commands::executeOperator( bool sign, Channel &channel, std::string param, 
 	}
 	else {
 		if (operatorIt != channel.getOP().end()) {
-			if (operatorIt->getSocketfd() == channel.getFounder().getSocketfd()) {
+			if (operatorIt->getSocketfd() == channel.getOwner().getSocketfd()) {
 				message = SERVER " " ERR_NOPRIVLIEGES " " + client.getNickname() + " " + channel.getChannelName() + " :You can't demote yourself as the channel owner\r\n";
 				send(client.getSocketfd(), message.c_str(), message.length(), 0);
 			}

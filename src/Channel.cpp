@@ -6,7 +6,7 @@
 #include <sys/socket.h>
 #include "Constants.hpp"
 
-Channel::Channel( std::string name, Client user ) : _name(name), _limit(0), _founder(user) {
+Channel::Channel( std::string name, Client user ) : _name(name), _limit(0), _owner(user) {
 	_mode['t'] = false;
 	_mode['k'] = false;
 	_mode['l'] = false;
@@ -20,15 +20,6 @@ Channel::~Channel( void ) {
 
 // SETTER FUNCTIONS
 
-void Channel::setSettings( void ) {
-	return ;
-}
-
-void Channel::setFounder( Client client ) {
-	this->_founder = client;
-	return ;
-}
-
 void Channel::setLimit( size_t limit ) {
 	this->_limit = limit;
 	return ;
@@ -39,8 +30,8 @@ void Channel::setPassword( std::string password ) {
 	return ;
 }
 
-void Channel::setFounder( Client &founder ) {
-	this->_founder = founder;
+void Channel::setOwner( Client owner ) {
+	this->_owner = owner;
 	return ;
 }
 
@@ -52,7 +43,7 @@ void Channel::setMode( std::map<char,bool> mode )  {
 void Channel::setTopic( std::string topic, Client client ) {
 	std::string message;
 	if (this->getMode()['t'] == true) {
-		if (this->getFounder().getSocketfd() == client.getSocketfd())
+		if (this->getOwner().getSocketfd() == client.getSocketfd())
 			this->_topic = topic;
 		else {
 			for (std::vector<Client>::iterator it = this->getOP().begin(); it != this->getOP().end(); it++ ) {
@@ -97,8 +88,8 @@ std::vector<Client> &Channel::getOP( void ) {
 	return (this->_op);
 }
 
-Client Channel::getFounder( void ) {
-	return (this->_founder);
+Client Channel::getOwner( void ) {
+	return (this->_owner);
 }
 
 std::map<char,bool> &Channel::getMode( void ) {
