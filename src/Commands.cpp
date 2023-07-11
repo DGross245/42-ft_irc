@@ -523,7 +523,11 @@ void sendInvitation(Client &client, std::string nickname, std::string channelNam
 	std::string inviteMessageClient = ":" + nickname + " INVITE " + nickname + " " + channelName + "\r\n";
 	std::cout << "Send: " << inviteMessageClient << std::endl;
 	send(client.getSocketfd(), inviteMessageClient.c_str(), inviteMessageClient.length(), 0);
-	Commands::searchForChannel(channelName, channels);
+	std::vector<Channel>::iterator channelIt = Commands::searchForChannel(channelName, channels);
+	if (channelIt != channels.end()) {
+		std::cout << "Found the channel: " << channelName << std::endl;
+		channelIt->getInviteList().push_back(client);
+	}
 }
 
 void Commands::invite(Client& client, Parser& input, std::vector<Client> &connections, std::vector<Channel> &channels) {
