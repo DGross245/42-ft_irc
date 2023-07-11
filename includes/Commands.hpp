@@ -12,11 +12,6 @@ class Commands {
 
 public:
 
-	// Constructor
-	Commands(void);
-
-	// Destructor
-	~Commands(void);
 
 	//Member functions
 	static void	join(Parser &input, Client client, std::vector<Channel> &channels);
@@ -55,6 +50,11 @@ public:
 	};
 
 private:
+	// Constructor
+	Commands(void);
+
+	// Destructor
+	~Commands(void);
 
 };
 

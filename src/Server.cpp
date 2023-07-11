@@ -121,36 +121,34 @@ void Server::addClient( int serverSocketfd, fd_set &readfds ) {
 }
 
 void Server::executeMsg( Parser &input, Client &client ) {
-	Commands	command;
-
 	if (input.getCMD() == "CAP")
-		command.cap(input, client);
+		Commands::cap(input, client);
 	else if (input.getCMD() == "NICK")
-		command.nick(input, client, this->getConnections());
+		Commands::nick(input, client, this->getConnections());
 	else if (input.getCMD() == "USER")
-		command.user(input, client, this->getConnections());
+		Commands::user(input, client, this->getConnections());
 	else if (input.getCMD() == "PING")
-		command.ping(input, client);
+		Commands::ping(input, client);
 	else if (input.getCMD() == "JOIN")
-		command.join(input, client, this->getChannels());
+		Commands::join(input, client, this->getChannels());
 	else if (input.getCMD() == "QUIT")
-		command.quit(input, client, this->getChannels());
+		Commands::quit(input, client, this->getChannels());
 	else if (input.getCMD() == "PRIVMSG")
-		command.privmsg(input, client, this->getConnections(), this->getChannels());
+		Commands::privmsg(input, client, this->getConnections(), this->getChannels());
 	else if (input.getCMD() == "KICK")
-		command.kick(input, client, this->getChannels());
+		Commands::kick(input, client, this->getChannels());
 	else if (input.getCMD() == "MODE")
-		command.mode(input, client, this->getChannels());
+		Commands::mode(input, client, this->getChannels());
 	else if (input.getCMD() == "PASS")
-		command.pass(input, client , this->getPassword());
+		Commands::pass(input, client , this->getPassword());
 	else if (input.getCMD() == "PART")
-		command.part(input, client, this->getChannels());
+		Commands::part(input, client, this->getChannels());
 	else if (input.getCMD() == "TOPIC")
-		command.topic(input, client, this->getChannels());
+		Commands::topic(input, client, this->getChannels());
 	else if (input.getCMD() == "INVITE") {
 		std::cout << "Username: " << client.getUsername() << std::endl;
 		std::cout << "Nickname: " << client.getNickname() << std::endl;
-		command.invite(client, input, this->getConnections(), this->getChannels());
+		Commands::invite(client, input, this->getConnections(), this->getChannels());
 	}
 	return ;
 }

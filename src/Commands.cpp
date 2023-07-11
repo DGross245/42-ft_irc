@@ -514,10 +514,11 @@ bool checkInvitedPerson(std::vector<Client> &connections, std::string invitedPer
 	return false;
 }
 
-void sendInvitation(Client &client, std::string nickname, std::string channelName) {
+void sendInvitation(Client &client, std::string nickname, std::string channelName,  std::vector<Channel> &channels) {
 	std::string inviteMessageClient = ":" + nickname + " INVITE " + nickname + " " + channelName + "\r\n";
 	std::cout << "Send: " << inviteMessageClient << std::endl;
 	send(client.getSocketfd(), inviteMessageClient.c_str(), inviteMessageClient.length(), 0);
+	Commands::searchForChannel(channelName, channels);
 }
 
 void Commands::invite(Client& client, Parser& input, std::vector<Client> &connections, std::vector<Channel> &channels) {
@@ -530,10 +531,7 @@ void Commands::invite(Client& client, Parser& input, std::vector<Client> &connec
 	if (checkInvitedPerson(connections, input.getParam()[1])) {
 		return ;
 	}
-	for (size_t i = 0; i < input.getParam().size(); ++i) {
-		std::cout << "Param: " << input.getParam()[i] << std::endl;
-	}
-	sendInvitation(client, input.getParam()[0], input.getParam()[1]);
+	sendInvitation(client, input.getParam()[0], input.getParam()[1], channels);
 }
 
 
