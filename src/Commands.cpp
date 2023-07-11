@@ -456,34 +456,38 @@ void Commands::user(Parser& input, Client& client, std::vector<Client>& connecti
 //    - Add the user to the list of channel members.
 //    - Notify the channel members about the user's arrival.
 
-bool checkForClient(std::string Username, std::vector<Client> &operatorMembers) {
-	for (size_t i = 0; i < operatorMembers.size(); ++i) {
-		if (operatorMembers[i].getUsername() == Username)
+bool checkPermission(std::string channelName, std::string username, std::vector<Channel> &channels) {
+	(void) channels;
+	for (size_t i = 0; i < channels.size(); ++i) {
+		std::cout << channelName << " = " << channels[i].getChannelName();
+		if (channels[i].getChannelName() == channelName) {
+			std::cout << "Found the channel: " << channelName << std::endl;
 			return true;
+		}
 	}
 	return false;
 }
 
-// bool searchNickname() {
-
+// bool checkInvitedPerson() {
+// 	for (size_t i = 0; i < serverMembers.size(); ++i) {
+// 		if (serverMembers[i].getNickname() == InvitedPerson)
+// 			return true;
+// 	}
+// 	return false;
 // }
 
-void Commands::invite(Client& client, Parser& input, std::vector<Client> &operatorMembers) {
+void Commands::invite(Client& client, Parser& input, std::vector<Client> &connections, std::vector<Channel> &channels) {
 	(void) client;
-	std::cout << "Command: " << input.getCMD() << std::endl;
-	std::cout << "Parameters: ";
-	const std::vector<std::string>& params = input.getParam();
-	for (std::vector<std::string>::const_iterator it = params.begin(); it != params.end(); ++it) {
-		std::cout << *it << " ";
-	}
+	(void) input;
+	(void) connections;
 	std::cout << "invite command" << std::endl;
-
-	// if (checkPermission()){
-
-	// }
-	if (checkForClient(input.getParam()[0], operatorMembers)) {
+	// Check if the invoker has the necessary permissions to send invitations.
+	if (checkPermission(input.getParam()[1], client.getNickname(), channels)) {
 		return ;
 	}
+	// if (checkFor()) {
+	// 	return ;
+	// }
 	// if (checkForChannel()) {
 
 	// }

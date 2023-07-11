@@ -167,7 +167,7 @@ void Server::executeMsg( Parser &input, Client &client ) {
 	else if (input.getCMD() == "INVITE") {
 		std::cout << "Username: " << client.getUsername() << std::endl;
 		std::cout << "Nickname: " << client.getNickname() << std::endl;
-		command.invite(client, input, this->getConnections());
+		command.invite(client, input, this->getConnections(), this->getChannels());
 	}
 	return ;
 }
