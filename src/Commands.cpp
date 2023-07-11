@@ -150,7 +150,7 @@ void Commands::part( Parser &input, Client client, std::vector<Channel> &channel
 void Commands::forwardMsg( std::string trailing, std::string channelName, Client client, std::vector<Client> connections) {
 	for (std::vector<Client>::iterator it = connections.begin(); it != connections.end(); ++it) {
 		if (it->getSocketfd() != client.getSocketfd()) {
-			std::string message = ":" + client.getNickname() + " PRIVMSG " + channelName + " :" + trailing; 
+			std::string message = ":" + client.getNickname() + " PRIVMSG " + channelName + " :" + trailing;
 			send(it->getSocketfd(), message.c_str(), message.length(), 0);
 		}
 	}
@@ -247,7 +247,7 @@ void Commands::mode(Parser &input, Client client , std::vector<Channel> &channel
 			sign = false;
 		else {
 			std::map<char,void(*)(bool,Channel &,std::string,Client)>::iterator modeIt = modeFuntion.find(mode);
-			if (modeIt == modeFuntion.end()) 
+			if (modeIt == modeFuntion.end())
 				std::cout << "Mode: ERROR!:" << mode << ":"<< std::endl;
 			else {
 				modeIt->second(sign, *channelIt, input.getParam().size() == 3 ? input.getParam()[2] : std::string(), client);
@@ -324,6 +324,7 @@ void Commands::executeOperator( bool sign, Channel &channel, std::string param, 
 }
 
 void Commands::executeLimit( bool sign, Channel &channel, std::string param, Client client ) {
+	(void) client;
 	if (sign) {
 		if (!param.empty()) {
 			channel.getMode()['l'] = sign;
@@ -337,7 +338,6 @@ void Commands::executeLimit( bool sign, Channel &channel, std::string param, Cli
 		channel.getMode()['l'] = sign;
 		std::cout << channel.getChannelName() << " modus was set to: -l" << std::endl;
 	}
-	(void)client;
 	return ;
 }
 
@@ -507,25 +507,62 @@ void Commands::user(Parser& input, Client& client, std::vector<Client>& connecti
 }
 
 
-// function handle_invite_command(inviter, nickname, channel):
-//     if !channel_exists(channel):
-//         send_numeric_reply(inviter, ERR_NOTONCHANNEL, channel)
-//         return
+// 1. Check if the invoker has the necessary permissions to send invitations.
 
-//     if !user_has_channel_operator_privileges(inviter, channel):
-//         send_numeric_reply(inviter, ERR_CHANOPRIVSNEEDED, channel)
-//         return
+// 2. Check if the <nickname> is available on server
 
-//     if user_is_online(nickname):
-//         send_invite_to_user(nickname, inviter, channel)
-//         send_numeric_reply(inviter, RPL_INVITING, nickname, channel)
-//     else:
-//         send_numeric_reply(inviter, ERR_NOSUCHNICK " ", nickname)
+// 3. Check if <channel>  valid and exist.
 
-void Commands::invite(Client& client){
-	(void) client;
-	std::cout << "invite command" << std::endl;
+// 4. Send an INVITE message to the target user using their connection details:
+//    - Command: INVITE
+//    - Parameters: <nickname> <channel>
+
+// 5. The target user receives the invitation
+
+// 6. If the invitation is accepted:
+//    - Add the user to the list of channel members.
+//    - Notify the channel members about the user's arrival.
+
+bool checkPermission(std::string channelName, std::string username, std::vector<Channel> &channels) {
+	(void) channels;
+	(void) username;
+	for (size_t i = 0; i < channels.size(); ++i) {
+		std::cout << channelName << " = " << channels[i].getChannelName();
+		if (channels[i].getChannelName() == channelName) {
+			std::cout << "Found the channel: " << channelName << std::endl;
+			return true;
+		}
+	}
+	return false;
 }
+
+// bool checkInvitedPerson() {
+// 	for (size_t i = 0; i < serverMembers.size(); ++i) {
+// 		if (serverMembers[i].getNickname() == InvitedPerson)
+// 			return true;
+// 	}
+// 	return false;
+// }
+
+void Commands::invite(Client& client, Parser& input, std::vector<Client> &connections, std::vector<Channel> &channels) {
+	(void) client;
+	(void) input;
+	(void) connections;
+	std::cout << "invite command" << std::endl;
+	// Check if the invoker has the necessary permissions to send invitations.
+	if (checkPermission(input.getParam()[1], client.getNickname(), channels)) {
+		return ;
+	}
+	// if (checkFor()) {
+	// 	return ;
+	// }
+	// if (checkForChannel()) {
+
+	// }
+	// if (sendInviteToClient())
+}
+
+
 
 Commands::commandFailException::~commandFailException( void ) throw() { return ;	}
 Commands::commandFailException::commandFailException( std::string error ) : _error(error) { return ; }
