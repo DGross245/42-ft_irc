@@ -400,28 +400,6 @@ bool isNicknameUnique(const std::vector<Client>& connections, std::string& nickn
 	return false;
 }
 
-// bool checkNickname(Client &client, std::string& nickname, const std::vector<Client>& connections) {
-// 	if (isNicknameUnique(connections, nickname)) {
-// 		std::string errorMessage = "IRCSERV 433 " + nickname +
-// 		" :Nickname is already in use. Please choose a different nickname.";
-// 		send(client.getSocketfd(), errorMessage.c_str(), errorMessage.length(), 0);
-// 		return false;
-// 	}
-// 	else if (nickname.size() > 10) {
-// 		std::string errorMessage = "IRCSERV 432 " + nickname +
-// 		" :Nickname is too long. Please choose a shorter nickname.";
-// 		send(client.getSocketfd(), errorMessage.c_str(), errorMessage.length(), 0);
-// 		return false;
-// 	}
-// 	else if (!isAlphaNumeric(nickname)) {
-// 		std::string errorMessage = "IRCSERV 432 " + nickname +
-// 		" :Nickname contains invalid symbols. Only use letters and numbers.";
-// 		send(client.getSocketfd(), errorMessage.c_str(), errorMessage.length(), 0);
-// 		return false;
-// 	}
-// 	return true;
-// }
-
 bool checkNickname(Client& client, std::string& nickname, const std::vector<Client>& connections) {
 	if (isNicknameUnique(connections, nickname)) {
 		std::string errorMessage = ":IRCSERV 433 " + nickname + " :Nickname is already in use. Please choose a different nickname.\r\n";
@@ -439,19 +417,6 @@ bool checkNickname(Client& client, std::string& nickname, const std::vector<Clie
 	return true;
 }
 
-// function handle_nick_command(client, nickname, hopcount):
-//     if client.is_registered():
-//         send_numeric_reply(client, ERR_ALREADYREGISTRED)
-//         return
-
-//     if nickname_is_in_use(nickname):
-//         handle_nickname_collision(client, nickname)
-//         return
-
-//     if is_connected(client):
-//         client.set_nickname(nickname)
-//         send_numeric_reply(client, RPL_NICKCHANGE)
-
 void Commands::nick(Parser& input, Client& client, std::vector<Client>& connections) {
 	if (!checkNickname(client, input.getParam()[0], connections)) {
 		return;
@@ -463,23 +428,10 @@ void Commands::nick(Parser& input, Client& client, std::vector<Client>& connecti
 	}
 }
 
-
-// function handle_user_command(client, username, hostname, servername, realname):
-//     if client.is_registered():
-//         send_numeric_reply(client, ERR_ALREADYREGISTRED)
-//         return
-
-//     client.set_user_info(username, hostname, servername, realname)
-
-//     if is_local_connection(client):
-//         send_welcome_messages_to_client(client)
-//         notify_servers_of_new_user(client)
-
 bool isUsernameAvailable(const std::vector<Client>& connections, const std::string& username) {
 	if (username.empty())
 		return true;
 	for (std::vector<Client>::size_type i = 0; i < connections.size(); ++i) {
-		std::cout << connections[i].getConstUsername() << " = " << username << std::endl;
 		if (connections[i].getConstUsername() == username) {
 		    return false;
 		}
