@@ -11,6 +11,7 @@ Channel::Channel( std::string name, Client user ) : _limit(0), _owner(user), _na
 	_mode['k'] = false;
 	_mode['l'] = false;
 	_clients.push_back(user);
+	_operator.push_back(user);
 	return ;
 }
 

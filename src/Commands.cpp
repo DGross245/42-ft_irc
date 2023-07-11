@@ -12,7 +12,6 @@
 #include <unistd.h>
 #include <map>
 
-// @todo error message bei Modi noch fixen und anpassen
 // @todo executeOperator nachricht wenn owner versuch sich zu demoten geht nicht oder kommt nicht an
 Commands::Commands() {
 	return ;
@@ -213,10 +212,9 @@ void Commands::quit( Parser &input, Client client, std::vector<Channel> &channel
 	return ;
 }
 
-// mögliche problematik mit bool sign wenn kein sign angegeben ist
-// @todo segfault if Founder tries to demote him self
+// @todo sign nochmal im auge behalten, da ich nicht weiss ob z.B /MODE o dgross einen error schmeissen soll
 void Commands::mode(Parser &input, Client client , std::vector<Channel> &channels) {
-	bool sign;
+	bool sign = true;
 	std::string message;
 	std::string modeLine = input.getParam()[1];
 	char mode;
@@ -247,8 +245,11 @@ void Commands::mode(Parser &input, Client client , std::vector<Channel> &channel
 			sign = false;
 		else {
 			std::map<char,void(*)(bool,Channel &,std::string,Client)>::iterator modeIt = modeFuntion.find(mode);
-			if (modeIt == modeFuntion.end())
-				std::cout << "Mode: ERROR!:" << mode << ":"<< std::endl;
+			if (modeIt == modeFuntion.end()) {
+				std::string message = SERVER " " ERR_UNKNOWNMODE " " + client.getNickname() + " " + channelIt->getChannelName() + " :Unknown mode " + mode + "\r\n";
+				send(client.getSocketfd(), message.c_str(), message.length(), 0);
+				return ;
+			}
 			else {
 				modeIt->second(sign, *channelIt, input.getParam().size() == 3 ? input.getParam()[2] : std::string(), client);
 			}
@@ -275,8 +276,10 @@ void Commands::executeKey( bool sign, Channel &channel, std::string param, Clien
 			channel.setPassword(param);
 			std::cout << channel.getChannelName() << " modus was set to: +k" << std::endl;
 		}
-		else
-			std::cout << "Mode: ERROR! K" << std::endl;
+		else {
+			std::string message = SERVER " " ERR_NEEDMOREPARAMS " " + client.getNickname() + " " + channel.getChannelName() + " :Not enough Parameters for +k\r\n";
+			send(client.getSocketfd(), message.c_str(), message.length(), 0);
+		}
 	}
 	else {
 		channel.getMode()['k'] = sign;
@@ -290,7 +293,8 @@ void Commands::executeKey( bool sign, Channel &channel, std::string param, Clien
 void Commands::executeOperator( bool sign, Channel &channel, std::string param, Client client ) {
 	std::string message;
 	if (param.empty()) {
-		std::cout << "Mode: ERROR! o" << std::endl;
+		message = SERVER " " ERR_NEEDMOREPARAMS " " + client.getNickname() + " " + channel.getChannelName() + " :Not enough Parameters for +/-o\r\n";
+		send(client.getSocketfd(), message.c_str(), message.length(), 0);
 		return ;
 	}
 	std::vector<Client>::iterator clientIt = channel.searchForUser(param, channel.getClients());
@@ -309,6 +313,7 @@ void Commands::executeOperator( bool sign, Channel &channel, std::string param, 
 	else {
 		if (operatorIt != channel.getOperator().end()) {
 			if (operatorIt->getSocketfd() == channel.getOwner().getSocketfd()) {
+				std::cout << "ERROR\n";
 				message = SERVER " " ERR_NOPRIVLIEGES " " + client.getNickname() + " " + channel.getChannelName() + " :You can't demote yourself as the channel owner\r\n";
 				send(client.getSocketfd(), message.c_str(), message.length(), 0);
 			}
@@ -331,8 +336,10 @@ void Commands::executeLimit( bool sign, Channel &channel, std::string param, Cli
 			channel.setLimit(0);
 			std::cout << channel.getChannelName() << " modus was set to: +l" << std::endl;
 		}
-		else
-			std::cout << "Mode: ERROR! l" << std::endl;
+		else {
+			std::string message = SERVER " " ERR_NEEDMOREPARAMS " " + client.getNickname() + " " + channel.getChannelName() + " :Not enough Parameters for +l\r\n";
+			send(client.getSocketfd(), message.c_str(), message.length(), 0);
+		}
 	}
 	else {
 		channel.getMode()['l'] = sign;
