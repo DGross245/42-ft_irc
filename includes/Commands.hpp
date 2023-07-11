@@ -41,7 +41,6 @@ public:
 	static void executeOperator(bool sign, Channel &channel, std::string param, Client client);
 	static void executeLimit(bool sign, Channel &channel, std::string param, Client client);
 	static void executeTopic(bool sign, Channel &channel, std::string param, Client client);
-	// static void mode(Parser &inout, Client client, std::vector<Channel> &channels);
 
 	class commandFailException : std::exception {
 

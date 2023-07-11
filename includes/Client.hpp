@@ -11,17 +11,18 @@ public:
 	Client( int socketfd );
 	~Client( void );
 
-	bool getAuthentication( void );
-	int getSocketfd( void );
+	int			Authentication( void );
+
+	bool		getAuthentication( void );
+	int			getSocketfd( void );
 	std::string getUsername( void ) ;
 	std::string getConstUsername(void) const;
 	std::string getNickname( void ) const;
 
-	void setAuthentication( bool authentication );
-	void setNickname( std::string nickname );
-	void setUsername( std::string username );
+	void		setAuthentication( bool authentication );
+	void		setNickname( std::string nickname );
+	void		setUsername( std::string username );
 
-	int Authentication( void );
 	class clientFailException : std::exception {
 
 	public:

@@ -6,7 +6,7 @@
 #include <sys/socket.h>
 #include "Constants.hpp"
 
-Channel::Channel( std::string name, Client user ) : _name(name), _limit(0), _owner(user) {
+Channel::Channel( std::string name, Client user ) : _limit(0), _owner(user), _name(name) {
 	_mode['t'] = false;
 	_mode['k'] = false;
 	_mode['l'] = false;
@@ -46,7 +46,7 @@ void Channel::setTopic( std::string topic, Client client ) {
 		if (this->getOwner().getSocketfd() == client.getSocketfd())
 			this->_topic = topic;
 		else {
-			for (std::vector<Client>::iterator it = this->getOP().begin(); it != this->getOP().end(); it++ ) {
+			for (std::vector<Client>::iterator it = this->getOperator().begin(); it != this->getOperator().end(); it++ ) {
 				if (it->getSocketfd() == client.getSocketfd() ) {
 					this->_topic = topic;
 					message = SERVER " " RPL_TOPIC " " + client.getNickname() + this->getChannelName() + ":" + this->getTopic() + "\r\n";
@@ -84,8 +84,8 @@ std::vector<Client> &Channel::getInviteList( void ) {
 	return (this->_invited);
 }
 
-std::vector<Client> &Channel::getOP( void ) {
-	return (this->_op);
+std::vector<Client> &Channel::getOperator( void ) {
+	return (this->_operator);
 }
 
 Client Channel::getOwner( void ) {
