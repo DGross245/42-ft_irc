@@ -21,6 +21,8 @@
 #include "Constants.hpp"
 #include "Commands.hpp"
 
+// @todo wenn channel owner leaved muss wer anderes channel owner werden
+// @todo wenn der channel leer ist muss der channel geschlossen werden/gelöscht werden
 // @todo vielleicht bessere nachrichten innerhalb des servers damit man weiss was passiert
 Server::Server( std::string port, std::string password ) {
 	if (port.find_first_not_of("0123456789") == std::string::npos) {

@@ -85,6 +85,7 @@ void Commands::topic( Parser &input, Client client, std::vector<Channel> &channe
 }
 
 // @todo kick error messages
+// @todo gucken ob man auf anderen IRC server nach einem kick immer noch dort drin schreiben kann, natürlich wenns nicht inv only ist oder +k
 void Commands::kick( Parser &input, Client requestor, std::vector<Channel> &channels ) {
 	std::string message;
 	std::vector<Channel>::iterator channelIt = searchForChannel(input.getParam()[0], channels);
@@ -334,6 +335,7 @@ void Commands::executeOperator( bool sign, Channel &channel, std::string param, 
 	return ;
 }
 
+// @todo gucken was min/max limit ist auf normale serven
 void Commands::executeLimit( bool sign, Channel &channel, std::string param, Client client ) {
 	(void) client;
 	if (sign) {
@@ -365,6 +367,7 @@ void Commands::executeTopic( bool sign, Channel &channel, std::string param, Cli
 	return ;
 }
 
+// @todo wenn man einen channel joined muss der user wissen wer alles im channel ist, welche modes aktiv sind, wer op ist vllt, was channel topic ist etc
 void Commands::join(Parser &input, Client client, std::vector<Channel> &channels){
 	std::string message;
 	if (input.getParam()[0].at(0) == '#')
