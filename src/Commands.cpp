@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include <map>
 #include "Client.hpp"
+#include <sstream>
 
 Commands::Commands() {
 	return ;
@@ -335,14 +336,26 @@ void Commands::executeOperator( bool sign, Channel &channel, std::string param, 
 	return ;
 }
 
-// @todo gucken was min/max limit ist auf normale serven
 void Commands::executeLimit( bool sign, Channel &channel, std::string param, Client client ) {
 	(void) client;
 	if (sign) {
 		if (!param.empty()) {
 			channel.getMode()['l'] = sign;
-			channel.setLimit(0);
-			std::cout << channel.getChannelName() << " modus was set to: +l" << std::endl;
+			if (param.find_first_not_of("0123456789") == std::string::npos) {
+				int limit = static_cast<int>( strtod(param.c_str(), NULL) );
+				int overflowCheck;
+
+				std::stringstream ss(param);
+				ss >> overflowCheck;
+				if (ss.fail() || !ss.eof())
+					return;
+				else if (limit < 1)
+					return;
+				else {
+					channel.setLimit(limit);
+					std::cout << channel.getChannelName() << " modus was set to: +l" << std::endl;
+				}
+			}
 		}
 		else {
 			std::string message = SERVER " " ERR_NEEDMOREPARAMS " " + client.getNickname() + " " + channel.getChannelName() + " :Not enough Parameters for +l\r\n";
