@@ -158,7 +158,6 @@ void Commands::forwardMsg( std::string trailing, std::string channelName, Client
 	return ;
 }
 
-// @todo clients msg are not being send or didnt reach their target
 void Commands::privmsg( Parser &input, Client client, std::vector<Client> connections, std::vector<Channel> channels) {
 	std::string receiver = input.getParam()[0];
 	std::string message = input.getTrailing() + "\r\n";;
@@ -182,7 +181,7 @@ void Commands::privmsg( Parser &input, Client client, std::vector<Client> connec
 	else {
 		for (std::vector<Client>::iterator targetIt = connections.begin(); targetIt != connections.end(); targetIt++) {
 			if (targetIt != connections.end() && targetIt->getNickname() == receiver) {
-				message = "PRIVMSG " + client.getNickname() + " :" + input.getTrailing() + "\r\n";
+				message = ":" + client.getNickname() + " PRIVMSG " + receiver + " :" + input.getTrailing() + "\r\n";
 				send(targetIt->getSocketfd(), message.c_str(), message.length(), 0);
 				return ;
 			}
