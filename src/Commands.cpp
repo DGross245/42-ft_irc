@@ -35,6 +35,7 @@ void Commands::ping( Parser &input, Client client ) {
 	return ;
 }
 
+// @todo cap messages fixen/erweiter
 void Commands::cap( Parser &input, Client client ) {
 	std::string message;
 	if (input.getParam()[0] == "LS")
@@ -83,6 +84,7 @@ void Commands::topic( Parser &input, Client client, std::vector<Channel> &channe
 	return ;
 }
 
+// @todo kick error messages
 void Commands::kick( Parser &input, Client requestor, std::vector<Channel> &channels ) {
 	std::string message;
 	std::vector<Channel>::iterator channelIt = searchForChannel(input.getParam()[0], channels);
@@ -362,7 +364,7 @@ void Commands::executeTopic( bool sign, Channel &channel, std::string param, Cli
 	(void)client;
 	return ;
 }
-// @todo join wird irgendwie 2x gesendet
+
 void Commands::join(Parser &input, Client client, std::vector<Channel> &channels){
 	std::string message;
 	if (input.getParam()[0].at(0) == '#')
@@ -411,6 +413,7 @@ bool isNicknameUnique(const std::vector<Client>& connections, std::string& nickn
 	return false;
 }
 
+// @todo constants/macros nehmen anstatt es dahin zu schreiben
 bool checkNickname(Client& client, std::string& nickname, const std::vector<Client>& connections) {
 	if (isNicknameUnique(connections, nickname)) {
 		std::string errorMessage = ":IRCSERV 433 " + nickname + " :Nickname is already in use. Please choose a different nickname.\r\n";
@@ -428,7 +431,6 @@ bool checkNickname(Client& client, std::string& nickname, const std::vector<Clie
 	return true;
 }
 
-// @todo add error messages
 void Commands::nick(Parser& input, Client& client, std::vector<Client>& connections) {
 	if (!checkNickname(client, input.getParam()[0], connections)) {
 		return;

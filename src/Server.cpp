@@ -21,6 +21,7 @@
 #include "Constants.hpp"
 #include "Commands.hpp"
 
+// @todo vielleicht bessere nachrichten innerhalb des servers damit man weiss was passiert
 Server::Server( std::string port, std::string password ) {
 	if (port.find_first_not_of("0123456789") == std::string::npos) {
 		int _port = static_cast<int>( strtod(port.c_str(), NULL) );
