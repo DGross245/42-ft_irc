@@ -86,7 +86,6 @@ void Commands::topic( Parser &input, Client client, std::vector<Channel> &channe
 }
 
 // @todo kick error messages
-// @todo gucken ob man auf anderen IRC server nach einem kick immer noch dort drin schreiben kann, natürlich wenns nicht inv only ist oder +k
 void Commands::kick( Parser &input, Client requestor, std::vector<Channel> &channels ) {
 	std::string message;
 	std::vector<Channel>::iterator channelIt = searchForChannel(input.getParam()[0], channels);
@@ -220,7 +219,7 @@ void Commands::quit( Parser &input, Client client, std::vector<Channel> &channel
 	return ;
 }
 
-// @todo sign nochmal im auge behalten, da ich nicht weiss ob z.B /MODE o dgross einen error schmeissen soll
+// @todo Mode unknown mode returnen wenn + oder - fehlen
 void Commands::mode(Parser &input, Client client , std::vector<Channel> &channels) {
 	bool sign = true;
 	std::string message;
@@ -245,6 +244,7 @@ void Commands::mode(Parser &input, Client client , std::vector<Channel> &channel
 	modeFuntion['o'] = &executeOperator;
 	modeFuntion['l'] = &executeLimit;
 
+	std::cout << "lol\n";
 	for (size_t i = 0; i < modeLine.length(); i++) {
 		mode = modeLine[i];
 		if (mode == '+')
