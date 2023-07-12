@@ -1,4 +1,7 @@
 #include "Client.hpp"
+#include <sys/socket.h>
+#include "Constants.hpp"
+#include <iostream>
 
 Client::Client( int clientfd ) : _socketfd(clientfd), _isAuthenticated(false), _passwordAccepted(false) {
 	return ;
@@ -57,18 +60,24 @@ int Client::getSocketfd( void ) {
 	return (this->_socketfd);
 }
 
-// @todo my also pw ??
-int Client::Authentication( void ) {
-	if (!this->getAuthentication()) {
-		if (this->getPasswordAccepted() == false)
-			return (0);
-		if (this->getNickname().empty())
-			return (0);
-		if (this->getUsername().empty())
-			return (0);
+int Client::Authentication( std::string CMD ) {
+	if (this->getAuthentication() == false) {
+		if (this->getPasswordAccepted() && !this->getNickname().empty() && !this->getUsername().empty()) {
+			this->setAuthentication(true);
+			std::string joinMessageClient = ":IRCSERVE 001 " + this->getNickname() +
+			" :Welcome to the Internet Relay Network, " + this->getNickname() + "\r\n";
+			send(this->getSocketfd(), joinMessageClient.c_str(), joinMessageClient.length(), 0);
+			std::cout << "ACCEPTED\n";
+			return (true);
+		}
+		if (CMD != "PASS" && CMD != "NICK" && CMD != "USER" && CMD != "CAP") {
+			std::cout << CMD << "<>" << CMD.length() << std::endl;
+			std::string message = SERVER " " ERR_NOTREGISTERED " * :You have not registered\r\n";
+			send(this->getSocketfd(), message.c_str(), message.length(), 0);
+		}
+		return (false);
 	}
-	this->setAuthentication( true );
-	return (1);
+	return (true);
 }
 
 Client::clientFailException::~clientFailException( void ) throw() { return ;	}

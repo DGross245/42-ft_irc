@@ -49,7 +49,6 @@ void Commands::cap( Parser &input, Client client ) {
 	return ;
 }
 
-// @todo falsche passwörter gehen tzd durch
 void Commands::pass( Parser &input, Client &client, std::string password ) {
 	if (*input.getParam().begin() == password) {
 		std::cout << "PW accepted!" << std::endl;
@@ -57,8 +56,9 @@ void Commands::pass( Parser &input, Client &client, std::string password ) {
 		return ;
 	}
 	else {
-		std::string message = ERR_PASSWDMISMATCH " :Wrong Password\r\n";
+		std::string message = SERVER " " ERR_PASSWDMISMATCH " * :Wrong Password\r\n";
 		send(client.getSocketfd(), message.c_str(), message.length(), 0);
+		client.setPasswordAccepted(false);
 	}
 	return ;
 }
@@ -433,9 +433,6 @@ void Commands::nick(Parser& input, Client& client, std::vector<Client>& connecti
 		return;
 	} else {
 		client.setNickname(input.getParam()[0]);
-		std::string joinMessageClient = ":IRCSERVE 001 " + client.getNickname() +
-		" :Welcome to the Internet Relay Network, " + client.getNickname() + "\r\n";
-		send(client.getSocketfd(), joinMessageClient.c_str(), joinMessageClient.length(), 0);
 	}
 }
 

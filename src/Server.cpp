@@ -123,14 +123,14 @@ void Server::addClient( int serverSocketfd, fd_set &readfds ) {
 void Server::executeMsg( Parser &input, Client &client ) {
 	if (input.getCMD() == "PASS")
 		Commands::pass(input, client , this->getPassword());
-	if (client.getPasswordAccepted()) {
+	else if (client.getPasswordAccepted()) {
 		if (input.getCMD() == "CAP")
 			Commands::cap(input, client);
 		else if (input.getCMD() == "NICK")
 			Commands::nick(input, client, this->getConnections());
 		else if (input.getCMD() == "USER")
 			Commands::user(input, client, this->getConnections());
-		else if (client.Authentication()) {
+		if (client.Authentication(input.getCMD())) {
 			if (input.getCMD() == "PING")
 				Commands::ping(input, client);
 			else if (input.getCMD() == "JOIN")
