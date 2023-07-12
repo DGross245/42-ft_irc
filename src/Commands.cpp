@@ -446,7 +446,7 @@ bool isUsernameAvailable(const std::vector<Client>& connections, const std::stri
 		return true;
 	for (std::vector<Client>::size_type i = 0; i < connections.size(); ++i) {
 		if (connections[i].getConstUsername() == username) {
-		    return false;
+			return false;
 		}
 	}
 	return true;
@@ -513,16 +513,35 @@ void sendInvitation(Client &client, std::string nickname, std::string channelNam
 	}
 }
 
+bool invitedPersonIsOnChannel(Client &client, std::vector<Channel> &channels, std::string channelName, std::string invitedPerson) {
+	std::vector<Channel>::iterator channelIt = Commands::searchForChannel(channelName, channels);
+	if (channelIt != channels.end()) {
+		for(std::vector<Client>::iterator clientIt = channelIt->getClients().begin(); clientIt != channelIt->getClients().end(); clientIt++) {
+			if (clientIt->getNickname() == invitedPerson) {
+				std::string errorMessageClient = SERVER " " ERR_USERONCHANNEL " " + invitedPerson + " " + channelName + " :is already on channel\r\n";
+				send(client.getSocketfd(), errorMessageClient.c_str(), errorMessageClient.length(), 0);
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+
 // @todo add error messages
 void Commands::invite(Client& client, Parser& input, std::vector<Client> &connections, std::vector<Channel> &channels) {
 	if (!checkPermission(client, input.getParam()[1], client.getNickname(), channels)) {
-		return ;
+		return;
+	}
+	if (invitedPersonIsOnChannel(client, channels, input.getParam()[1], input.getParam()[0])) {
+		return;
 	}
 	if (checkInvitedPerson(connections, input.getParam()[1])) {
-		return ;
+		return;
 	}
 	sendInvitation(client, input.getParam()[0], input.getParam()[1], channels, connections);
 }
+
 
 Commands::commandFailException::~commandFailException( void ) throw() { return ;	}
 Commands::commandFailException::commandFailException( std::string error ) : _error(error) { return ; }
