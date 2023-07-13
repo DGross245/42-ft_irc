@@ -105,6 +105,10 @@ std::string Channel::getTopic( void ) {
 	return (this->_topic);
 }
 
+std::string Channel::getModeString(void) {
+	return (this->_modeString);
+}
+
 // NORMAL CODE
 
 void Channel::addUser( Client user ) {
