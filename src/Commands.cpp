@@ -244,7 +244,6 @@ void Commands::mode(Parser &input, Client client , std::vector<Channel> &channel
 	modeFuntion['o'] = &executeOperator;
 	modeFuntion['l'] = &executeLimit;
 
-	std::cout << "lol\n";
 	for (size_t i = 0; i < modeLine.length(); i++) {
 		mode = modeLine[i];
 		if (mode == '+')
@@ -382,14 +381,14 @@ void Commands::executeTopic( bool sign, Channel &channel, std::string param, Cli
 
 void sendWelcomeMessage(Client client, std::vector<Channel>::iterator channelIt) {
 	std::string message;
-	if (channelIt->getTopic().empty())
+	if (channelIt->getTopic().empty()) 
 		message = SERVER " " RPL_NOTOPIC " " + client.getNickname() + " " + channelIt->getChannelName() + " :No topic set\r\n";
 	else
 		message = SERVER " " RPL_TOPIC " " + client.getNickname() + " " + channelIt->getChannelName() + " :" + channelIt->getTopic() + "\r\n";
 	std::cout << "The message is: " << message << std::endl;
 	send(client.getSocketfd(), message.c_str(), message.length(), 0);
-	message = SERVER " " RPL_CHANNELMODEIS " " + client.getNickname() + " " + channelIt->getChannelName() + " +" + channelIt->getModeString() + "\r\n";
-	send(client.getSocketfd(), message.c_str(), message.length(), 0);
+	//message = SERVER " " RPL_CHANNELMODEIS " " + client.getNickname() + " " + channelIt->getChannelName() + " +" + channelIt->getModeString() + "\r\n";
+	//send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	std::cout << "Bin hier" << std::endl;
 	for (std::vector<Client>::iterator it = channelIt->getClients().begin(); it != channelIt->getClients().end(); ++it) {
 		if (it->getSocketfd() != client.getSocketfd()) {
@@ -412,12 +411,15 @@ void Commands::join(Parser &input, Client client, std::vector<Channel> &channels
 			message = "/buffer " + input.getParam()[0] + "\r\n";
 			send(client.getSocketfd(), message.c_str(), message.length(), 0);
 			channelIt = channels.begin();
-			} else {
+		} 
+		else {
 			if (channelIt->canUserJoin( client, input )) {
 				channelIt->addUser( client );
 				std::vector<Client>::iterator clientIt = channelIt->searchForUser(client.getNickname(), channelIt->getInviteList());
 				if (clientIt != channelIt->getInviteList().end())
 					channelIt->getInviteList().erase(clientIt);
+				message = ":" + client.getNickname() + " JOIN " + input.getParam()[0] + "\r\n";;
+				send(client.getSocketfd(), message.c_str(), message.length(), 0);
 				message = "/buffer " + input.getParam()[0] + "\r\n";
 				send(client.getSocketfd(), message.c_str(), message.length(), 0);
 			}
