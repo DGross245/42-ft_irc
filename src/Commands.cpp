@@ -62,13 +62,13 @@ void Commands::pass( Parser &input, Client &client, std::string password ) {
 			client.setPasswordAccepted(true);
 		}
 		else {
-			message = SERVER " " ERR_PASSWDMISMATCH + (client.getNickname().empty() ? "*" : client.getNickname())  + " :Wrong Password\r\n";
+			message = SERVER " " ERR_PASSWDMISMATCH  " " + (client.getNickname().empty() ? "*" : client.getNickname()) + " :Wrong Password\r\n";
 			send(client.getSocketfd(), message.c_str(), message.length(), 0);
 			client.setPasswordAccepted(false);
 		}
 	}
 	else {
-		message = SERVER " " ERR_ALREADYREGISTRED + (client.getNickname().empty() ? "*" : client.getNickname()) + " :You have entered the correct password\r\n";
+		message = SERVER " " ERR_ALREADYREGISTRED " " + (client.getNickname().empty() ? "*" : client.getNickname()) + " :You have entered the correct password already\r\n";
 		send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	}
 	return ;
