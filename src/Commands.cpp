@@ -30,21 +30,23 @@ std::vector<Channel>::iterator	Commands::searchForChannel( std::string channelNa
 	}
 	return (iterator);
 }
+
 void Commands::ping( Parser &input, Client client ) {
 	std::string message = "PONG :" + input.getParam()[0] + "\r\n";
 	send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	return ;
 }
 
-// @todo cap messages fixen/erweiter
+// @todo LS immer noch erweitern und invalid cap cmd geht auch nicht
 void Commands::cap( Parser &input, Client client ) {
 	std::string message;
 	if (input.getParam()[0] == "LS")
-		message = "CAP * LS :JOIN\r\n";
+		message = "CAP * LS :...\r\n";
 	else if (input.getParam()[0] == "END")
-		message = "CAP * ACK :JOIN\r\n";
+		message = "CAP * ACK :...\r\n";
 	else {
 		message = SERVER " 410 " + client.getNickname() + " " + input.getParam()[0] + " :Invalid CAP command";
+		send(client.getSocketfd(), message.c_str(), message.length(), 0);
 		std::cout << "User send a invalid CAP request\n";
 	}
 	send(client.getSocketfd(), message.c_str(), message.length(), 0);
@@ -52,14 +54,28 @@ void Commands::cap( Parser &input, Client client ) {
 }
 
 void Commands::pass( Parser &input, Client &client, std::string password ) {
+<<<<<<< HEAD
 	if (*input.getParam().begin() == password) {
 		client.setPasswordAccepted(true);
 		return ;
+=======
+	std::string message;
+
+	if (!client.getPasswordAccepted()) {
+		if (*input.getParam().begin() == password) {
+			std::cout << "PW accepted!" << std::endl;
+			client.setPasswordAccepted(true);
+		}
+		else {
+			message = SERVER " " ERR_PASSWDMISMATCH  " " + (client.getNickname().empty() ? "*" : client.getNickname()) + " :Wrong Password\r\n";
+			send(client.getSocketfd(), message.c_str(), message.length(), 0);
+			client.setPasswordAccepted(false);
+		}
+>>>>>>> c342f1e76c5240867131aeade910b93e835bf929
 	}
 	else {
-		std::string message = SERVER " " ERR_PASSWDMISMATCH " * :Wrong Password\r\n";
+		message = SERVER " " ERR_ALREADYREGISTRED " " + (client.getNickname().empty() ? "*" : client.getNickname()) + " :You have entered the correct password already\r\n";
 		send(client.getSocketfd(), message.c_str(), message.length(), 0);
-		client.setPasswordAccepted(false);
 	}
 	return ;
 }
@@ -79,8 +95,13 @@ void Commands::topic( Parser &input, Client client, std::vector<Channel> &channe
 			message = SERVER " " RPL_TOPIC " " + client.getNickname() + " " + channelIt->getChannelName() + " :" + channelIt->getTopic() + "\r\n";
 		send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	}
-	else
+	else {
 		channelIt->setTopic(input.getTrailing(), client);
+		for (std::vector<Client>::iterator clientIt = channelIt->getClients().begin(); clientIt != channelIt->getClients().end(); ++clientIt) {
+			message = SERVER " " RPL_TOPIC " " + client.getNickname() + " " + channelIt->getChannelName() + " :" + channelIt->getTopic() + "\r\n";
+			send(client.getSocketfd(), message.c_str(), message.length(), 0);
+		}
+	}
 	return ;
 }
 
@@ -111,19 +132,25 @@ void Commands::kick( Parser &input, Client requestor, std::vector<Channel> &chan
 		for (std::vector<Client>::iterator it = op.begin(); it != op.end(); it++) {
 			if (requestor.getSocketfd() == it->getSocketfd()) {
 				if (target->getSocketfd() == channelIt->getOwner().getSocketfd()) {
-					message = "ERROR";
+					message = message = SERVER " " ERR_NOPRIVLIEGES " " + requestor.getNickname() + " " + channelIt->getChannelName() + " :You can't kick the owner of this channel\r\n";;
 					send(target->getSocketfd(), message.c_str(), message.length(), 0);
 					return ;
 				}
 				message = ":" + requestor.getNickname() + " KICK " + channelIt->getChannelName() + " " + target->getNickname();
 				if (!input.getTrailing().empty())
-					message += input.getTrailing() + + "\r\n";
+					message += " :" + input.getTrailing() + "\r\n";
 				else
 					message += "\r\n";
 				send(target->getSocketfd(), message.c_str(), message.length(), 0);
 				channelIt->getClients().erase(target);
+				for (std::vector<Client>::iterator clientIt = channelIt->getClients().begin(); clientIt != channelIt->getClients().end(); ++clientIt) {
+					send(clientIt->getSocketfd(), message.c_str(), message.length(), 0);
+				}
+				return ;
 			}
 		}
+		message = SERVER " " ERR_CHANOPRIVSNEEDED " " + requestor.getNickname() + " " + channelIt->getChannelName() + " :You're not channel operator\r\n";
+		send(requestor.getSocketfd(), message.c_str(), message.length(), 0);
 	}
 	return ;
 }
