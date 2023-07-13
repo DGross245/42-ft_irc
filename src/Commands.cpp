@@ -89,8 +89,13 @@ void Commands::topic( Parser &input, Client client, std::vector<Channel> &channe
 			message = SERVER " " RPL_TOPIC " " + client.getNickname() + " " + channelIt->getChannelName() + " :" + channelIt->getTopic() + "\r\n";
 		send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	}
-	else
+	else {
 		channelIt->setTopic(input.getTrailing(), client);
+		for (std::vector<Client>::iterator clientIt = channelIt->getClients().begin(); clientIt != channelIt->getClients().end(); ++clientIt) {
+			message = SERVER " " RPL_TOPIC " " + client.getNickname() + " " + channelIt->getChannelName() + " :" + channelIt->getTopic() + "\r\n";
+			send(client.getSocketfd(), message.c_str(), message.length(), 0);
+		}
+	}
 	return ;
 }
 
