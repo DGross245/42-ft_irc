@@ -24,6 +24,7 @@ public:
 	void							setMode( std::map<char,bool> mode);
 	void							setLimit( size_t i );
 	void							setPassword( std::string password );
+	// void							setModeString( );
 
 	size_t							getLimit( void );
 	Client							getOwner( void );

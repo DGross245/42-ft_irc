@@ -420,7 +420,8 @@ void sendWelcomeMessage(Client client, std::vector<Channel>::iterator channelIt)
 	return ;
 }
 
-// @todo wenn man einen channel joined muss der user wissen wer alles im channel ist, welche modes aktiv sind, wer op ist vllt, was channel topic ist etc
+// @todo RPL_NAMRPLY and RPL_ENDOFNAMES, 
+// @todo client darf nicht nochmal in den channel joinen können wo er schon drin ist
 void Commands::join(Parser &input, Client client, std::vector<Channel> &channels){
 	std::string message;
 	if (input.getParam()[0].at(0) == '#') {
