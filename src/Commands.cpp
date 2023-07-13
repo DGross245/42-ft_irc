@@ -54,11 +54,6 @@ void Commands::cap( Parser &input, Client client ) {
 }
 
 void Commands::pass( Parser &input, Client &client, std::string password ) {
-<<<<<<< HEAD
-	if (*input.getParam().begin() == password) {
-		client.setPasswordAccepted(true);
-		return ;
-=======
 	std::string message;
 
 	if (!client.getPasswordAccepted()) {
@@ -71,7 +66,6 @@ void Commands::pass( Parser &input, Client &client, std::string password ) {
 			send(client.getSocketfd(), message.c_str(), message.length(), 0);
 			client.setPasswordAccepted(false);
 		}
->>>>>>> c342f1e76c5240867131aeade910b93e835bf929
 	}
 	else {
 		message = SERVER " " ERR_ALREADYREGISTRED " " + (client.getNickname().empty() ? "*" : client.getNickname()) + " :You have entered the correct password already\r\n";
