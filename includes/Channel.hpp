@@ -30,6 +30,7 @@ public:
 	std::string						getTopic( void );
 	std::string						getChannelName( void );
 	std::string						getPassword( void );
+	std::string						getModeString( void );
 	std::map<char,bool>				&getMode( void );
 	std::vector<Client>				&getClients( void );
 	std::vector<Client>				&getInviteList( void );
@@ -60,6 +61,7 @@ private:
 	std::vector<Client>		_operator;
 	std::vector<Client>		_invited;
 	std::map<char, bool>	_mode;
+	std::string				_modeString;
 
 };
 

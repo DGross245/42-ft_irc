@@ -258,7 +258,6 @@ void Commands::mode(Parser &input, Client client , std::vector<Channel> &channel
 	modeFuntion['o'] = &executeOperator;
 	modeFuntion['l'] = &executeLimit;
 
-	std::cout << "lol\n";
 	for (size_t i = 0; i < modeLine.length(); i++) {
 		mode = modeLine[i];
 		if (mode == '+')
@@ -394,11 +393,30 @@ void Commands::executeTopic( bool sign, Channel &channel, std::string param, Cli
 	return ;
 }
 
+void sendWelcomeMessage(Client client, std::vector<Channel>::iterator channelIt) {
+	std::string message;
+	if (channelIt->getTopic().empty()) 
+		message = SERVER " " RPL_NOTOPIC " " + client.getNickname() + " " + channelIt->getChannelName() + " :No topic set\r\n";
+	else
+		message = SERVER " " RPL_TOPIC " " + client.getNickname() + " " + channelIt->getChannelName() + " :" + channelIt->getTopic() + "\r\n";
+	std::cout << "The message is: " << message << std::endl;
+	send(client.getSocketfd(), message.c_str(), message.length(), 0);
+	//message = SERVER " " RPL_CHANNELMODEIS " " + client.getNickname() + " " + channelIt->getChannelName() + " +" + channelIt->getModeString() + "\r\n";
+	//send(client.getSocketfd(), message.c_str(), message.length(), 0);
+	std::cout << "Bin hier" << std::endl;
+	for (std::vector<Client>::iterator it = channelIt->getClients().begin(); it != channelIt->getClients().end(); ++it) {
+		if (it->getSocketfd() != client.getSocketfd()) {
+			message = ":" + client.getNickname() + " JOIN " + channelIt->getChannelName() + "\r\n";;
+			send(it->getSocketfd(), message.c_str(), message.length(), 0);
+		}
+	}
+	return ;
+}
+
 // @todo wenn man einen channel joined muss der user wissen wer alles im channel ist, welche modes aktiv sind, wer op ist vllt, was channel topic ist etc
 void Commands::join(Parser &input, Client client, std::vector<Channel> &channels){
 	std::string message;
-	if (input.getParam()[0].at(0) == '#')
-	{
+	if (input.getParam()[0].at(0) == '#') {
 		std::vector<Channel>::iterator channelIt = searchForChannel( input.getParam()[0], channels);
 		if (channelIt == channels.end()) {
 			channels.push_back(Channel ( input.getParam()[0], client ));
@@ -406,21 +424,24 @@ void Commands::join(Parser &input, Client client, std::vector<Channel> &channels
 			send(client.getSocketfd(), message.c_str(), message.length(), 0);
 			message = "/buffer " + input.getParam()[0] + "\r\n";
 			send(client.getSocketfd(), message.c_str(), message.length(), 0);
-		}
+			channelIt = channels.begin();
+		} 
 		else {
 			if (channelIt->canUserJoin( client, input )) {
 				channelIt->addUser( client );
 				std::vector<Client>::iterator clientIt = channelIt->searchForUser(client.getNickname(), channelIt->getInviteList());
 				if (clientIt != channelIt->getInviteList().end())
 					channelIt->getInviteList().erase(clientIt);
-				for (std::vector<Client>::iterator it = channelIt->getClients().begin(); it != channelIt->getClients().end(); ++it) {
-					message = ":" + client.getNickname() + " JOIN " + input.getParam()[0] + "\r\n";;
-					send(it->getSocketfd(), message.c_str(), message.length(), 0);
-				}
+				message = ":" + client.getNickname() + " JOIN " + input.getParam()[0] + "\r\n";;
+				send(client.getSocketfd(), message.c_str(), message.length(), 0);
 				message = "/buffer " + input.getParam()[0] + "\r\n";
 				send(client.getSocketfd(), message.c_str(), message.length(), 0);
 			}
 		}
+		sendWelcomeMessage(client, channelIt);
+	} else {
+		message = SERVER " " ERR_NOSUCHCHANNEL " " + client.getNickname() + " " + input.getParam()[0] + " : No such channel\r\n";
+		send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	}
 	return ;
 }
@@ -443,18 +464,17 @@ bool isNicknameUnique(const std::vector<Client>& connections, std::string& nickn
 	return false;
 }
 
-// @todo constants/macros nehmen anstatt es dahin zu schreiben
 bool checkNickname(Client& client, std::string& nickname, const std::vector<Client>& connections) {
 	if (isNicknameUnique(connections, nickname)) {
-		std::string errorMessage = ":IRCSERV 433 " + nickname + " :Nickname is already in use. Please choose a different nickname.\r\n";
+		std::string errorMessage = SERVER " " ERR_NICKNAMEINUSE " " + nickname + " :Nickname is already in use. Please choose a different nickname.\r\n";
 		send(client.getSocketfd(), errorMessage.c_str(), errorMessage.length(), 0);
 		return false;
 	} else if (nickname.size() > 10) {
-		std::string errorMessage = ":IRCSERV 432 " + nickname + " :Nickname is too long. Please choose a shorter nickname.\r\n";
+		std::string errorMessage = SERVER " " ERR_ERRONEUSNICKNAME " " + nickname + " :Nickname is too long. Please choose a shorter nickname.\r\n";
 		send(client.getSocketfd(), errorMessage.c_str(), errorMessage.length(), 0);
 		return false;
 	} else if (!isAlphaNumeric(nickname)) {
-		std::string errorMessage = ":IRCSERV 432 " + nickname + " :Nickname contains invalid symbols. Only use letters and numbers.\r\n";
+		std::string errorMessage = SERVER " " ERR_ERRONEUSNICKNAME " " + nickname + " :Nickname contains invalid symbols. Only use letters and numbers.\r\n";
 		send(client.getSocketfd(), errorMessage.c_str(), errorMessage.length(), 0);
 		return false;
 	}
@@ -489,7 +509,7 @@ bool isNameValid(const std::string& name) {
 	return true;
 }
 
-// @todo add error messages
+// @todo add messages
 void Commands::user(Parser& input, Client& client, std::vector<Client>& connections) {
 	if (!isNameValid(client.getConstUsername())) {
 		return;
@@ -555,8 +575,6 @@ bool invitedPersonIsOnChannel(Client &client, std::vector<Channel> &channels, st
 	return false;
 }
 
-
-// @todo add error messages
 void Commands::invite(Client& client, Parser& input, std::vector<Client> &connections, std::vector<Channel> &channels) {
 	if (!checkPermission(client, input.getParam()[1], client.getNickname(), channels)) {
 		return;
