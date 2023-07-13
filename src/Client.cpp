@@ -67,7 +67,7 @@ int Client::Authentication( std::string CMD ) {
 			std::string joinMessageClient = ":IRCSERVE 001 " + this->getNickname() +
 			" :Welcome to the Internet Relay Network, " + this->getNickname() + "\r\n";
 			send(this->getSocketfd(), joinMessageClient.c_str(), joinMessageClient.length(), 0);
-			std::cout << "ACCEPTED\n";
+			std::cout << GREEN << "Client " << this->getNickname() << " has joined the server" << RESET << std::endl;
 			return (true);
 		}
 		if (CMD != "PASS" && CMD != "NICK" && CMD != "USER" && CMD != "CAP") {

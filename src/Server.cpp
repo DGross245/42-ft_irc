@@ -93,7 +93,7 @@ void Server::initServer( void ) {
 	struct sockaddr_in serverAddress;
 	memset(&serverAddress, 0, sizeof(serverAddress));
 	serverAddress.sin_family = AF_INET;
-	serverAddress.sin_addr.s_addr = inet_addr("10.11.5.25");
+	serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
 	serverAddress.sin_port = htons(this->getPort());
 	fcntl(serverSocketfd, F_SETFL, O_NONBLOCK);
 	bind(serverSocketfd, reinterpret_cast<struct sockaddr *>(&serverAddress), sizeof(serverAddress));
@@ -117,7 +117,6 @@ void Server::addClient( int serverSocketfd, fd_set &readfds ) {
 	clientfd = accept(serverSocketfd, reinterpret_cast<struct sockaddr *>(&clientAddress), &clientAddressLength);
 	FD_SET(clientfd, &readfds);
 	if (clientfd > 0) {
-		std::cout << "New Client tries to connect" << std::endl;
 		this->_connections.push_back(Client (clientfd));
 		fcntl(clientfd, F_SETFL, O_NONBLOCK);
 	}
@@ -161,15 +160,15 @@ void Server::executeMsg( Parser &input, Client &client ) {
 	return ;
 }
 
-static void Sprinter( Parser parser) {
-	// std::cout << "Prefix:" << parser.getPrefix() << std::endl;
-	std::cout << "\nCommand:" << parser.getCMD() << std::endl;
-	std::vector<std::string> test = parser.getParam();
-	for (std::vector<std::string>::iterator it = test.begin(); it != test.end(); it++)
-		std::cout << "Param :" << *it << std::endl;
-	std::cout << "trailing :" << parser.getTrailing() << std::endl;
-	return ;
-}
+// static void Sprinter( Parser parser) {
+// 	// std::cout << "Prefix:" << parser.getPrefix() << std::endl;
+// 	std::cout << "\nCommand:" << parser.getCMD() << std::endl;
+// 	std::vector<std::string> test = parser.getParam();
+// 	for (std::vector<std::string>::iterator it = test.begin(); it != test.end(); it++)
+// 		std::cout << "Param :" << *it << std::endl;
+// 	std::cout << "trailing :" << parser.getTrailing() << std::endl;
+// 	return ;
+// }
 
 void Server::readMsg( Client &client, int i) {
 	std::string buffer(1024, '\0');
@@ -178,7 +177,7 @@ void Server::readMsg( Client &client, int i) {
 	if (bytes_read == -1)
 		throw serverFailException("recv Error");
 	else if (bytes_read == 0) {
-		std::cout << "Disconnected" << std::endl;
+		std::cout << GREEN << "Client has disconnected from server" << std::endl;
 		close(client.getSocketfd());
 		this->_connections.erase(this->_connections.begin() + i);
 	}
@@ -188,7 +187,7 @@ void Server::readMsg( Client &client, int i) {
 			buffer.resize(bytes_read);
 			while (!buffer.empty() || buffer.find("\r\n") != std::string::npos) {
 				Parser input( buffer, client );
-				Sprinter( input );
+				// Sprinter( input );
 				executeMsg( input, client );
 			}
 		}
@@ -201,6 +200,7 @@ void Server::readMsg( Client &client, int i) {
 }
 
 void Server::launchServer( void ) {
+	std::cout << GREEN << "IRCSERV has started" << RESET << std::endl;
 	clientIOHandler();
 	closeALLConnections();
 	close(this->_serverfd);
@@ -228,8 +228,10 @@ void Server::clientIOHandler( void ) {
 		else if (ready_fds == 0)
 			continue;
 		else {
-			if (FD_ISSET(this->_serverfd, &readfds))
+			if (FD_ISSET(this->_serverfd, &readfds)) {
 				addClient( this->_serverfd, readfds );
+				std::cout << GREEN << "A new client has connected. Total connected clients: " << this->getConnections().size() << std::endl;
+			}
 			else {
 				for (size_t i = 0; i < this->_connections.size(); i++) {
 					if (FD_ISSET(this->_connections[i].getSocketfd(), &readfds))

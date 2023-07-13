@@ -53,7 +53,6 @@ void Commands::cap( Parser &input, Client client ) {
 
 void Commands::pass( Parser &input, Client &client, std::string password ) {
 	if (*input.getParam().begin() == password) {
-		std::cout << "PW accepted!" << std::endl;
 		client.setPasswordAccepted(true);
 		return ;
 	}
@@ -381,15 +380,13 @@ void Commands::executeTopic( bool sign, Channel &channel, std::string param, Cli
 
 void sendWelcomeMessage(Client client, std::vector<Channel>::iterator channelIt) {
 	std::string message;
-	if (channelIt->getTopic().empty()) 
+	if (channelIt->getTopic().empty())
 		message = SERVER " " RPL_NOTOPIC " " + client.getNickname() + " " + channelIt->getChannelName() + " :No topic set\r\n";
 	else
 		message = SERVER " " RPL_TOPIC " " + client.getNickname() + " " + channelIt->getChannelName() + " :" + channelIt->getTopic() + "\r\n";
-	std::cout << "The message is: " << message << std::endl;
 	send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	//message = SERVER " " RPL_CHANNELMODEIS " " + client.getNickname() + " " + channelIt->getChannelName() + " +" + channelIt->getModeString() + "\r\n";
 	//send(client.getSocketfd(), message.c_str(), message.length(), 0);
-	std::cout << "Bin hier" << std::endl;
 	for (std::vector<Client>::iterator it = channelIt->getClients().begin(); it != channelIt->getClients().end(); ++it) {
 		if (it->getSocketfd() != client.getSocketfd()) {
 			message = ":" + client.getNickname() + " JOIN " + channelIt->getChannelName() + "\r\n";;
@@ -411,7 +408,8 @@ void Commands::join(Parser &input, Client client, std::vector<Channel> &channels
 			message = "/buffer " + input.getParam()[0] + "\r\n";
 			send(client.getSocketfd(), message.c_str(), message.length(), 0);
 			channelIt = channels.begin();
-		} 
+			std::cout << GREEN << "User " << client.getNickname() << " created channel " << input.getParam()[0] << RESET << std::endl;
+		}
 		else {
 			if (channelIt->canUserJoin( client, input )) {
 				channelIt->addUser( client );
