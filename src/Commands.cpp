@@ -126,19 +126,25 @@ void Commands::kick( Parser &input, Client requestor, std::vector<Channel> &chan
 		for (std::vector<Client>::iterator it = op.begin(); it != op.end(); it++) {
 			if (requestor.getSocketfd() == it->getSocketfd()) {
 				if (target->getSocketfd() == channelIt->getOwner().getSocketfd()) {
-					message = "ERROR";
+					message = message = SERVER " " ERR_NOPRIVLIEGES " " + requestor.getNickname() + " " + channelIt->getChannelName() + " :You can't kick the owner of this channel\r\n";;
 					send(target->getSocketfd(), message.c_str(), message.length(), 0);
 					return ;
 				}
 				message = ":" + requestor.getNickname() + " KICK " + channelIt->getChannelName() + " " + target->getNickname();
 				if (!input.getTrailing().empty())
-					message += input.getTrailing() + + "\r\n";
+					message += " :" + input.getTrailing() + "\r\n";
 				else
 					message += "\r\n";
 				send(target->getSocketfd(), message.c_str(), message.length(), 0);
 				channelIt->getClients().erase(target);
+				for (std::vector<Client>::iterator clientIt = channelIt->getClients().begin(); clientIt != channelIt->getClients().end(); ++clientIt) {
+					send(clientIt->getSocketfd(), message.c_str(), message.length(), 0);
+				}
+				return ;
 			}
 		}
+		message = SERVER " " ERR_CHANOPRIVSNEEDED " " + requestor.getNickname() + " " + channelIt->getChannelName() + " :You're not channel operator\r\n";
+		send(requestor.getSocketfd(), message.c_str(), message.length(), 0);
 	}
 	return ;
 }
