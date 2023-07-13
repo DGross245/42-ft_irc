@@ -30,21 +30,23 @@ std::vector<Channel>::iterator	Commands::searchForChannel( std::string channelNa
 	}
 	return (iterator);
 }
+
 void Commands::ping( Parser &input, Client client ) {
 	std::string message = "PONG :" + input.getParam()[0] + "\r\n";
 	send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	return ;
 }
 
-// @todo cap messages fixen/erweiter
+// @todo LS immer noch erweitern und invalid cap cmd geht auch nicht
 void Commands::cap( Parser &input, Client client ) {
 	std::string message;
 	if (input.getParam()[0] == "LS")
-		message = "CAP * LS :JOIN\r\n";
+		message = "CAP * LS :...\r\n";
 	else if (input.getParam()[0] == "END")
-		message = "CAP * ACK :JOIN\r\n";
+		message = "CAP * ACK :...\r\n";
 	else {
 		message = SERVER " 410 " + client.getNickname() + " " + input.getParam()[0] + " :Invalid CAP command";
+		send(client.getSocketfd(), message.c_str(), message.length(), 0);
 		std::cout << "User send a invalid CAP request\n";
 	}
 	send(client.getSocketfd(), message.c_str(), message.length(), 0);
@@ -52,15 +54,22 @@ void Commands::cap( Parser &input, Client client ) {
 }
 
 void Commands::pass( Parser &input, Client &client, std::string password ) {
-	if (*input.getParam().begin() == password) {
-		std::cout << "PW accepted!" << std::endl;
-		client.setPasswordAccepted(true);
-		return ;
+	std::string message;
+
+	if (!client.getPasswordAccepted()) {
+		if (*input.getParam().begin() == password) {
+			std::cout << "PW accepted!" << std::endl;
+			client.setPasswordAccepted(true);
+		}
+		else {
+			message = SERVER " " ERR_PASSWDMISMATCH + (client.getNickname().empty() ? "*" : client.getNickname())  + " :Wrong Password\r\n";
+			send(client.getSocketfd(), message.c_str(), message.length(), 0);
+			client.setPasswordAccepted(false);
+		}
 	}
 	else {
-		std::string message = SERVER " " ERR_PASSWDMISMATCH " * :Wrong Password\r\n";
+		message = SERVER " " ERR_ALREADYREGISTRED + (client.getNickname().empty() ? "*" : client.getNickname()) + " :You have entered the correct password\r\n";
 		send(client.getSocketfd(), message.c_str(), message.length(), 0);
-		client.setPasswordAccepted(false);
 	}
 	return ;
 }
