@@ -545,7 +545,7 @@ bool checkInvitedPerson(std::vector<Client> &connections, std::string invitedPer
 }
 
 void sendInvitation(Client &client, std::string nickname, std::string channelName,  std::vector<Channel> &channels, std::vector<Client> &connections) {
-	std::string inviteMessageClient = ":" + client.getNickname() + " " RPL_INVITING " " +nickname + " " + channelName + "\r\n";
+	std::string inviteMessageClient = ":" + client.getNickname() + " " + RPL_INVITING " " + nickname + " " + channelName + "\r\n";
 	send(client.getSocketfd(), inviteMessageClient.c_str(), inviteMessageClient.length(), 0);
 	std::vector<Channel>::iterator channelIt = Commands::searchForChannel(channelName, channels);
 	if (channelIt != channels.end()) {
