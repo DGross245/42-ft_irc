@@ -237,7 +237,7 @@ void Commands::mode(Parser &input, Client client , std::vector<Channel> &channel
 	}
 	std::vector<Client>::iterator clientIt = channelIt->searchForUser(client.getNickname(), channelIt->getOperator());
 	if (clientIt == channelIt->getClients().end()) {
-		message = SERVER " " ERR_CHANOPRIVSNEEDED " " + client.getNickname() + " " + input.getParam()[2] + " :Channel privileges needed\r\n";
+		message = SERVER " "   " " + client.getNickname() + " " + input.getParam()[2] + " :Channel privileges needed\r\n";
 		send(client.getSocketfd(), message.c_str(), message.length(), 0);
 		return ;
 	}
@@ -515,11 +515,16 @@ bool checkInvokerRights(std::vector<Client> &operators, std::string nickname) {
 			return true;
 	}
 	return false;
-
 }
+
 bool checkPermission(Client &client, std::string channelName, std::string nickname, std::vector<Channel> &channels) {
 	for (size_t i = 0; i < channels.size(); ++i) {
-		if (channels[i].getChannelName() == channelName && checkInvokerRights(channels[i].getOperator(), nickname)) {
+		if (channels[i].getChannelName() == channelName) {
+			if (!checkInvokerRights(channels[i].getOperator(), nickname)) {
+				std::string errorMessageClient = SERVER " " ERR_CHANOPRIVSNEEDED " " + nickname + " " + channelName + " :You're not channel operator\r\n";
+				send(client.getSocketfd(), errorMessageClient.c_str(), errorMessageClient.length(), 0);
+				return false;
+			}
 			return true;
 		}
 	}
@@ -529,7 +534,7 @@ bool checkPermission(Client &client, std::string channelName, std::string nickna
 }
 
 bool checkInvitedPerson(std::vector<Client> &connections, std::string invitedPerson) {
-	for (size_t i = 0; i < connections.size(); ++i) {
+	for (size_t i = 0; i < connections.size(); i++) {
 		if (connections[i].getNickname() == invitedPerson) {
 			return true;
 		}
@@ -564,7 +569,7 @@ bool invitedPersonIsOnChannel(Client &client, std::vector<Channel> &channels, st
 	return false;
 }
 
-// @todo Missing error message :ERR_NOTONCHANNEL,ERR_NOSUCHNICK,ERR_CHANOPRIVSNEEDED and RPL_INVITING
+	// @todo Missing error message :,,ERR_CHANOPRIVSNEEDED and RPL_INVITING
 void Commands::invite(Client& client, Parser& input, std::vector<Client> &connections, std::vector<Channel> &channels) {
 	if (!checkPermission(client, input.getParam()[1], client.getNickname(), channels)) {
 		return;
@@ -572,12 +577,14 @@ void Commands::invite(Client& client, Parser& input, std::vector<Client> &connec
 	if (invitedPersonIsOnChannel(client, channels, input.getParam()[1], input.getParam()[0])) {
 		return;
 	}
-	if (checkInvitedPerson(connections, input.getParam()[1])) {
+	if (!checkInvitedPerson(connections, input.getParam()[1])) {
+		std::string errorMessageClient = SERVER " " ERR_NOSUCHNICK " " + client.getNickname() + " " + input.getParam()[1] + " :No such nickname\r\n";
+		std::cout << errorMessageClient << std::endl;
+		send(client.getSocketfd(), errorMessageClient.c_str(), errorMessageClient.length(), 0);
 		return;
 	}
 	sendInvitation(client, input.getParam()[0], input.getParam()[1], channels, connections);
 }
-
 
 Commands::commandFailException::~commandFailException( void ) throw() { return ;	}
 Commands::commandFailException::commandFailException( std::string error ) : _error(error) { return ; }
