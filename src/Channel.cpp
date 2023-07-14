@@ -10,6 +10,7 @@ Channel::Channel( std::string name, Client user ) : _limit(0), _owner(user), _na
 	_mode['t'] = false;
 	_mode['k'] = false;
 	_mode['l'] = false;
+	_mode['m'] = true;
 	_clients.push_back(user);
 	_operator.push_back(user);
 	return ;
@@ -106,6 +107,11 @@ std::string Channel::getTopic( void ) {
 }
 
 std::string Channel::getModeString(void) {
+	std::map<char,bool> map = this->getMode();
+	for (std::map<char,bool>::iterator it = map.begin(); it != map.end(); it++) {
+		if (it->second == true)
+			this->_modeString += it->first;
+	}
 	return (this->_modeString);
 }
 

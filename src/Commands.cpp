@@ -169,7 +169,6 @@ void Commands::kick( Parser &input, Client requestor, std::vector<Channel> &chan
 	return ;
 }
 
-// @todo nochmal checken ob die nachricht gesendet wird
 void Commands::part( Parser &input, Client client, std::vector<Channel> &channels) {
 	std::string message;
 	std::vector<Channel>::iterator channelIt = searchForChannel(input.getParam()[0], channels);
@@ -439,10 +438,10 @@ void sendWelcomeMessage(Client client, std::vector<Channel>::iterator channelIt)
 		message = SERVER " " RPL_NOTOPIC " " + client.getNickname() + " " + channelIt->getChannelName() + " :No topic set\r\n";
 	else
 		message = SERVER " " RPL_TOPIC " " + client.getNickname() + " " + channelIt->getChannelName() + " :" + channelIt->getTopic() + "\r\n";
-	std::cout << "The message is: " << message << std::endl;
 	send(client.getSocketfd(), message.c_str(), message.length(), 0);
-	//message = SERVER " " RPL_CHANNELMODEIS " " + client.getNickname() + " " + channelIt->getChannelName() + " +" + channelIt->getModeString() + "\r\n";
-	//send(client.getSocketfd(), message.c_str(), message.length(), 0);
+	message = SERVER " MODE " + client.getNickname() + " " + channelIt->getChannelName() + " +" + channelIt->getModeString() + "\r\n";
+	std::cout << "modestring:" << message << std::endl;
+	send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	for (std::vector<Client>::iterator it = channelIt->getClients().begin(); it != channelIt->getClients().end(); ++it) {
 		if (it->getSocketfd() != client.getSocketfd()) {
 			message = ":" + client.getNickname() + " JOIN " + channelIt->getChannelName() + "\r\n";;
@@ -463,7 +462,6 @@ void sendWelcomeMessage(Client client, std::vector<Channel>::iterator channelIt)
 	return ;
 }
 
-// @todo RPL_NAMRPLY and RPL_ENDOFNAMES, 
 void Commands::join(Parser &input, Client client, std::vector<Channel> &channels){
 	std::string message;
 	if (input.getParam()[0].at(0) == '#') {
@@ -534,7 +532,7 @@ void Commands::nick(Parser& input, Client& client, std::vector<Client>& connecti
 		return;
 	} else {
 		if (!client.getNickname().empty()) {
-			std::string joinMessageClient = ":IRCSERVE 001 " + client.getNickname() +
+			std::string joinMessageClient = SERVER " " RPL_WELCOME " " + client.getNickname() +
 			" :Changed nickname to :" + client.getNickname() + "\r\n";
 			send(client.getSocketfd(), joinMessageClient.c_str(), joinMessageClient.length(), 0);
 		}
