@@ -8,6 +8,7 @@
 # define RPL_CHANNELMODEIS	"324"
 # define RPL_NOTOPIC		"331"
 # define RPL_TOPIC			"332"
+# define RPL_INVITING		"341"
 # define RPL_NAMREPLY		"353"
 # define RPL_ENDOFNAMES		"366"
 
@@ -23,6 +24,7 @@
 # define ERR_NICKNAMEINUSE		"433"
 # define ERR_NOTONCHANNEL 		"442"
 # define ERR_USERONCHANNEL 		"443"
+# define ERR_NOTREGISTERED		"451"
 # define ERR_NEEDMOREPARAMS 	"461"
 # define ERR_ALREADYREGISTRED	"462"
 # define ERR_PASSWDMISMATCH 	"464"
@@ -32,7 +34,6 @@
 # define ERR_BADCHANNELKEY		"475"
 # define ERR_NOPRIVLIEGES		"481"
 # define ERR_CHANOPRIVSNEEDED 	"482"
-# define ERR_NOTREGISTERED		"451"
 //COLOURS
 # define RESET   "\033[0m"
 # define RED     "\033[31m"

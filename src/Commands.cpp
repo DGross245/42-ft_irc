@@ -38,7 +38,6 @@ void Commands::ping( Parser &input, Client client ) {
 	return ;
 }
 
-// @todo LS immer noch erweitern und invalid cap cmd geht auch nicht
 void Commands::cap( Parser &input, Client client ) {
 	std::string message;
 	if (input.getParam()[0] == "LS")
@@ -46,8 +45,7 @@ void Commands::cap( Parser &input, Client client ) {
 	else if (input.getParam()[0] == "END")
 		message = "CAP * ACK :...\r\n";
 	else {
-		message = SERVER " 410 " + client.getNickname() + " " + input.getParam()[0] + " :Invalid CAP command";
-		send(client.getSocketfd(), message.c_str(), message.length(), 0);
+		message = SERVER " 410 " + client.getNickname() + " " + input.getParam()[0] + " :Invalid CAP command\r\n";
 		std::cout << "User send a invalid CAP request\n";
 	}
 	send(client.getSocketfd(), message.c_str(), message.length(), 0);
@@ -269,10 +267,11 @@ void Commands::quit( Parser &input, Client client, std::vector<Channel> &channel
 
 // @todo Mode unknown mode returnen wenn + oder - fehlen
 void Commands::mode(Parser &input, Client client , std::vector<Channel> &channels) {
-	bool sign = true;
-	std::string message;
 	std::string modeLine = input.getParam()[1];
+	std::string message;
+	bool sign = true;
 	char mode;
+
 	std::vector<Channel>::iterator channelIt = searchForChannel(input.getParam()[0], channels);
 	if (channelIt == channels.end()) {
 		message = SERVER " " ERR_NOSUCHCHANNEL " " + client.getNickname() + " " + input.getParam()[0] + " : No such channel\r\n";
@@ -288,6 +287,16 @@ void Commands::mode(Parser &input, Client client , std::vector<Channel> &channel
 	std::vector<Client>::iterator operatorIt = channelIt->searchForUser(client.getNickname(), channelIt->getOperator());
 	if (operatorIt == channelIt->getClients().end()) {
 		message = SERVER " " ERR_CHANOPRIVSNEEDED " " + client.getNickname() + " " + input.getParam()[2] + " :Channel privileges needed\r\n";
+		send(client.getSocketfd(), message.c_str(), message.length(), 0);
+		return ;
+	}
+	if (input.getParam().size() == 1) {
+		message = SERVER " " RPL_CHANNELMODEIS " " + client.getNickname() + " " + channelIt->getChannelName() + " +" + channelIt->getModeString() + "\r\n";
+		send(client.getSocketfd(), message.c_str(), message.length(), 0);
+		return ;
+	}
+	if (input.getParam()[1].at(0) != '-' && input.getParam()[1].at(0) != '+') {
+		std::string message = SERVER " " ERR_UNKNOWNMODE " " + client.getNickname() + " " + channelIt->getChannelName() + " :Unknown mode " + input.getParam()[1].at(0) + "\r\n";
 		send(client.getSocketfd(), message.c_str(), message.length(), 0);
 		return ;
 	}
@@ -360,7 +369,7 @@ void Commands::executeOperator( bool sign, Channel &channel, std::string param, 
 	}
 	std::vector<Client>::iterator clientIt = channel.searchForUser(param, channel.getClients());
 	if (clientIt == channel.getClients().end()) {
-		message = SERVER " " ERR_NOSUCHNICK " " + client.getNickname() + " " + param + " : No such nickname\r\n";
+		message = SERVER " " ERR_NOSUCHNICK " " + client.getNickname() + " " + channel.getChannelName() + " : No such nickname\r\n";
 		send(client.getSocketfd(), message.c_str(), message.length(), 0);
 		return ;
 	}
@@ -432,15 +441,13 @@ void Commands::executeTopic( bool sign, Channel &channel, std::string param, Cli
 	return ;
 }
 
+// @todo mode list hast irgendwie ein komisches verhalten (nochmal nachgucken was da los ist)
 void sendWelcomeMessage(Client client, std::vector<Channel>::iterator channelIt) {
 	std::string message;
 	if (channelIt->getTopic().empty()) 
 		message = SERVER " " RPL_NOTOPIC " " + client.getNickname() + " " + channelIt->getChannelName() + " :No topic set\r\n";
 	else
 		message = SERVER " " RPL_TOPIC " " + client.getNickname() + " " + channelIt->getChannelName() + " :" + channelIt->getTopic() + "\r\n";
-	send(client.getSocketfd(), message.c_str(), message.length(), 0);
-	message = SERVER " " RPL_CHANNELMODEIS " " + client.getNickname() + " " + channelIt->getChannelName() + " +" + channelIt->getModeString() + "\r\n";
-	std::cout << "modestring:" << message << std::endl;
 	send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	for (std::vector<Client>::iterator it = channelIt->getClients().begin(); it != channelIt->getClients().end(); ++it) {
 		if (it->getSocketfd() != client.getSocketfd()) {
@@ -458,6 +465,8 @@ void sendWelcomeMessage(Client client, std::vector<Channel>::iterator channelIt)
 	message += "\r\n";
 	send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	message = SERVER " " RPL_ENDOFNAMES " " + client.getNickname() + " " + channelIt->getChannelName() + " :End of /NAMES list\r\n";
+	send(client.getSocketfd(), message.c_str(), message.length(), 0);
+	message = SERVER " " RPL_CHANNELMODEIS " " + client.getNickname() + " " + channelIt->getChannelName() + " +" + channelIt->getModeString() + "\r\n";
 	send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	return ;
 }
@@ -607,7 +616,7 @@ bool checkInvitedPerson(std::vector<Client> &connections, std::string invitedPer
 }
 
 void sendInvitation(Client &client, std::string nickname, std::string channelName,  std::vector<Channel> &channels, std::vector<Client> &connections) {
-	std::string inviteMessageClient = ":" + client.getNickname() + " INVITE " + nickname + " " + channelName + "\r\n";
+	std::string inviteMessageClient = ":" + client.getNickname() + " " + RPL_INVITING " " + nickname + " " + channelName + "\r\n";
 	send(client.getSocketfd(), inviteMessageClient.c_str(), inviteMessageClient.length(), 0);
 	std::vector<Channel>::iterator channelIt = Commands::searchForChannel(channelName, channels);
 	if (channelIt != channels.end()) {
@@ -633,7 +642,6 @@ bool invitedPersonIsOnChannel(Client &client, std::vector<Channel> &channels, st
 	return false;
 }
 
-	// @todo Missing error message :,,ERR_CHANOPRIVSNEEDED and RPL_INVITING
 void Commands::invite(Client& client, Parser& input, std::vector<Client> &connections, std::vector<Channel> &channels) {
 	if (!checkPermission(client, input.getParam()[1], client.getNickname(), channels)) {
 		return;
