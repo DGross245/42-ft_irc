@@ -200,7 +200,7 @@ void Server::readMsg( Client &client, int i) {
 }
 
 void Server::launchServer( void ) {
-	std::cout << GREEN << "IRCSERV has started" << RESET << std::endl;
+	std::cout << GREEN << "IRCSERV has launched" << RESET << std::endl;
 	clientIOHandler();
 	closeALLConnections();
 	close(this->_serverfd);

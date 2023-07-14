@@ -475,6 +475,8 @@ void Commands::nick(Parser& input, Client& client, std::vector<Client>& connecti
 		return;
 	} else {
 		client.setNickname(input.getParam()[0]);
+		std::string message = ":" + client.getConstUsername() + " NICK " + client.getNickname() + "\r\n";
+
 	}
 }
 

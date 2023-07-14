@@ -1,5 +1,7 @@
 #include <iostream>
 #include "Server.hpp"
+#include <iostream>
+#include "Constants.hpp"
 
 int main (int argc, char **argv) {
 	if (argc != 3)	{
@@ -15,6 +17,7 @@ int main (int argc, char **argv) {
 		catch(Server::serverFailException & e)
 		{
 			std::cerr << e.what() << '\n';
+			std::cout << RED << "Server failed to launch" << RESET << std::endl;
 			return (1);
 		}
 	}

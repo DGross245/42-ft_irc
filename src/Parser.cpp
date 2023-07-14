@@ -11,6 +11,7 @@ Parser::Parser( std::string &buffer, Client client ) {
 	size_t pos = buffer.find("\r\n");
 	if (pos != std::string::npos  || !buffer.empty()) {
 		this->_input = buffer.substr(0, pos);
+		std::cout << "input: " << this->_input << std::endl;
 		parseMsg( client );
 		if (std::string::npos != buffer.find("\r\n"))
 			buffer.erase(0, pos + 2);
@@ -209,7 +210,7 @@ void Parser::commandHandler( std::string command ) {
 }
 
 void Parser::paramHandler( std::string param ) {
-	size_t found = 0; 
+	size_t found = 0;
 
 	while (!param.empty()) {
 		if (param == "\r\n")
