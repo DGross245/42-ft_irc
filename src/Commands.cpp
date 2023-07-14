@@ -14,6 +14,7 @@
 #include "Client.hpp"
 #include <sstream>
 
+// @todo rework all messages being send
 Commands::Commands() {
 	return ;
 }
@@ -74,6 +75,7 @@ void Commands::pass( Parser &input, Client &client, std::string password ) {
 	return ;
 }
 
+// @todo also check if client is on channel / when +t is aktiv and user is not an operator we must send ERR_CHANOPRIVSNEEDED
 void Commands::topic( Parser &input, Client client, std::vector<Channel> &channels) {
 	std::string message;
 	std::vector<Channel>::iterator channelIt = searchForChannel(input.getParam()[0], channels);
@@ -99,6 +101,7 @@ void Commands::topic( Parser &input, Client client, std::vector<Channel> &channe
 	return ;
 }
 
+// @todo ERR_NOTONCHANNEL missing
 void Commands::kick( Parser &input, Client requestor, std::vector<Channel> &channels ) {
 	std::string message;
 	std::vector<Channel>::iterator channelIt = searchForChannel(input.getParam()[0], channels);
@@ -148,6 +151,7 @@ void Commands::kick( Parser &input, Client requestor, std::vector<Channel> &chan
 	return ;
 }
 
+// @todo ERR_NOTONCHANNEL, und nochmal checken ob die nachricht gesendet wird
 void Commands::part( Parser &input, Client client, std::vector<Channel> &channels) {
 	std::string message;
 	std::vector<Channel>::iterator channelIt = searchForChannel(input.getParam()[0], channels);
@@ -581,6 +585,7 @@ bool invitedPersonIsOnChannel(Client &client, std::vector<Channel> &channels, st
 	return false;
 }
 
+// @todo Missing error message :ERR_NOTONCHANNEL,ERR_NOSUCHNICK,ERR_CHANOPRIVSNEEDED and RPL_INVITING
 void Commands::invite(Client& client, Parser& input, std::vector<Client> &connections, std::vector<Channel> &channels) {
 	if (!checkPermission(client, input.getParam()[1], client.getNickname(), channels)) {
 		return;
