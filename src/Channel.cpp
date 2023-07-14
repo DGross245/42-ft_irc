@@ -150,6 +150,9 @@ bool Channel::canUserJoin( Client client, Parser &input ) {
 			return (false);
 		}
 	}
+	std::vector<Client>::iterator clientIt = this->searchForUser(client.getNickname(), this->getClients());
+	if (clientIt != this->getClients().end())
+		return (false);
 	return (true);
 }
 

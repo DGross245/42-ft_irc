@@ -108,7 +108,7 @@ void Commands::topic( Parser &input, Client client, std::vector<Channel> &channe
 		channelIt->setTopic(input.getTrailing(), client);
 		for (std::vector<Client>::iterator clientIt = channelIt->getClients().begin(); clientIt != channelIt->getClients().end(); ++clientIt) {
 			message = SERVER " " RPL_TOPIC " " + client.getNickname() + " " + channelIt->getChannelName() + " :" + channelIt->getTopic() + "\r\n";
-			send(client.getSocketfd(), message.c_str(), message.length(), 0);
+			send(clientIt->getSocketfd(), message.c_str(), message.length(), 0);
 		}
 	}
 	return ;
@@ -280,8 +280,14 @@ void Commands::mode(Parser &input, Client client , std::vector<Channel> &channel
 		send(client.getSocketfd(), message.c_str(), message.length(), 0);
 		return ;
 	}
-	std::vector<Client>::iterator clientIt = channelIt->searchForUser(client.getNickname(), channelIt->getOperator());
+	std::vector<Client>::iterator clientIt = channelIt->searchForUser(client.getNickname(), channelIt->getClients());
 	if (clientIt == channelIt->getClients().end()) {
+		message = SERVER " " ERR_NOTONCHANNEL " " + client.getNickname() + " " + channelIt->getChannelName() + " :You're not in the channel\r\n";
+		send(client.getSocketfd(), message.c_str(), message.length(), 0);
+		return ;
+	}
+	std::vector<Client>::iterator operatorIt = channelIt->searchForUser(client.getNickname(), channelIt->getOperator());
+	if (operatorIt == channelIt->getClients().end()) {
 		message = SERVER " " ERR_CHANOPRIVSNEEDED " " + client.getNickname() + " " + input.getParam()[2] + " :Channel privileges needed\r\n";
 		send(client.getSocketfd(), message.c_str(), message.length(), 0);
 		return ;
@@ -437,18 +443,27 @@ void sendWelcomeMessage(Client client, std::vector<Channel>::iterator channelIt)
 	send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	//message = SERVER " " RPL_CHANNELMODEIS " " + client.getNickname() + " " + channelIt->getChannelName() + " +" + channelIt->getModeString() + "\r\n";
 	//send(client.getSocketfd(), message.c_str(), message.length(), 0);
-
 	for (std::vector<Client>::iterator it = channelIt->getClients().begin(); it != channelIt->getClients().end(); ++it) {
 		if (it->getSocketfd() != client.getSocketfd()) {
 			message = ":" + client.getNickname() + " JOIN " + channelIt->getChannelName() + "\r\n";;
 			send(it->getSocketfd(), message.c_str(), message.length(), 0);
 		}
 	}
+	message = SERVER " " RPL_NAMREPLY " " + client.getNickname() + " " + channelIt->getChannelName() + " :";
+	for (std::vector<Client>::iterator clientIt = channelIt->getClients().begin(); clientIt != channelIt->getClients().end(); clientIt++) {
+		std::vector<Client>::iterator operatorIt = channelIt->searchForUser(clientIt->getNickname(), channelIt->getOperator());
+		if (operatorIt != channelIt->getOperator().end())
+			message += "@";
+		message += clientIt->getNickname() + " ";
+	}
+	message += "\r\n";
+	send(client.getSocketfd(), message.c_str(), message.length(), 0);
+	message = SERVER " " RPL_ENDOFNAMES " " + client.getNickname() + " " + channelIt->getChannelName() + " :End of /NAMES list\r\n";
+	send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	return ;
 }
 
 // @todo RPL_NAMRPLY and RPL_ENDOFNAMES, 
-// @todo client darf nicht nochmal in den channel joinen können wo er schon drin ist
 void Commands::join(Parser &input, Client client, std::vector<Channel> &channels){
 	std::string message;
 	if (input.getParam()[0].at(0) == '#') {
@@ -467,9 +482,9 @@ void Commands::join(Parser &input, Client client, std::vector<Channel> &channels
 					channelIt->getInviteList().erase(clientIt);
 				message = ":" + client.getNickname() + " JOIN " + input.getParam()[0] + "\r\n";;
 				send(client.getSocketfd(), message.c_str(), message.length(), 0);
-				message = "/buffer " + input.getParam()[0] + "\r\n";
-				send(client.getSocketfd(), message.c_str(), message.length(), 0);
 			}
+			else
+				return ;
 		}
 		sendWelcomeMessage(client, channelIt);
 	} else {
