@@ -439,7 +439,7 @@ void sendWelcomeMessage(Client client, std::vector<Channel>::iterator channelIt)
 	else
 		message = SERVER " " RPL_TOPIC " " + client.getNickname() + " " + channelIt->getChannelName() + " :" + channelIt->getTopic() + "\r\n";
 	send(client.getSocketfd(), message.c_str(), message.length(), 0);
-	message = SERVER " MODE " + client.getNickname() + " " + channelIt->getChannelName() + " +" + channelIt->getModeString() + "\r\n";
+	message = SERVER " " RPL_CHANNELMODEIS " " + client.getNickname() + " " + channelIt->getChannelName() + " +" + channelIt->getModeString() + "\r\n";
 	std::cout << "modestring:" << message << std::endl;
 	send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	for (std::vector<Client>::iterator it = channelIt->getClients().begin(); it != channelIt->getClients().end(); ++it) {

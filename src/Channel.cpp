@@ -108,6 +108,7 @@ std::string Channel::getTopic( void ) {
 
 std::string Channel::getModeString(void) {
 	std::map<char,bool> map = this->getMode();
+	this->_modeString = "";
 	for (std::map<char,bool>::iterator it = map.begin(); it != map.end(); it++) {
 		if (it->second == true)
 			this->_modeString += it->first;
