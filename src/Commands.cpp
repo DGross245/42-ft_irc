@@ -14,6 +14,7 @@
 #include "Client.hpp"
 #include <sstream>
 
+// @todo rework all messages being send
 Commands::Commands() {
 	return ;
 }
@@ -64,6 +65,7 @@ void Commands::pass( Parser &input, Client &client, std::string password ) {
 	return ;
 }
 
+// @todo also check if client is on channel / when +t is aktiv and user is not an operator we must send ERR_CHANOPRIVSNEEDED
 void Commands::topic( Parser &input, Client client, std::vector<Channel> &channels) {
 	std::string message;
 	std::vector<Channel>::iterator channelIt = searchForChannel(input.getParam()[0], channels);
@@ -84,7 +86,7 @@ void Commands::topic( Parser &input, Client client, std::vector<Channel> &channe
 	return ;
 }
 
-// @todo kick error messages
+// @todo ERR_NOTONCHANNEL missing
 void Commands::kick( Parser &input, Client requestor, std::vector<Channel> &channels ) {
 	std::string message;
 	std::vector<Channel>::iterator channelIt = searchForChannel(input.getParam()[0], channels);
@@ -95,7 +97,7 @@ void Commands::kick( Parser &input, Client requestor, std::vector<Channel> &chan
 	}
 	std::vector<Client>::iterator target = channelIt->searchForUser(input.getParam()[1], channelIt->getClients());
 	if (target == channelIt->getClients().end()) {
-		message = SERVER " " ERR_NOSUCHNICK " " + requestor.getNickname() + " " + input.getParam()[1] + " : No such nickname\r\n";
+		message = SERVER " " ERR_NOSUCHNICK " " + requestor.getNickname() + " " + channelIt->getChannelName() + " : No such nickname\r\n";
 		send(requestor.getSocketfd(), message.c_str(), message.length(), 0);
 		return ;
 	}
@@ -128,6 +130,7 @@ void Commands::kick( Parser &input, Client requestor, std::vector<Channel> &chan
 	return ;
 }
 
+// @todo ERR_NOTONCHANNEL, und nochmal checken ob die nachricht gesendet wird
 void Commands::part( Parser &input, Client client, std::vector<Channel> &channels) {
 	std::string message;
 	std::vector<Channel>::iterator channelIt = searchForChannel(input.getParam()[0], channels);
@@ -194,24 +197,26 @@ void Commands::privmsg( Parser &input, Client client, std::vector<Client> connec
 	return ;
 }
 
-// @funktionier nicht ganz. user wissen nicht wenn er geleavt ist etc
-void Commands::quit( Parser &input, Client client, std::vector<Channel> &channels) {
-	std::string message;
+void Commands::quit( Parser &input, Client client, std::vector<Channel> &channels, std::vector<Client> &connections) {
 	for (std::vector<Channel>::iterator channelIt = channels.begin(); channelIt != channels.end(); channelIt++) {
 		std::vector<Client> &clientCopy = channelIt->getClients();
-		for (std::vector<Client>::iterator clientIterator = clientCopy.begin(); clientIterator != clientCopy.end(); clientIterator++) {
-			if (clientIterator->getSocketfd() == client.getSocketfd()) {
-				clientCopy.erase(clientIterator);
-				//message = "";
-				//forwardMsg(message, channelIt->getChannelName(), client, channelIt->getClients());
-				return ;
+		for (std::vector<Client>::iterator targetIt = clientCopy.begin(); targetIt != clientCopy.end(); targetIt++) {
+			if (targetIt->getSocketfd() == client.getSocketfd()) {
+				clientCopy.erase(targetIt);
+				break ;
 			}
 		}
 		for (std::vector<Client>::iterator invitedIterator = clientCopy.begin(); invitedIterator != clientCopy.end(); invitedIterator++) {
 			if (invitedIterator->getSocketfd() == client.getSocketfd()) {
 				clientCopy.erase(invitedIterator);
-				return ;
+				break ;
 			}
+		}
+	}
+	for (std::vector<Client>::iterator clientIt = connections.begin(); clientIt != connections.end(); clientIt++) {
+		if (client.getNickname() != clientIt->getNickname()) {
+			std::string message = ":" + client.getNickname() + " QUIT :" + input.getTrailing() + "\r\n";
+			send(clientIt->getSocketfd(), message.c_str(), message.length(), 0);
 		}
 	}
 	(void)input;
@@ -387,6 +392,7 @@ void sendWelcomeMessage(Client client, std::vector<Channel>::iterator channelIt)
 	send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	//message = SERVER " " RPL_CHANNELMODEIS " " + client.getNickname() + " " + channelIt->getChannelName() + " +" + channelIt->getModeString() + "\r\n";
 	//send(client.getSocketfd(), message.c_str(), message.length(), 0);
+
 	for (std::vector<Client>::iterator it = channelIt->getClients().begin(); it != channelIt->getClients().end(); ++it) {
 		if (it->getSocketfd() != client.getSocketfd()) {
 			message = ":" + client.getNickname() + " JOIN " + channelIt->getChannelName() + "\r\n";;
@@ -396,7 +402,8 @@ void sendWelcomeMessage(Client client, std::vector<Channel>::iterator channelIt)
 	return ;
 }
 
-// @todo wenn man einen channel joined muss der user wissen wer alles im channel ist, welche modes aktiv sind, wer op ist vllt, was channel topic ist etc
+// @todo RPL_NAMRPLY and RPL_ENDOFNAMES,
+// @todo client darf nicht nochmal in den channel joinen können wo er schon drin ist
 void Commands::join(Parser &input, Client client, std::vector<Channel> &channels){
 	std::string message;
 	if (input.getParam()[0].at(0) == '#') {
@@ -404,8 +411,6 @@ void Commands::join(Parser &input, Client client, std::vector<Channel> &channels
 		if (channelIt == channels.end()) {
 			channels.push_back(Channel ( input.getParam()[0], client ));
 			message = ":" + client.getNickname() + " JOIN " + input.getParam()[0] + "\r\n";;
-			send(client.getSocketfd(), message.c_str(), message.length(), 0);
-			message = "/buffer " + input.getParam()[0] + "\r\n";
 			send(client.getSocketfd(), message.c_str(), message.length(), 0);
 			channelIt = channels.begin();
 			std::cout << GREEN << "User " << client.getNickname() << " created channel " << input.getParam()[0] << RESET << std::endl;
@@ -559,6 +564,7 @@ bool invitedPersonIsOnChannel(Client &client, std::vector<Channel> &channels, st
 	return false;
 }
 
+// @todo Missing error message :ERR_NOTONCHANNEL,ERR_NOSUCHNICK,ERR_CHANOPRIVSNEEDED and RPL_INVITING
 void Commands::invite(Client& client, Parser& input, std::vector<Client> &connections, std::vector<Channel> &channels) {
 	if (!checkPermission(client, input.getParam()[1], client.getNickname(), channels)) {
 		return;

@@ -139,7 +139,7 @@ void Server::executeMsg( Parser &input, Client &client ) {
 			else if (input.getCMD() == "JOIN")
 				Commands::join(input, client, this->getChannels());
 			else if (input.getCMD() == "QUIT")
-				Commands::quit(input, client, this->getChannels());
+				Commands::quit(input, client, this->getChannels(), this->getConnections());
 			else if (input.getCMD() == "PRIVMSG")
 				Commands::privmsg(input, client, this->getConnections(), this->getChannels());
 			else if (input.getCMD() == "KICK")

@@ -107,7 +107,7 @@ void Parser::checkCAP( Client client) {
 }
 
 void Parser::sendError( Client client ) {
-	std::string message = SERVER  " " ERR_NEEDMOREPARAMS " " + client.getNickname() + " " + this->getCMD() + " :Not enough parameters";
+	std::string message = SERVER  " " ERR_NEEDMOREPARAMS " " + client.getNickname() + " " + this->getCMD() + " :Not enough parameters\r\n";
 	send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	throw parserErrorException("Invalid Command " + this->getCMD());
 	return ;
@@ -119,6 +119,7 @@ void Parser::checkPASS( Client client ) {
 	return ;
 }
 
+//ERR_NONICKNAMEGIVEN
 void Parser::checkNICK( Client client ) {
 	if (this->getParam().size() != 1 || !this->getTrailing().empty())
 		sendError( client );
@@ -142,7 +143,7 @@ void Parser::checkJOIN( Client client ) {
 		sendError( client );
 	return ;
 }
-
+// bei /MODE modestring printen ?
 void Parser::checkMODE( Client client ) {
 	if (this->getParam().size() < 1 || this->getParam().size() > 4 || !this->getTrailing().empty())
 		sendError( client );
@@ -166,13 +167,13 @@ void Parser::checkKICK( Client client ) {
 		sendError( client );
 	return ;
 }
-
+// @todo ERR_NORECIPIENT, ERR_NOTEXTTOSEND
 void Parser::checkPRIVMSG( Client client ) {
 	if (this->getParam().size() != 1 || this->getTrailing().empty())
 		sendError( client );
 	return ;
 }
-
+// @todo ERR_NOORIGIN    ERR_NOSUCHSERVER?
 void Parser::checkPING( Client client ) {
 	if (this->getParam().size() != 1 || !this->getTrailing().empty())
 		sendError( client );
