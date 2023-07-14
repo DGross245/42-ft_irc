@@ -108,7 +108,7 @@ void Parser::checkCAP( Client client) {
 }
 
 void Parser::sendError( Client client ) {
-	std::string message = SERVER  " " ERR_NEEDMOREPARAMS " " + client.getNickname() + " " + this->getCMD() + " :Not enough parameters\r\n";
+	std::string message = SERVER  " " ERR_NEEDMOREPARAMS " " + client.getNickname() + " :Not enough parameters\r\n";
 	send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	throw parserErrorException("Invalid Command " + this->getCMD());
 	return ;
@@ -120,9 +120,13 @@ void Parser::checkPASS( Client client ) {
 	return ;
 }
 
-//ERR_NONICKNAMEGIVEN
 void Parser::checkNICK( Client client ) {
-	if (this->getParam().size() != 1 || !this->getTrailing().empty())
+	if (this->getParam().size() != 1) {
+		std::string message = SERVER  " " ERR_NONICKNAMEGIVEN " " + client.getNickname() + " " + this->getCMD() + " :Nickname is missing\r\n";
+		send(client.getSocketfd(), message.c_str(), message.length(), 0);
+		throw parserErrorException("Invalid Command " + this->getCMD());
+	}
+	else if (!this->getTrailing().empty())
 		sendError( client );
 	return ;
 }
