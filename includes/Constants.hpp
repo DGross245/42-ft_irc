@@ -16,6 +16,7 @@
 # define ERR_CANNOTSENDTOCHAN   "404"
 # define ERR_NORECIPIEN			"411"
 # define ERR_NOTEXTTOSEND		"412"
+# define ERR_NONICKNAMEGIVEN	"431"
 # define ERR_ERRONEUSNICKNAME	"432"
 # define ERR_NICKNAMEINUSE		"433"
 # define ERR_NOTONCHANNEL 		"442"
@@ -30,7 +31,6 @@
 # define ERR_NOPRIVLIEGES		"481"
 # define ERR_CHANOPRIVSNEEDED 	"482"
 # define ERR_NOTREGISTERED		"451"
-
 //COLOURS
 # define RESET   "\033[0m"
 # define RED     "\033[31m"
