@@ -94,8 +94,8 @@ void Commands::kick( Parser &input, Client requestor, std::vector<Channel> &chan
 		send(requestor.getSocketfd(), message.c_str(), message.length(), 0);
 		return ;
 	}
-	std::vector<Client>::iterator target = channelIt->searchForUser(input.getParam()[1], channelIt->getClients());
-	if (target == channelIt->getClients().end()) {
+	std::vector<Client>::iterator targetIt = channelIt->searchForUser(input.getParam()[1], channelIt->getClients());
+	if (targetIt == channelIt->getClients().end()) {
 		message = SERVER " " ERR_NOSUCHNICK " " + requestor.getNickname() + " " + channelIt->getChannelName() + " : No such nickname\r\n";
 		send(requestor.getSocketfd(), message.c_str(), message.length(), 0);
 		return ;
@@ -104,20 +104,20 @@ void Commands::kick( Parser &input, Client requestor, std::vector<Channel> &chan
 		std::vector<Client> op = channelIt->getOperator();
 		for (std::vector<Client>::iterator it = op.begin(); it != op.end(); it++) {
 			if (requestor.getSocketfd() == it->getSocketfd()) {
-				if (target->getSocketfd() == channelIt->getOwner().getSocketfd()) {
+				if (targetIt->getSocketfd() == channelIt->getOwner().getSocketfd()) {
 					message = "ERROR";
-					send(target->getSocketfd(), message.c_str(), message.length(), 0);
+					send(targetIt->getSocketfd(), message.c_str(), message.length(), 0);
 					return ;
 				}
 				for (std::vector<Client>::iterator clientIt = channelIt->getClients().begin(); clientIt != channelIt->getClients().end(); ++clientIt) {
-					message = ":" + requestor.getNickname() + " KICK " + channelIt->getChannelName() + " " + target->getNickname();
+					message = ":" + requestor.getNickname() + " KICK " + channelIt->getChannelName() + " " + targetIt->getNickname();
 					if (!input.getTrailing().empty())
 						message += " :" + input.getTrailing() + "\r\n";
 					else
 						message += "\r\n";
 					send(clientIt->getSocketfd(), message.c_str(), message.length(), 0);
 				}
-				channelIt->getClients().erase(target);
+				channelIt->getClients().erase(targetIt);
 				return ;
 			}
 		}
@@ -134,8 +134,8 @@ void Commands::part( Parser &input, Client client, std::vector<Channel> &channel
 		send(client.getSocketfd(), message.c_str(), message.length(), 0);
 		return ;
 	}
-	std::vector<Client>::iterator target = channelIt->searchForUser(client.getNickname(), channelIt->getClients());
-	if (target == channelIt->getClients().end()) {
+	std::vector<Client>::iterator targetIt = channelIt->searchForUser(client.getNickname(), channelIt->getClients());
+	if (targetIt == channelIt->getClients().end()) {
 		message = SERVER " " ERR_NOSUCHNICK " " + client.getNickname() + " " + input.getParam()[0] + " : No such nickname\r\n";
 		send(client.getSocketfd(), message.c_str(), message.length(), 0);
 		return ;
