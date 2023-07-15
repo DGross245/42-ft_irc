@@ -37,7 +37,6 @@ void Commands::ping( Parser &input, Client client ) {
 	return ;
 }
 
-// @todo cap messages fixen/erweiter
 void Commands::cap( Parser &input, Client client ) {
 	std::string message;
 	if (input.getParam()[0] == "LS")
@@ -45,7 +44,7 @@ void Commands::cap( Parser &input, Client client ) {
 	else if (input.getParam()[0] == "END")
 		message = "CAP * ACK :JOIN\r\n";
 	else {
-		message = SERVER " 410 " + client.getNickname() + " " + input.getParam()[0] + " :Invalid CAP command";
+		message = SERVER " 410 " + client.getNickname() + " " + input.getParam()[0] + " :Invalid CAP command\r\n";
 		std::cout << "User send a invalid CAP request\n";
 	}
 	send(client.getSocketfd(), message.c_str(), message.length(), 0);
@@ -101,13 +100,6 @@ void Commands::kick( Parser &input, Client requestor, std::vector<Channel> &chan
 		send(requestor.getSocketfd(), message.c_str(), message.length(), 0);
 		return ;
 	}
-	if (requestor.getSocketfd() == channelIt->getOwner().getSocketfd()) {
-		message = ":" + requestor.getNickname() + " KICK " + channelIt->getChannelName() + " " + target->getNickname() + "\r\n";
-		if (!input.getTrailing().empty())
-			message += input.getTrailing();
-		send(target->getSocketfd(), message.c_str(), message.length(), 0);
-		channelIt->getClients().erase(target);
-	}
 	else {
 		std::vector<Client> op = channelIt->getOperator();
 		for (std::vector<Client>::iterator it = op.begin(); it != op.end(); it++) {
@@ -117,13 +109,16 @@ void Commands::kick( Parser &input, Client requestor, std::vector<Channel> &chan
 					send(target->getSocketfd(), message.c_str(), message.length(), 0);
 					return ;
 				}
-				message = ":" + requestor.getNickname() + " KICK " + channelIt->getChannelName() + " " + target->getNickname();
-				if (!input.getTrailing().empty())
-					message += input.getTrailing() + + "\r\n";
-				else
-					message += "\r\n";
-				send(target->getSocketfd(), message.c_str(), message.length(), 0);
+				for (std::vector<Client>::iterator clientIt = channelIt->getClients().begin(); clientIt != channelIt->getClients().end(); ++clientIt) {
+					message = ":" + requestor.getNickname() + " KICK " + channelIt->getChannelName() + " " + target->getNickname();
+					if (!input.getTrailing().empty())
+						message += " :" + input.getTrailing() + "\r\n";
+					else
+						message += "\r\n";
+					send(clientIt->getSocketfd(), message.c_str(), message.length(), 0);
+				}
 				channelIt->getClients().erase(target);
+				return ;
 			}
 		}
 	}
@@ -145,11 +140,19 @@ void Commands::part( Parser &input, Client client, std::vector<Channel> &channel
 		send(client.getSocketfd(), message.c_str(), message.length(), 0);
 		return ;
 	}
-	channelIt->getClients().erase(target);
-	if (!input.getTrailing().empty())
-		forwardMsg(input.getTrailing() + "\r\n", channelIt->getChannelName(), client, channelIt->getClients());
+	channelIt->getClients().erase(targetIt);
+	if (!input.getTrailing().empty()) {
+		for (std::vector<Client>::iterator it = channelIt->getClients().begin(); it != channelIt->getClients().end(); ++it) {
+			if (it->getSocketfd() != client.getSocketfd()) {
+				std::string message = ":" + client.getNickname() + " PART " + channelIt->getChannelName() + " :" + input.getTrailing() + "\r\n";
+				send(it->getSocketfd(), message.c_str(), message.length(), 0);
+			}
+		}
+	}
 	message = ":" + client.getNickname() + " PART " + channelIt->getChannelName() + "\r\n";
 	send(client.getSocketfd(), message.c_str(), message.length(), 0);
+	if (channelIt->getClients().size() == 0)
+		channels.erase(channelIt);
 	return ;
 }
 
@@ -212,6 +215,10 @@ void Commands::quit( Parser &input, Client client, std::vector<Channel> &channel
 				break ;
 			}
 		}
+		if (clientCopy.size() == 0) {
+			channels.erase(channelIt);
+			channelIt--;
+		}
 	}
 	for (std::vector<Client>::iterator clientIt = connections.begin(); clientIt != connections.end(); clientIt++) {
 		if (client.getNickname() != clientIt->getNickname()) {
@@ -223,12 +230,12 @@ void Commands::quit( Parser &input, Client client, std::vector<Channel> &channel
 	return ;
 }
 
-// @todo Mode unknown mode returnen wenn + oder - fehlen
 void Commands::mode(Parser &input, Client client , std::vector<Channel> &channels) {
-	bool sign = true;
-	std::string message;
 	std::string modeLine = input.getParam()[1];
+	std::string message;
+	bool sign = true;
 	char mode;
+
 	std::vector<Channel>::iterator channelIt = searchForChannel(input.getParam()[0], channels);
 	if (channelIt == channels.end()) {
 		message = SERVER " " ERR_NOSUCHCHANNEL " " + client.getNickname() + " " + input.getParam()[0] + " : No such channel\r\n";
@@ -237,7 +244,24 @@ void Commands::mode(Parser &input, Client client , std::vector<Channel> &channel
 	}
 	std::vector<Client>::iterator clientIt = channelIt->searchForUser(client.getNickname(), channelIt->getOperator());
 	if (clientIt == channelIt->getClients().end()) {
-		message = SERVER " "   " " + client.getNickname() + " " + input.getParam()[2] + " :Channel privileges needed\r\n";
+		message = SERVER " " ERR_NOTONCHANNEL " " + client.getNickname() + " " + channelIt->getChannelName() + " :You're not in the channel\r\n";
+		send(client.getSocketfd(), message.c_str(), message.length(), 0);
+		return ;
+	}
+	if (input.getParam().size() == 1) {
+		message = SERVER " " RPL_CHANNELMODEIS " " + client.getNickname() + " " + channelIt->getChannelName() + " +" + channelIt->getModeString() + "\r\n";
+		send(client.getSocketfd(), message.c_str(), message.length(), 0);
+		std::cout << "lol\n";
+		return ;
+	}
+	std::vector<Client>::iterator operatorIt = channelIt->searchForUser(client.getNickname(), channelIt->getOperator());
+	if (operatorIt == channelIt->getOperator().end()) {
+		message = SERVER " " ERR_CHANOPRIVSNEEDED " " + client.getNickname() + " :Channel privileges needed\r\n";
+		send(client.getSocketfd(), message.c_str(), message.length(), 0);
+		return ;
+	}
+	if (input.getParam()[1].at(0) != '-' && input.getParam()[1].at(0) != '+') {
+		std::string message = SERVER " " ERR_UNKNOWNMODE " " + client.getNickname() + " " + channelIt->getChannelName() + " :Unknown mode " + input.getParam()[1].at(0) + "\r\n";
 		send(client.getSocketfd(), message.c_str(), message.length(), 0);
 		return ;
 	}
@@ -271,32 +295,41 @@ void Commands::mode(Parser &input, Client client , std::vector<Channel> &channel
 
 void Commands::executeInvite( bool sign, Channel &channel, std::string param, Client client ) {
 	channel.getMode()['i'] = sign;
-	if (sign)
+	std::string message;
+	if (sign) {
+		message = ":" + client.getNickname() + " MODE " + channel.getChannelName() + " +i\r\n";
 		std::cout << channel.getChannelName() << " modus was set to: +i" << std::endl;
-	else
+	}
+	else {
+		message = ":" + client.getNickname() + " MODE " + channel.getChannelName() + " -i\r\n";
 		std::cout << channel.getChannelName() << " modus was set to: -i" << std::endl;
+	}
+	send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	(void)param;
 	(void)client;
 	return ;
 }
 
 void Commands::executeKey( bool sign, Channel &channel, std::string param, Client client ) {
+	std::string message;
+
 	if (sign) {
 		if (!param.empty()) {
 			channel.getMode()['k'] = sign;
 			channel.setPassword(param);
+			message = ":" + client.getNickname() + " MODE " + channel.getChannelName() + " +k " + param + "\r\n";
 			std::cout << channel.getChannelName() << " modus was set to: +k" << std::endl;
 		}
-		else {
+		else
 			std::string message = SERVER " " ERR_NEEDMOREPARAMS " " + client.getNickname() + " " + channel.getChannelName() + " :Not enough Parameters for +k\r\n";
-			send(client.getSocketfd(), message.c_str(), message.length(), 0);
-		}
 	}
 	else {
 		channel.getMode()['k'] = sign;
 		channel.setPassword("");
+		message = ":" + client.getNickname() + " MODE " + channel.getChannelName() + " -k\r\n";
 		std::cout << channel.getChannelName() << " modus was set to: -k" << std::endl;
 	}
+	send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	(void)client;
 	return ;
 }
@@ -310,7 +343,7 @@ void Commands::executeOperator( bool sign, Channel &channel, std::string param, 
 	}
 	std::vector<Client>::iterator clientIt = channel.searchForUser(param, channel.getClients());
 	if (clientIt == channel.getClients().end()) {
-		message = SERVER " " ERR_NOSUCHNICK " " + client.getNickname() + " " + param + " : No such nickname\r\n";
+		message = SERVER " " ERR_NOSUCHNICK " " + client.getNickname() + " " + channel.getChannelName() + " : No such nickname\r\n";
 		send(client.getSocketfd(), message.c_str(), message.length(), 0);
 		return ;
 	}
@@ -318,6 +351,7 @@ void Commands::executeOperator( bool sign, Channel &channel, std::string param, 
 	if (sign) {
 		if (operatorIt == channel.getOperator().end()) {
 			channel.getOperator().push_back(*clientIt);
+			message = ":" + client.getNickname() + " MODE " + channel.getChannelName() + " +o" + param + "\r\n";
 			std::cout << channel.getChannelName() << " " << clientIt->getNickname() << " was promoted to operator" << std::endl;
 		}
 	}
@@ -326,21 +360,24 @@ void Commands::executeOperator( bool sign, Channel &channel, std::string param, 
 			if (operatorIt->getSocketfd() == channel.getOwner().getSocketfd()) {
 				std::cout << "ERROR\n";
 				message = SERVER " " ERR_NOPRIVLIEGES " " + client.getNickname() + " " + channel.getChannelName() + " :You can't demote yourself as the channel owner\r\n";
-				send(client.getSocketfd(), message.c_str(), message.length(), 0);
 			}
 			else {
-				channel.getOperator().erase(clientIt);
+				channel.getOperator().erase(operatorIt);
+				message = ":" + client.getNickname() + " MODE " + channel.getChannelName() + " -o" + param + "\r\n";
 				std::cout << channel.getChannelName() << " " << clientIt->getNickname() << " was demoted" << std::endl;
 			}
 		}
 
 	}
+	send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	(void)client;
 	return ;
 }
 
 void Commands::executeLimit( bool sign, Channel &channel, std::string param, Client client ) {
+	std::string message;
 	(void) client;
+
 	if (sign) {
 		if (!param.empty()) {
 			channel.getMode()['l'] = sign;
@@ -356,28 +393,35 @@ void Commands::executeLimit( bool sign, Channel &channel, std::string param, Cli
 					return;
 				else {
 					channel.setLimit(limit);
+					message = ":" + client.getNickname() + " MODE " + channel.getChannelName() + " +l\r\n";
 					std::cout << channel.getChannelName() << " modus was set to: +l" << std::endl;
 				}
 			}
 		}
-		else {
-			std::string message = SERVER " " ERR_NEEDMOREPARAMS " " + client.getNickname() + " " + channel.getChannelName() + " :Not enough Parameters for +l\r\n";
-			send(client.getSocketfd(), message.c_str(), message.length(), 0);
-		}
+		else
+			message = SERVER " " ERR_NEEDMOREPARAMS " " + client.getNickname() + " " + channel.getChannelName() + " :Not enough Parameters for +l\r\n";
 	}
 	else {
 		channel.getMode()['l'] = sign;
+		message = ":" + client.getNickname() + " MODE " + channel.getChannelName() + " -l\r\n";
 		std::cout << channel.getChannelName() << " modus was set to: -l" << std::endl;
 	}
+	send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	return ;
 }
 
 void Commands::executeTopic( bool sign, Channel &channel, std::string param, Client client ) {
 	channel.getMode()['t'] = sign;
-	if (sign)
+	std::string message;
+	if (sign) {
+		message = ":" + client.getNickname() + " MODE " + channel.getChannelName() + " +t\r\n";
 		std::cout << channel.getChannelName() << " modus was set to: +t" << std::endl;
-	else
+	}
+	else {
+		message = ":" + client.getNickname() + " MODE " + channel.getChannelName() + " -t\r\n";
 		std::cout << channel.getChannelName() << " modus was set to: -t" << std::endl;
+	}
+	send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	(void)param;
 	(void)client;
 	return ;
@@ -390,15 +434,28 @@ void sendWelcomeMessage(Client client, std::vector<Channel>::iterator channelIt)
 	else
 		message = SERVER " " RPL_TOPIC " " + client.getNickname() + " " + channelIt->getChannelName() + " :" + channelIt->getTopic() + "\r\n";
 	send(client.getSocketfd(), message.c_str(), message.length(), 0);
-	//message = SERVER " " RPL_CHANNELMODEIS " " + client.getNickname() + " " + channelIt->getChannelName() + " +" + channelIt->getModeString() + "\r\n";
-	//send(client.getSocketfd(), message.c_str(), message.length(), 0);
-
 	for (std::vector<Client>::iterator it = channelIt->getClients().begin(); it != channelIt->getClients().end(); ++it) {
 		if (it->getSocketfd() != client.getSocketfd()) {
 			message = ":" + client.getNickname() + " JOIN " + channelIt->getChannelName() + "\r\n";;
 			send(it->getSocketfd(), message.c_str(), message.length(), 0);
+			std::cout << "Server: " << message << std::endl;
 		}
 	}
+	message = SERVER " " RPL_NAMREPLY " " + client.getNickname() + " " + channelIt->getChannelName() + " :";
+	for (std::vector<Client>::iterator clientIt = channelIt->getClients().begin(); clientIt != channelIt->getClients().end(); clientIt++) {
+		std::vector<Client>::iterator operatorIt = channelIt->searchForUser(clientIt->getNickname(), channelIt->getOperator());
+		if (operatorIt != channelIt->getOperator().end())
+			message += "@";
+		message += clientIt->getNickname() + " ";
+	}
+	message += "\r\n";
+	send(client.getSocketfd(), message.c_str(), message.length(), 0);
+	message = SERVER " " RPL_ENDOFNAMES " " + client.getNickname() + " " + channelIt->getChannelName() + " :End of /NAMES list\r\n";
+	send(client.getSocketfd(), message.c_str(), message.length(), 0);
+	message = SERVER " MODE " + channelIt->getChannelName() + " +" + channelIt->getModeString() + "\r\n";
+	if (send(client.getSocketfd(), message.c_str(), message.length(), 0) == -1)
+		std::cout << "ERROR\n";
+	std::cout << "send:" << message << std::endl;
 	return ;
 }
 
@@ -412,7 +469,7 @@ void Commands::join(Parser &input, Client client, std::vector<Channel> &channels
 			channels.push_back(Channel ( input.getParam()[0], client ));
 			message = ":" + client.getNickname() + " JOIN " + input.getParam()[0] + "\r\n";;
 			send(client.getSocketfd(), message.c_str(), message.length(), 0);
-			channelIt = channels.begin();
+			channelIt = searchForChannel( input.getParam()[0], channels);
 			std::cout << GREEN << "User " << client.getNickname() << " created channel " << input.getParam()[0] << RESET << std::endl;
 		}
 		else {
@@ -423,8 +480,7 @@ void Commands::join(Parser &input, Client client, std::vector<Channel> &channels
 					channelIt->getInviteList().erase(clientIt);
 				message = ":" + client.getNickname() + " JOIN " + input.getParam()[0] + "\r\n";;
 				send(client.getSocketfd(), message.c_str(), message.length(), 0);
-				message = "/buffer " + input.getParam()[0] + "\r\n";
-				send(client.getSocketfd(), message.c_str(), message.length(), 0);
+				std::cout << "server:" << message << std::endl;
 			}
 		}
 		sendWelcomeMessage(client, channelIt);
@@ -500,7 +556,6 @@ bool isNameValid(const std::string& name) {
 	return true;
 }
 
-// @todo add messages
 void Commands::user(Parser& input, Client& client, std::vector<Client>& connections) {
 	if (!isNameValid(client.getConstUsername())) {
 		return;
@@ -571,7 +626,6 @@ bool invitedPersonIsOnChannel(Client &client, std::vector<Channel> &channels, st
 	return false;
 }
 
-	// @todo Missing error message :,, and RPL_INVITING
 void Commands::invite(Client& client, Parser& input, std::vector<Client> &connections, std::vector<Channel> &channels) {
 	if (!checkPermission(client, input.getParam()[1], client.getNickname(), channels)) {
 		return;

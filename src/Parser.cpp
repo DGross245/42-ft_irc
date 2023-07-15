@@ -6,7 +6,6 @@
 #include <vector>
 #include <sys/socket.h>
 
-// @todo Have to add more error messages to better replay on erros using the ERR_... codes
 Parser::Parser( std::string &buffer, Client client ) {
 	size_t pos = buffer.find("\r\n");
 	if (pos != std::string::npos  || !buffer.empty()) {
@@ -148,7 +147,7 @@ void Parser::checkJOIN( Client client ) {
 		sendError( client );
 	return ;
 }
-// bei /MODE modestring printen ?
+
 void Parser::checkMODE( Client client ) {
 	if (this->getParam().size() < 1 || this->getParam().size() > 4 || !this->getTrailing().empty())
 		sendError( client );
@@ -172,13 +171,21 @@ void Parser::checkKICK( Client client ) {
 		sendError( client );
 	return ;
 }
-// @todo ERR_NORECIPIENT, ERR_NOTEXTTOSEND
+
 void Parser::checkPRIVMSG( Client client ) {
-	if (this->getParam().size() != 1 || this->getTrailing().empty())
-		sendError( client );
+	if (this->getTrailing().empty()) {
+		std::string message = SERVER  " " ERR_NOTEXTTOSEND " " + client.getNickname() + " :No text to send\r\n";
+		send(client.getSocketfd(), message.c_str(), message.length(), 0);
+		throw parserErrorException("Invalid Command " + this->getCMD());
+	}
+	if (this->getParam().size() != 1) {
+		std::string message = SERVER  " " ERR_NORECIPIENT " " + client.getNickname() + " :No recipient\r\n";
+		send(client.getSocketfd(), message.c_str(), message.length(), 0);
+		throw parserErrorException("Invalid Command " + this->getCMD());
+	}
 	return ;
 }
-// @todo ERR_NOORIGIN    ERR_NOSUCHSERVER?
+
 void Parser::checkPING( Client client ) {
 	if (this->getParam().size() != 1 || !this->getTrailing().empty())
 		sendError( client );

@@ -42,6 +42,7 @@ void Channel::setMode( std::map<char,bool> mode )  {
 	return ;
 }
 
+// @todo nachricht ändern in "change too" oder gucken wie das so gemacht wird
 void Channel::setTopic( std::string topic, Client client ) {
 	std::string message;
 	if (this->getMode()['t'] == true) {
@@ -144,7 +145,13 @@ bool Channel::canUserJoin( Client client, Parser &input ) {
 		}
 	}
 	if (this->getMode()['k'] == true) {
-		if (input.getParam()[1].empty() || this->getPassword() != input.getParam()[1]) {
+		std::cout << this->getPassword() << std::endl;
+		if (input.getParam().size() != 2) {
+			message = SERVER " " ERR_BADCHANNELKEY " " + client.getNickname() + " " + input.getParam()[0] + " :Missing or wrong channel key\r\n";
+			send(client.getSocketfd(), message.c_str(), message.length(), 0);
+			return (false);
+		}
+		else if (this->getPassword() != input.getParam()[1]) {
 			message = SERVER " " ERR_BADCHANNELKEY " " + client.getNickname() + " " + input.getParam()[0] + " :Missing or wrong channel key\r\n";
 			send(client.getSocketfd(), message.c_str(), message.length(), 0);
 			return (false);
