@@ -21,8 +21,6 @@
 #include "Constants.hpp"
 #include "Commands.hpp"
 
-// @todo paar functionen noch protecten
-// @todo wenn channel owner leaved muss wer anderes channel owner werden
 // @todo wenn der channel leer ist muss der channel geschlossen werden/gelöscht werden
 // @todo vielleicht bessere nachrichten innerhalb des servers damit man weiss was passiert
 Server::Server( std::string port, std::string password ) {
@@ -90,14 +88,25 @@ void Server::setServerfd( int serverSocketfd ) {
 
 void Server::initServer( void ) {
 	int serverSocketfd = socket(AF_INET, SOCK_STREAM, 0);
+	if (serverSocketfd == -1)
+		throw serverFailException("Error: socket error");
 	struct sockaddr_in serverAddress;
 	memset(&serverAddress, 0, sizeof(serverAddress));
 	serverAddress.sin_family = AF_INET;
-	serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
+	serverAddress.sin_addr.s_addr = inet_addr("10.11.5.25");
 	serverAddress.sin_port = htons(this->getPort());
-	fcntl(serverSocketfd, F_SETFL, O_NONBLOCK);
-	bind(serverSocketfd, reinterpret_cast<struct sockaddr *>(&serverAddress), sizeof(serverAddress));
-	listen(serverSocketfd, 1);
+	if (fcntl(serverSocketfd, F_SETFL, O_NONBLOCK) == -1) {
+		close(serverSocketfd);
+		throw serverFailException("Error: fcntl error");
+	}
+	if (bind(serverSocketfd, reinterpret_cast<struct sockaddr *>(&serverAddress), sizeof(serverAddress)) == -1) {
+		close(serverSocketfd);
+		throw serverFailException("Error: bind error");
+	}
+	if (listen(serverSocketfd, 1) == -1) {
+		close(serverSocketfd);
+		throw serverFailException("Error: listen error");
+	}
 	this->setServerfd( serverSocketfd );
 	return ;
 }
@@ -118,7 +127,15 @@ void Server::addClient( int serverSocketfd, fd_set &readfds ) {
 	FD_SET(clientfd, &readfds);
 	if (clientfd > 0) {
 		this->_connections.push_back(Client (clientfd));
-		fcntl(clientfd, F_SETFL, O_NONBLOCK);
+		if (fcntl(clientfd, F_SETFL, O_NONBLOCK) == -1) {
+			close(clientfd);
+			for (std::vector<Client>::iterator it = this->getConnections().begin(); it != this->getConnections().end(); it++) {
+				if (it->getSocketfd() == clientfd) {
+					this->getConnections().erase(it);
+					break ;
+				}
+			}
+		}
 	}
 	return ;
 }
@@ -151,24 +168,12 @@ void Server::executeMsg( Parser &input, Client &client ) {
 			else if (input.getCMD() == "TOPIC")
 				Commands::topic(input, client, this->getChannels());
 			else if (input.getCMD() == "INVITE") {
-				std::cout << "Username: " << client.getUsername() << std::endl;
-				std::cout << "Nickname: " << client.getNickname() << std::endl;
 				Commands::invite(client, input, this->getConnections(), this->getChannels());
 			}
 		}
 	}
 	return ;
 }
-
-// static void Sprinter( Parser parser) {
-// 	// std::cout << "Prefix:" << parser.getPrefix() << std::endl;
-// 	std::cout << "\nCommand:" << parser.getCMD() << std::endl;
-// 	std::vector<std::string> test = parser.getParam();
-// 	for (std::vector<std::string>::iterator it = test.begin(); it != test.end(); it++)
-// 		std::cout << "Param :" << *it << std::endl;
-// 	std::cout << "trailing :" << parser.getTrailing() << std::endl;
-// 	return ;
-// }
 
 void Server::readMsg( Client &client, int i) {
 	std::string buffer(1024, '\0');
@@ -187,7 +192,6 @@ void Server::readMsg( Client &client, int i) {
 			buffer.resize(bytes_read);
 			while (!buffer.empty() || buffer.find("\r\n") != std::string::npos) {
 				Parser input( buffer, client );
-				// Sprinter( input );
 				executeMsg( input, client );
 			}
 		}

@@ -2,6 +2,7 @@
 #include <sys/socket.h>
 #include "Constants.hpp"
 #include <iostream>
+#include <unistd.h>
 
 Client::Client( int clientfd ) : _socketfd(clientfd), _isAuthenticated(false), _passwordAccepted(false) {
 	return ;

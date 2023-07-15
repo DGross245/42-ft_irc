@@ -112,6 +112,7 @@ void Commands::topic( Parser &input, Client client, std::vector<Channel> &channe
 	return ;
 }
 
+// @todo owner kann irgendwie operator nicht kicken oder wird nicht richtig gesendet
 void Commands::kick( Parser &input, Client requestor, std::vector<Channel> &channels ) {
 	std::string message;
 	std::vector<Channel>::iterator channelIt = searchForChannel(input.getParam()[0], channels);
@@ -167,6 +168,7 @@ void Commands::kick( Parser &input, Client requestor, std::vector<Channel> &chan
 	return ;
 }
 
+// @todo irgendein segfault nachdem man leaved
 void Commands::part( Parser &input, Client client, std::vector<Channel> &channels) {
 	std::string message;
 	std::vector<Channel>::iterator channelIt = searchForChannel(input.getParam()[0], channels);
@@ -188,6 +190,10 @@ void Commands::part( Parser &input, Client client, std::vector<Channel> &channel
 		return ;
 	}
 	channelIt->getClients().erase(targetIt);
+	if (channelIt->getClients().size() == 0) {
+		channels.erase(channelIt);
+		return ;
+	}
 	if (!input.getTrailing().empty())
 		forwardMsg(input.getTrailing() + "\r\n", channelIt->getChannelName(), client, channelIt->getClients());
 	message = ":" + client.getNickname() + " PART " + channelIt->getChannelName() + "\r\n";
@@ -254,6 +260,8 @@ void Commands::quit( Parser &input, Client client, std::vector<Channel> &channel
 				break ;
 			}
 		}
+		if (clientCopy.size() == 0)
+			channels.erase(channelIt);
 	}
 	for (std::vector<Client>::iterator clientIt = connections.begin(); clientIt != connections.end(); clientIt++) {
 		if (client.getNickname() != clientIt->getNickname()) {
@@ -265,6 +273,7 @@ void Commands::quit( Parser &input, Client client, std::vector<Channel> &channel
 	return ;
 }
 
+// @todo wenn owner versucht jmd zu demoten dann kommt no such nickname obwohl er auf dem channel ist
 void Commands::mode(Parser &input, Client client , std::vector<Channel> &channels) {
 	std::string modeLine = input.getParam()[1];
 	std::string message;
