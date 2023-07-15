@@ -42,28 +42,25 @@ void Channel::setMode( std::map<char,bool> mode )  {
 	return ;
 }
 
-// @todo nachricht ändern in "change too" oder gucken wie das so gemacht wird
+// @todo nochmal checken ob auch alle den change mitbekommen
 void Channel::setTopic( std::string topic, Client client ) {
 	std::string message;
+
 	if (this->getMode()['t'] == true) {
-		if (this->getOwner().getSocketfd() == client.getSocketfd())
-			this->_topic = topic;
-		else {
-			for (std::vector<Client>::iterator it = this->getOperator().begin(); it != this->getOperator().end(); it++ ) {
-				if (it->getSocketfd() == client.getSocketfd() ) {
-					this->_topic = topic;
-					message = SERVER " " RPL_TOPIC " " + client.getNickname() + this->getChannelName() + ":" + this->getTopic() + "\r\n";
-					send(client.getSocketfd(), message.c_str(), message.length(), 0);
-					return ;
-				}
+		for (std::vector<Client>::iterator it = this->getOperator().begin(); it != this->getOperator().end(); it++ ) {
+			if (it->getSocketfd() == client.getSocketfd() ) {
+				this->_topic = topic;
+				message = ":" + client.getNickname() + " TOPIC " + this->getChannelName() + " :" + this->getTopic() + "\r\n";
+				send(client.getSocketfd(), message.c_str(), message.length(), 0);
+				return ;
 			}
-			message = SERVER " " ERR_CHANOPRIVSNEEDED " " + client.getNickname() + " " + this->getChannelName() + ":You're not a channel operator\r\n";
-			send(client.getSocketfd(), message.c_str(), message.length(), 0);
 		}
+		message = SERVER " " ERR_CHANOPRIVSNEEDED " " + client.getNickname() + " " + this->getChannelName() + ":You're not a channel operator\r\n";
+		send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	}
 	else {
 		this->_topic = topic;
-		message = SERVER " " RPL_TOPIC " " + client.getNickname() + " " + this->getChannelName() + ":" + this->getTopic() + "\r\n";
+		message = ":" + client.getNickname() + " TOPIC " + this->getChannelName() + " :" + this->getTopic() + "\r\n";
 		send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	}
 	return ;
