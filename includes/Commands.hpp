@@ -19,7 +19,7 @@ public:
 	static void privmsg(Parser &input, Client client, std::vector<Client> connections, std::vector<Channel> channels);
 	static void quit(Parser &input, Client client, std::vector<Channel> &channels, std::vector<Client> &connections);
 	static std::vector<Channel>::iterator searchForChannel(std::string channelName, std::vector<Channel> &channels);
-	static void forwardMsg(std::string message, std::string channelName, Client client, std::vector<Client> connections);
+	static void forwardMsg(std::string message, Client target, std::vector<Client> clients, bool shouldInclude);
 	static void kick(Parser &input, Client requestor, std::vector<Channel> &channels);
 	static void mode(Parser &input, Client client, std::vector<Channel> &channels);
 	static void part(Parser &input, Client client, std::vector<Channel> &channels);
@@ -29,6 +29,7 @@ public:
 	static void	nick(Parser& input, Client& client, std::vector<Client>& connections);
 	static void user(Parser &input, Client &client, std::vector<Client>& connections);
 	static void invite(Client& client, Parser& input, std::vector<Client> &connections, std::vector<Channel> &channels);
+	static void sendWelcomeMessage(Client client, std::vector<Channel>::iterator channelIt);
 
 	//Mode functions
 	static void executeInvite(bool sign, Channel &channel, std::string param, Client client);

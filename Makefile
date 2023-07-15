@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: dgross <dgross@student.42.fr>              +#+  +:+       +#+         #
+#    By: dna <dna@student.42.fr>                    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/05/31 08:49:39 by dgross            #+#    #+#              #
-#    Updated: 2023/07/05 14:24:29 by dgross           ###   ########.fr        #
+#    Updated: 2023/07/15 21:46:46 by dna              ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -25,7 +25,8 @@ HEADER			= Channel.hpp \
 				  Client.hpp \
 				  Server.hpp \
 				  Parser.hpp \
-				  Commands.hpp
+				  Commands.hpp \
+				  Constants.hpp
 
 OBJ_DIR			= ./obj/
 

@@ -50,4 +50,6 @@
 # define UNDERLINE "\033[4m"
 # define ORANGE  "\033[38;2;255;165;0m"
 
+# define INCLUDE true
+# define EXCLUDE false
 #endif

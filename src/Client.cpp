@@ -61,6 +61,11 @@ int Client::getSocketfd( void ) {
 	return (this->_socketfd);
 }
 
+void Client::sendMsg( std::string message ) {
+	send(this->getSocketfd(), message.c_str(), message.length(), 0);
+	return ;
+}
+
 int Client::Authentication( std::string CMD ) {
 	if (this->getAuthentication() == false) {
 		if (this->getPasswordAccepted() && !this->getNickname().empty() && !this->getUsername().empty()) {

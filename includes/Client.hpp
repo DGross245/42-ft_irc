@@ -12,6 +12,7 @@ public:
 	~Client( void );
 
 	int			Authentication( std::string CMD );
+	void		sendMsg( std::string message );
 
 	bool		getAuthentication( void );
 	int			getSocketfd( void );
