@@ -532,14 +532,14 @@ void Commands::nick(Parser& input, Client& client, std::vector<Client>& connecti
 	} else {
 		client.setNickname(input.getParam()[0]);
 		std::string message = ":" + client.getConstUsername() + " NICK " + client.getNickname() + "\r\n";
-
 	}
 }
 
 bool isUsernameAvailable(const std::vector<Client>& connections, const std::string& username) {
 	if (username.empty())
 		return true;
-	for (std::vector<Client>::size_type i = 0; i < connections.size(); ++i) {
+	std::cout << username << " = " << connections[0].getConstUsername() << std::endl;
+	for (std::vector<Client>::size_type i = 0; i < connections.size(); i++) {
 		if (connections[i].getConstUsername() == username) {
 			return false;
 		}
@@ -561,6 +561,8 @@ void Commands::user(Parser& input, Client& client, std::vector<Client>& connecti
 		return;
 	}
 	else if (!isUsernameAvailable(connections, input.getTrailing())) {
+		std::string errorMessage = SERVER " " ERR_ALREADYREGISTRED " " + client.getConstUsername() + " :Username is already in use. Please choose a different username.\r\n";
+		send(client.getSocketfd(), errorMessage.c_str(), errorMessage.length(), 0);
 		return;
 	}
 	client.setUsername(input.getTrailing());
