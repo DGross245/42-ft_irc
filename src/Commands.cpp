@@ -314,13 +314,11 @@ void Commands::mode(Parser &input, Client client , std::vector<Channel> &channel
 		else {
 			std::map<char,void(*)(bool,Channel &,std::string,Client)>::iterator modeIt = modeFuntion.find(mode);
 			if (modeIt == modeFuntion.end()) {
-				std::string message = SERVER " " ERR_UNKNOWNMODE " " + client.getNickname() + " " + channelIt->getChannelName() + " :Unknown mode " + mode + "\r\n";
+				message = SERVER " " ERR_UNKNOWNMODE " " + client.getNickname() + " " + channelIt->getChannelName() + " :Unknown mode " + mode + "\r\n";
 				send(client.getSocketfd(), message.c_str(), message.length(), 0);
-				return ;
 			}
-			else {
+			else 
 				modeIt->second(sign, *channelIt, input.getParam().size() == 3 ? input.getParam()[2] : std::string(), client);
-			}
 		}
 	}
 	return ;
@@ -339,7 +337,6 @@ void Commands::executeInvite( bool sign, Channel &channel, std::string param, Cl
 	}
 	send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	(void)param;
-	(void)client;
 	return ;
 }
 
@@ -354,7 +351,7 @@ void Commands::executeKey( bool sign, Channel &channel, std::string param, Clien
 			std::cout << channel.getChannelName() << " modus was set to: +k" << std::endl;
 		}
 		else
-			std::string message = SERVER " " ERR_NEEDMOREPARAMS " " + client.getNickname() + " " + channel.getChannelName() + " :Not enough Parameters for +k\r\n";
+			message = SERVER " " ERR_NEEDMOREPARAMS " " + client.getNickname() + " " + channel.getChannelName() + " :Not enough Parameters for +k\r\n";
 	}
 	else {
 		channel.getMode()['k'] = sign;
@@ -363,7 +360,6 @@ void Commands::executeKey( bool sign, Channel &channel, std::string param, Clien
 		std::cout << channel.getChannelName() << " modus was set to: -k" << std::endl;
 	}
 	send(client.getSocketfd(), message.c_str(), message.length(), 0);
-	(void)client;
 	return ;
 }
 
@@ -401,13 +397,11 @@ void Commands::executeOperator( bool sign, Channel &channel, std::string param, 
 
 	}
 	send(client.getSocketfd(), message.c_str(), message.length(), 0);
-	(void)client;
 	return ;
 }
 
 void Commands::executeLimit( bool sign, Channel &channel, std::string param, Client client ) {
 	std::string message;
-	(void) client;
 
 	if (sign) {
 		if (!param.empty()) {
@@ -454,7 +448,6 @@ void Commands::executeTopic( bool sign, Channel &channel, std::string param, Cli
 	}
 	send(client.getSocketfd(), message.c_str(), message.length(), 0);
 	(void)param;
-	(void)client;
 	return ;
 }
 
