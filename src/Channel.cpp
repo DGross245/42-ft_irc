@@ -1,10 +1,11 @@
 #include "Channel.hpp"
 #include "Client.hpp"
+#include "Constants.hpp"
+
 #include <string>
 #include <iostream>
 #include <vector>
 #include <sys/socket.h>
-#include "Constants.hpp"
 
 Channel::Channel( std::string name, Client user ) : _limit(0), _owner(user), _name(name) {
 	_mode['t'] = false;
@@ -44,24 +45,18 @@ void Channel::setMode( std::map<char,bool> mode )  {
 
 // @todo nochmal checken ob auch alle den change mitbekommen
 void Channel::setTopic( std::string topic, Client client ) {
-	std::string message;
-
 	if (this->getMode()['t'] == true) {
 		for (std::vector<Client>::iterator it = this->getOperator().begin(); it != this->getOperator().end(); it++ ) {
 			if (it->getSocketfd() == client.getSocketfd() ) {
 				this->_topic = topic;
-				message = ":" + client.getNickname() + " TOPIC " + this->getChannelName() + " :" + this->getTopic() + "\r\n";
-				send(client.getSocketfd(), message.c_str(), message.length(), 0);
-				return ;
+				return (client.sendMsg(":" + client.getNickname() + " TOPIC " + this->getChannelName() + " :" + this->getTopic() + "\r\n"));
 			}
 		}
-		message = SERVER " " ERR_CHANOPRIVSNEEDED " " + client.getNickname() + " " + this->getChannelName() + ":You're not a channel operator\r\n";
-		send(client.getSocketfd(), message.c_str(), message.length(), 0);
+		client.sendMsg(SERVER " " ERR_CHANOPRIVSNEEDED " " + client.getNickname() + " " + this->getChannelName() + ":You're not a channel operator\r\n");
 	}
 	else {
 		this->_topic = topic;
-		message = ":" + client.getNickname() + " TOPIC " + this->getChannelName() + " :" + this->getTopic() + "\r\n";
-		send(client.getSocketfd(), message.c_str(), message.length(), 0);
+		client.sendMsg(":" + client.getNickname() + " TOPIC " + this->getChannelName() + " :" + this->getTopic() + "\r\n");
 	}
 	return ;
 }
@@ -136,28 +131,23 @@ bool Channel::canUserJoin( Client client, Parser &input ) {
 	if (this->getMode()['i'] == true) {
 		std::vector<Client>::iterator inviteIt = searchForUser( client.getNickname(), this->getInviteList());
 		if (inviteIt == this->getInviteList().end()) {
-			message = SERVER " " ERR_INVITEONLYCHAN " " + client.getNickname() + " " + input.getParam()[0] + " :is Invite only restricted\r\n";
-			send(client.getSocketfd(), message.c_str(), message.length(), 0);
+			client.sendMsg(SERVER " " ERR_INVITEONLYCHAN " " + client.getNickname() + " " + input.getParam()[0] + " :is Invite only restricted\r\n");
 			return (false);
 		}
 	}
 	if (this->getMode()['k'] == true) {
-		std::cout << this->getPassword() << std::endl;
 		if (input.getParam().size() != 2) {
-			message = SERVER " " ERR_BADCHANNELKEY " " + client.getNickname() + " " + input.getParam()[0] + " :Missing or wrong channel key\r\n";
-			send(client.getSocketfd(), message.c_str(), message.length(), 0);
+			client.sendMsg(SERVER " " ERR_BADCHANNELKEY " " + client.getNickname() + " " + input.getParam()[0] + " :Missing or wrong channel key\r\n");
 			return (false);
 		}
 		else if (this->getPassword() != input.getParam()[1]) {
-			message = SERVER " " ERR_BADCHANNELKEY " " + client.getNickname() + " " + input.getParam()[0] + " :Missing or wrong channel key\r\n";
-			send(client.getSocketfd(), message.c_str(), message.length(), 0);
+			client.sendMsg(SERVER " " ERR_BADCHANNELKEY " " + client.getNickname() + " " + input.getParam()[0] + " :Missing or wrong channel key\r\n");
 			return (false);
 		}
 	}
 	if (this->getMode()['l'] == true) {
 		if (this->getClients().size() >= this->getLimit()) {
-			message = SERVER " " ERR_CHANNELISFULL " " + client.getNickname() + " " + input.getParam()[0] + " :Limit reached, channel is to full\r\n";
-			send(client.getSocketfd(), message.c_str(), message.length(), 0);
+			client.sendMsg(SERVER " " ERR_CHANNELISFULL " " + client.getNickname() + " " + input.getParam()[0] + " :Limit reached, channel is to full\r\n");
 			return (false);
 		}
 	}
@@ -166,7 +156,3 @@ bool Channel::canUserJoin( Client client, Parser &input ) {
 		return (false);
 	return (true);
 }
-
-Channel::channelFailException::~channelFailException( void ) throw() { return ;	}
-Channel::channelFailException::channelFailException( std::string error ) : _error(error) { return ; }
-const char *Channel::channelFailException::what() const throw() { return (this->_error.c_str());}

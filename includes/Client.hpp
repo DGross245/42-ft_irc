@@ -1,7 +1,6 @@
 #ifndef CLIENT_H
 # define CLIENT_H
 
-# include <exception>
 # include <string>
 
 class Client {
@@ -26,20 +25,6 @@ public:
 	void		setUsername( std::string username );
 	void		setPasswordAccepted( bool status );
 
-	class clientFailException : std::exception {
-
-	public:
-
-		clientFailException( std::string error );
-		~clientFailException( void ) throw();
-		virtual const char *what() const throw();
-
-	private:
-
-		std::string _error;
-
-	};
-
 private:
 
 	std::string	_username;
@@ -47,6 +32,7 @@ private:
 	int			_socketfd;
 	bool		_isAuthenticated;
 	bool 		_passwordAccepted;
+
 };
 
 #endif

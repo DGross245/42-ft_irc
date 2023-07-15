@@ -1,12 +1,12 @@
 #ifndef SERVER_H
 # define SERVER_H
 
+# include "Parser.hpp"
+# include "Channel.hpp"
 # include <exception>
 # include <string>
 # include <vector>
 # include <sys/types.h>
-# include <Channel.hpp>
-# include <Parser.hpp>
 # include <sys/time.h>
 
 class Server {
@@ -56,6 +56,7 @@ private:
 	int						_port;
 	std::string				_password;
 	struct timeval			_tv;
+
 };
 
 #endif

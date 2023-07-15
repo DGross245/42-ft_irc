@@ -1,10 +1,10 @@
 #ifndef PARSER_H
 # define PARSER_H
 
+# include "Client.hpp"
 # include <exception>
 # include <string>
 # include <vector>
-# include "Client.hpp"
 
 class Parser {
 
@@ -66,6 +66,7 @@ private:
 	std::string					_command;
 	std::vector<std::string>	_parameter;
 	std::string 				_trailing;
+
 };
 
 #endif

@@ -1,8 +1,9 @@
 #include "Parser.hpp"
-#include <string>
-#include <iostream>
 #include "Constants.hpp"
 #include "Client.hpp"
+
+#include <string>
+#include <iostream>
 #include <vector>
 #include <sys/socket.h>
 

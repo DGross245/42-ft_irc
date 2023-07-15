@@ -1,6 +1,7 @@
 #include "Client.hpp"
-#include <sys/socket.h>
 #include "Constants.hpp"
+
+#include <sys/socket.h>
 #include <iostream>
 #include <unistd.h>
 
@@ -85,7 +86,3 @@ int Client::Authentication( std::string CMD ) {
 	}
 	return (true);
 }
-
-Client::clientFailException::~clientFailException( void ) throw() { return ;	}
-Client::clientFailException::clientFailException( std::string error ) : _error(error) { return ; }
-const char *Client::clientFailException::what() const throw() { return (this->_error.c_str());}

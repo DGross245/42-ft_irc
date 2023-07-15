@@ -1,12 +1,11 @@
 #ifndef CHANNEL_H
 # define CHANNEL_H
 
-# include <exception>
-# include <string>
+# include "Parser.hpp"
 # include "Client.hpp"
+# include <string>
 # include <vector>
 # include <map>
-# include "Parser.hpp"
 
 class Channel {
 
@@ -24,7 +23,6 @@ public:
 	void							setMode( std::map<char,bool> mode);
 	void							setLimit( size_t i );
 	void							setPassword( std::string password );
-	// void							setModeString( );
 
 	size_t							getLimit( void );
 	Client							getOwner( void );
@@ -36,20 +34,6 @@ public:
 	std::vector<Client>				&getClients( void );
 	std::vector<Client>				&getInviteList( void );
 	std::vector<Client>				&getOperator( void );
-
-	class channelFailException : std::exception {
-
-	public:
-
-		channelFailException( std::string error );
-		~channelFailException( void ) throw();
-		virtual const char *what() const throw();
-
-	private:
-
-		std::string _error;
-
-	};
 
 private:
 

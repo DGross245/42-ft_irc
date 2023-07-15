@@ -1,17 +1,18 @@
-#include <exception>
+#include "Parser.hpp"
+#include "Commands.hpp"
+#include "Channel.hpp"
+#include "Constants.hpp"
+#include "Client.hpp"
+
+
 #include <iostream>
 #include <string>
 #include <vector>
 #include <sys/types.h>
-#include "Channel.hpp"
-#include <Parser.hpp>
 #include <sys/time.h>
-#include "Commands.hpp"
 #include <sys/socket.h>
-#include "Constants.hpp"
 #include <unistd.h>
 #include <map>
-#include "Client.hpp"
 #include <sstream>
 
 // @todo Terminal msgs has to be fixed
@@ -567,7 +568,3 @@ void Commands::invite(Client& client, Parser& input, std::vector<Client> &connec
 	}
 	sendInvitation(client, input.getParam()[0], input.getParam()[1], channels, connections);
 }
-
-Commands::commandFailException::~commandFailException( void ) throw() { return ;	}
-Commands::commandFailException::commandFailException( std::string error ) : _error(error) { return ; }
-const char *Commands::commandFailException::what() const throw() { return (this->_error.c_str());}

@@ -1,25 +1,20 @@
 #include "Server.hpp"
+#include "Channel.hpp"
+#include "Commands.hpp"
+#include "Constants.hpp"
+#include "Client.hpp"
+#include "Parser.hpp"
+
 #include <exception>
 #include <string>
 #include <iostream>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
-#include <cstdlib>
-#include <cstring>
 #include <unistd.h>
-#include <cmath>
 #include <fcntl.h>
-#include <algorithm>
-#include "Channel.hpp"
-#include "Parser.hpp"
-#include <csignal>
 #include <vector>
 #include <sstream>
-#include <Client.hpp>
-#include "Constants.hpp"
-#include "Commands.hpp"
 
 // @todo wenn der channel leer ist muss der channel geschlossen werden/gelöscht werden
 // @todo vielleicht bessere nachrichten innerhalb des servers damit man weiss was passiert

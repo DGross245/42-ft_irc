@@ -1,7 +1,7 @@
-#include <iostream>
 #include "Server.hpp"
-#include <iostream>
 #include "Constants.hpp"
+
+#include <iostream>
 
 int main (int argc, char **argv) {
 	if (argc != 3)	{
