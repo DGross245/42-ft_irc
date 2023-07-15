@@ -265,7 +265,6 @@ void Commands::quit( Parser &input, Client client, std::vector<Channel> &channel
 	return ;
 }
 
-// @todo Mode unknown mode returnen wenn + oder - fehlen
 void Commands::mode(Parser &input, Client client , std::vector<Channel> &channels) {
 	std::string modeLine = input.getParam()[1];
 	std::string message;
