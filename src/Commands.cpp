@@ -219,7 +219,6 @@ void Commands::quit( Parser &input, Client client, std::vector<Channel> &channel
 	return ;
 }
 
-// @todo vergessen an alle zu schicken
 void Commands::mode(Parser &input, Client client , std::vector<Channel> &channels) {
 	std::string modeLine = input.getParam()[1];
 	bool sign = true;
@@ -265,36 +264,41 @@ void Commands::mode(Parser &input, Client client , std::vector<Channel> &channel
 
 void Commands::executeInvite( bool sign, Channel &channel, std::string param, Client client ) {
 	channel.getMode()['i'] = sign;
+	std::string message;
 
 	if (sign) {
-		client.sendMsg(":" + client.getNickname() + " MODE " + channel.getChannelName() + " +i\r\n");
+		message = ":" + client.getNickname() + " MODE " + channel.getChannelName() + " +i\r\n";
 		std::cout << BLACK "[Server]: " DARK_GRAY "Channel " MAGENTA << channel.getChannelName() << DARK_GRAY " was set to: " LIGHT_GREEN "+i" RESET "\n" << std::endl;
 	}
 	else {
-		client.sendMsg(":" + client.getNickname() + " MODE " + channel.getChannelName() + " -i\r\n");
+		message = ":" + client.getNickname() + " MODE " + channel.getChannelName() + " -i\r\n";
 		std::cout << BLACK "[Server]: " DARK_GRAY "Channel " MAGENTA << channel.getChannelName() << DARK_GRAY " was set to: " LIGHT_RED "-i" RESET "\n" << std::endl;
 	}
+	forwardMsg(message, client, channel.getClients(), INCLUDE);
 	(void)param;
 	return ;
 }
 
 void Commands::executeKey( bool sign, Channel &channel, std::string param, Client client ) {
+	std::string message;
+
 	if (sign) {
 		if (!param.empty()) {
 			channel.getMode()['k'] = sign;
 			channel.setPassword(param);
-			client.sendMsg(":" + client.getNickname() + " MODE " + channel.getChannelName() + " +k " + param + "\r\n");
+			message = ":" + client.getNickname() + " MODE " + channel.getChannelName() + " +k " + param + "\r\n";
 			std::cout << BLACK "[Server]: " DARK_GRAY "Channel " MAGENTA << channel.getChannelName() << DARK_GRAY " was set to: " LIGHT_GREEN "+k" RESET "\n" << std::endl;
 		}
 		else
-			client.sendMsg(SERVER " " ERR_NEEDMOREPARAMS " " + client.getNickname() + " " + channel.getChannelName() + " :Not enough Parameters for +k\r\n");
+			return (client.sendMsg(SERVER " " ERR_NEEDMOREPARAMS " " + client.getNickname() + " " + channel.getChannelName() + " :Not enough Parameters for +k\r\n"));
 	}
 	else {
 		channel.getMode()['k'] = sign;
 		channel.setPassword("");
-		client.sendMsg(":" + client.getNickname() + " MODE " + channel.getChannelName() + " -k\r\n");
+		message = ":" + client.getNickname() + " MODE " + channel.getChannelName() + " -k\r\n";
 		std::cout << BLACK "[Server]: " DARK_GRAY "Channel " MAGENTA << channel.getChannelName() << DARK_GRAY " was set to: " LIGHT_RED "-k" RESET "\n" << std::endl;
 	}
+	forwardMsg(message, client, channel.getClients(), INCLUDE);
 	return ;
 }
 
@@ -329,8 +333,9 @@ void Commands::executeOperator( bool sign, Channel &channel, std::string param, 
 	return ;
 }
 
-// @todo gucken was wir bei einem error machen wie z.B +l 0 oder max int
 void Commands::executeLimit( bool sign, Channel &channel, std::string param, Client client ) {
+	std::string message;
+
 	if (sign) {
 		if (!param.empty()) {
 			channel.getMode()['l'] = sign;
@@ -346,32 +351,36 @@ void Commands::executeLimit( bool sign, Channel &channel, std::string param, Cli
 					return;
 				else {
 					channel.setLimit(limit);
-					client.sendMsg(":" + client.getNickname() + " MODE " + channel.getChannelName() + " +l\r\n");
+					message = ":" + client.getNickname() + " MODE " + channel.getChannelName() + " +l\r\n";
 					std::cout << BLACK "[Server]: " DARK_GRAY "Channel " MAGENTA << channel.getChannelName() << DARK_GRAY " was set to: " LIGHT_GREEN "+l " << limit << RESET "\n" << std::endl;
 				}
 			}
 		}
 		else
-			client.sendMsg(SERVER " " ERR_NEEDMOREPARAMS " " + client.getNickname() + " " + channel.getChannelName() + " :Not enough Parameters for +l\r\n");
+			return (client.sendMsg(SERVER " " ERR_NEEDMOREPARAMS " " + client.getNickname() + " " + channel.getChannelName() + " :Not enough Parameters for +l\r\n"));
 	}
 	else {
 		channel.getMode()['l'] = sign;
-		client.sendMsg(":" + client.getNickname() + " MODE " + channel.getChannelName() + " -l\r\n");
+		message = ":" + client.getNickname() + " MODE " + channel.getChannelName() + " -l\r\n";
 		std::cout << BLACK "[Server]: " DARK_GRAY "Channel " MAGENTA << channel.getChannelName() << DARK_GRAY " was set to: " LIGHT_RED "-l" << RESET "\n" << std::endl;
 	}
+	forwardMsg(message, client, channel.getClients(), INCLUDE);
 	return ;
 }
 
 void Commands::executeTopic( bool sign, Channel &channel, std::string param, Client client ) {
 	channel.getMode()['t'] = sign;
+	std::string message;
+
 	if (sign) {
-		client.sendMsg(":" + client.getNickname() + " MODE " + channel.getChannelName() + " +t\r\n");
+		message = ":" + client.getNickname() + " MODE " + channel.getChannelName() + " +t\r\n";
 		std::cout << BLACK "[Server]: " DARK_GRAY "Channel " MAGENTA << channel.getChannelName() << DARK_GRAY " was set to: " LIGHT_GREEN "+t" << RESET "\n" << std::endl;
 	}
 	else {
-		client.sendMsg(":" + client.getNickname() + " MODE " + channel.getChannelName() + " -t\r\n");
+		message = ":" + client.getNickname() + " MODE " + channel.getChannelName() + " -t\r\n";
 		std::cout << BLACK "[Server]: " DARK_GRAY "Channel " MAGENTA << channel.getChannelName() << DARK_GRAY " was set to: " LIGHT_RED "-t" << RESET "\n" << std::endl;
 	}
+	forwardMsg(message, client, channel.getClients(), INCLUDE);
 	(void)param;
 	return ;
 }
