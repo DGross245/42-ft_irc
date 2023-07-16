@@ -18,8 +18,6 @@
 
 // @todo gucken wegen max lenght of text
 // @todo generell alles testen jede funktion
-// @todo channel name länge checken
-// @todo topic name chekcen
 
 Commands::Commands() {
 	return ;
@@ -90,8 +88,8 @@ void Commands::topic( Parser &input, Client client, std::vector<Channel> &channe
 				return (client.sendMsg(SERVER " " ERR_CHANOPRIVSNEEDED " " + client.getNickname() + " " + input.getParam()[2] + " :Channel privileges needed\r\n"));
 		}
 		channelIt->setTopic(input.getTrailing(), client);
-		for (std::vector<Client>::iterator clientIt = channelIt->getClients().begin(); clientIt != channelIt->getClients().end(); ++clientIt)
-			clientIt->sendMsg(SERVER " " RPL_TOPIC " " + client.getNickname() + " " + channelIt->getChannelName() + " :" + channelIt->getTopic() + "\r\n");
+		std::string message = SERVER " " RPL_TOPIC " " + client.getNickname() + " " + channelIt->getChannelName() + " :" + channelIt->getTopic() + "\r\n";
+		forwardMsg(message, client, channelIt->getClients(), INCLUDE);
 	}
 	return ;
 }

@@ -43,7 +43,6 @@ void Channel::setMode( std::map<char,bool> mode )  {
 	return ;
 }
 
-// @todo nochmal checken ob auch alle den change mitbekommen
 void Channel::setTopic( std::string topic, Client client ) {
 	if (this->getMode()['t'] == true) {
 		for (std::vector<Client>::iterator it = this->getOperator().begin(); it != this->getOperator().end(); it++ ) {
