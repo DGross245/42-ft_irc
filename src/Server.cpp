@@ -16,8 +16,6 @@
 #include <vector>
 #include <sstream>
 
-// @todo wenn der channel leer ist muss der channel geschlossen werden/gelöscht werden
-// @todo vielleicht bessere nachrichten innerhalb des servers damit man weiss was passiert
 Server::Server( std::string port, std::string password ) {
 	if (port.find_first_not_of("0123456789") == std::string::npos) {
 		int _port = static_cast<int>( strtod(port.c_str(), NULL) );
@@ -71,6 +69,10 @@ std::vector<Client> &Server::getConnections(void) {
 	return (this->_connections);
 }
 
+int	Server::getServerfd( void){
+	return (this->_serverfd);
+}
+
 void Server::setPassword( std::string &password ) {
 	this->_password = password;
 	return ;
@@ -107,8 +109,8 @@ void Server::initServer( void ) {
 }
 
 void Server::closeALLConnections( void ) {
-	for (size_t i = 0; i < this->_connections.size(); i++)
-		close(this->_connections[i].getSocketfd());
+	for (size_t i = 0; i < this->getConnections().size(); i++)
+		close(this->getConnections()[i].getSocketfd());
 	return ;
 }
 
@@ -121,7 +123,7 @@ void Server::addClient( int serverSocketfd, fd_set &readfds ) {
 	clientfd = accept(serverSocketfd, reinterpret_cast<struct sockaddr *>(&clientAddress), &clientAddressLength);
 	FD_SET(clientfd, &readfds);
 	if (clientfd > 0) {
-		this->_connections.push_back(Client (clientfd));
+		this->getConnections().push_back(Client (clientfd));
 		if (fcntl(clientfd, F_SETFL, O_NONBLOCK) == -1) {
 			close(clientfd);
 			for (std::vector<Client>::iterator it = this->getConnections().begin(); it != this->getConnections().end(); it++) {
@@ -179,7 +181,7 @@ void Server::readMsg( Client &client, int i) {
 	else if (bytes_read == 0) {
 		std::cout << GREEN << "Client has disconnected from server" << std::endl;
 		close(client.getSocketfd());
-		this->_connections.erase(this->_connections.begin() + i);
+		this->getConnections().erase(this->_connections.begin() + i);
 	}
 	else {
 		try
@@ -202,7 +204,7 @@ void Server::launchServer( void ) {
 	std::cout << GREEN << "IRCSERV has launched" << RESET << std::endl;
 	clientIOHandler();
 	closeALLConnections();
-	close(this->_serverfd);
+	close(this->getServerfd());
 	return ;
 }
 
@@ -218,7 +220,7 @@ void Server::clientIOHandler( void ) {
 	while (1) {
 		fd_set readfds;
 		FD_ZERO( &readfds );
-		FD_SET( this->_serverfd, &readfds );
+		FD_SET( this->getServerfd(), &readfds );
 		int maxfd = getMaxfd( readfds );
 
 		int ready_fds = select( maxfd + 1, &readfds, NULL, NULL , &this->_tv);
@@ -227,14 +229,14 @@ void Server::clientIOHandler( void ) {
 		else if (ready_fds == 0)
 			continue;
 		else {
-			if (FD_ISSET(this->_serverfd, &readfds)) {
-				addClient( this->_serverfd, readfds );
+			if (FD_ISSET( this->getServerfd(), &readfds )) {
+				addClient( this->getServerfd(), readfds );
 				std::cout << GREEN << "A new client has connected. Total connected clients: " << this->getConnections().size() << std::endl;
 			}
 			else {
-				for (size_t i = 0; i < this->_connections.size(); i++) {
-					if (FD_ISSET(this->_connections[i].getSocketfd(), &readfds))
-						readMsg( this->_connections[i], i);
+				for (size_t i = 0; i < this->getConnections().size(); i++) {
+					if (FD_ISSET( this->getConnections()[i].getSocketfd(), &readfds ))
+						readMsg( this->getConnections()[i], i );
 				}
 			}
 		}
@@ -243,9 +245,9 @@ void Server::clientIOHandler( void ) {
 }
 
 int Server::getMaxfd( fd_set &readfds ) {
-	int max = this->_serverfd;
-	for (size_t i = 0; i < this->_connections.size(); i++) {
-		int clientfd = this->_connections[i].getSocketfd();
+	int max = this->getServerfd();
+	for (size_t i = 0; i < this->getConnections().size(); i++) {
+		int clientfd = this->getConnections()[i].getSocketfd();
 		FD_SET(clientfd, &readfds);
 		if (clientfd > max)
 			max = clientfd;

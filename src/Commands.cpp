@@ -436,28 +436,27 @@ bool isNicknameUnique(const std::vector<Client>& connections, std::string& nickn
 
 bool checkNickname(Client& client, std::string& nickname, const std::vector<Client>& connections) {
 	if (isNicknameUnique(connections, nickname)) {
-		std::string errorMessage = SERVER " " ERR_NICKNAMEINUSE " " + nickname + " :Nickname is already in use. Please choose a different nickname.\r\n";
-		send(client.getSocketfd(), errorMessage.c_str(), errorMessage.length(), 0);
+		client.sendMsg(SERVER " " ERR_NICKNAMEINUSE " " + nickname + " :Nickname is already in use. Please choose a different nickname.\r\n");
 		return false;
 	} else if (nickname.size() > 10) {
-		std::string errorMessage = SERVER " " ERR_ERRONEUSNICKNAME " " + nickname + " :Nickname is too long. Please choose a shorter nickname.\r\n";
-		send(client.getSocketfd(), errorMessage.c_str(), errorMessage.length(), 0);
+		client.sendMsg(SERVER " " ERR_ERRONEUSNICKNAME " " + nickname + " :Nickname is too long. Please choose a shorter nickname.\r\n");
 		return false;
 	} else if (!isAlphaNumeric(nickname)) {
-		std::string errorMessage = SERVER " " ERR_ERRONEUSNICKNAME " " + nickname + " :Nickname contains invalid symbols. Only use letters and numbers.\r\n";
-		send(client.getSocketfd(), errorMessage.c_str(), errorMessage.length(), 0);
+		client.sendMsg(SERVER " " ERR_ERRONEUSNICKNAME " " + nickname + " :Nickname contains invalid symbols. Only use letters and numbers.\r\n");
 		return false;
 	}
 	return true;
 }
 
+// @todo nick hat nie den name geschickt also da gabs kein send
 void Commands::nick(Parser& input, Client& client, std::vector<Client>& connections) {
 	if (!checkNickname(client, input.getParam()[0], connections)) {
-		return;
+		return ;
 	} else {
 		client.setNickname(input.getParam()[0]);
-		std::string message = ":" + client.getConstUsername() + " NICK " + client.getNickname() + "\r\n";
+		client.sendMsg(":" + client.getConstUsername() + " NICK " + client.getNickname() + "\r\n");
 	}
+	return ;
 }
 
 bool isUsernameAvailable(const std::vector<Client>& connections, const std::string& username) {
@@ -482,14 +481,10 @@ bool isNameValid(const std::string& name) {
 }
 
 void Commands::user(Parser& input, Client& client, std::vector<Client>& connections) {
-	if (!isNameValid(client.getConstUsername())) {
+	if (!isNameValid(client.getConstUsername()))
 		return;
-	}
-	else if (!isUsernameAvailable(connections, input.getTrailing())) {
-		std::string errorMessage = SERVER " " ERR_ALREADYREGISTRED " " + client.getConstUsername() + " :Username is already in use. Please choose a different username.\r\n";
-		send(client.getSocketfd(), errorMessage.c_str(), errorMessage.length(), 0);
-		return;
-	}
+	else if (!isUsernameAvailable(connections, input.getTrailing()))
+		return (client.sendMsg(SERVER " " ERR_ALREADYREGISTRED " " + client.getConstUsername() + " :Username is already in use. Please choose a different username.\r\n"));
 	client.setUsername(input.getTrailing());
 }
 
@@ -505,15 +500,13 @@ bool checkPermission(Client &client, std::string channelName, std::string nickna
 	for (size_t i = 0; i < channels.size(); ++i) {
 		if (channels[i].getChannelName() == channelName) {
 			if (!checkInvokerRights(channels[i].getOperator(), nickname)) {
-				std::string errorMessageClient = SERVER " " ERR_CHANOPRIVSNEEDED " " + nickname + " " + channelName + " :You're not channel operator\r\n";
-				send(client.getSocketfd(), errorMessageClient.c_str(), errorMessageClient.length(), 0);
+				client.sendMsg(SERVER " " ERR_CHANOPRIVSNEEDED " " + nickname + " " + channelName + " :You're not channel operator\r\n");
 				return false;
 			}
 			return true;
 		}
 	}
-	std::string errorMessageClient = SERVER " " ERR_NOSUCHCHANNEL " " + nickname + " " + channelName + " :No such channel\r\n";
-	send(client.getSocketfd(), errorMessageClient.c_str(), errorMessageClient.length(), 0);
+	client.sendMsg(SERVER " " ERR_NOSUCHCHANNEL " " + nickname + " " + channelName + " :No such channel\r\n");
 	return false;
 }
 
@@ -527,8 +520,7 @@ bool checkInvitedPerson(std::vector<Client> &connections, std::string invitedPer
 }
 
 void sendInvitation(Client &client, std::string nickname, std::string channelName,  std::vector<Channel> &channels, std::vector<Client> &connections) {
-	std::string inviteMessageClient = ":" + client.getNickname() + " " + RPL_INVITING " " + nickname + " " + channelName + "\r\n";
-	send(client.getSocketfd(), inviteMessageClient.c_str(), inviteMessageClient.length(), 0);
+	client.sendMsg(":" + client.getNickname() + " " + RPL_INVITING " " + nickname + " " + channelName + "\r\n");
 	std::vector<Channel>::iterator channelIt = Commands::searchForChannel(channelName, channels);
 	if (channelIt != channels.end()) {
 		for(std::vector<Client>::iterator clientIt = connections.begin(); clientIt != connections.end(); clientIt++) {
@@ -544,8 +536,7 @@ bool invitedPersonIsOnChannel(Client &client, std::vector<Channel> &channels, st
 	if (channelIt != channels.end()) {
 		for(std::vector<Client>::iterator clientIt = channelIt->getClients().begin(); clientIt != channelIt->getClients().end(); clientIt++) {
 			if (clientIt->getNickname() == invitedPerson) {
-				std::string errorMessageClient = SERVER " " ERR_USERONCHANNEL " " + invitedPerson + " " + channelName + " :is already on channel\r\n";
-				send(client.getSocketfd(), errorMessageClient.c_str(), errorMessageClient.length(), 0);
+				client.sendMsg(SERVER " " ERR_USERONCHANNEL " " + invitedPerson + " " + channelName + " :is already on channel\r\n");
 				return true;
 			}
 		}
@@ -554,17 +545,11 @@ bool invitedPersonIsOnChannel(Client &client, std::vector<Channel> &channels, st
 }
 
 void Commands::invite(Client& client, Parser& input, std::vector<Client> &connections, std::vector<Channel> &channels) {
-	if (!checkPermission(client, input.getParam()[1], client.getNickname(), channels)) {
+	if (!checkPermission(client, input.getParam()[1], client.getNickname(), channels))
 		return;
-	}
-	if (invitedPersonIsOnChannel(client, channels, input.getParam()[1], input.getParam()[0])) {
+	if (invitedPersonIsOnChannel(client, channels, input.getParam()[1], input.getParam()[0]))
 		return;
-	}
-	if (!checkInvitedPerson(connections, input.getParam()[1])) {
-		std::string errorMessageClient = SERVER " " ERR_NOSUCHNICK " " + client.getNickname() + " " + input.getParam()[1] + " :No such nickname\r\n";
-		std::cout << errorMessageClient << std::endl;
-		send(client.getSocketfd(), errorMessageClient.c_str(), errorMessageClient.length(), 0);
-		return;
-	}
+	if (!checkInvitedPerson(connections, input.getParam()[1]))
+		return (client.sendMsg(SERVER " " ERR_NOSUCHNICK " " + client.getNickname() + " " + input.getParam()[1] + " :No such nickname\r\n"));
 	sendInvitation(client, input.getParam()[0], input.getParam()[1], channels, connections);
 }

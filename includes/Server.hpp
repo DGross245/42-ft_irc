@@ -33,7 +33,8 @@ public:
 	std::string				getPassword( void );
 	std::vector<Client>		&getConnections( void );
 	std::vector<Channel>	&getChannels(void);
-
+	int						getServerfd( void);
+	
 	class serverFailException : std::exception {
 
 	public:

@@ -196,25 +196,25 @@ void Parser::checkPART( Client client ) {
 }
 
 void Parser::parseMsg( Client client ) {
-	if (this->_input[0] == ':')
-		prefixHandler(this->_input.substr(1, this->_input.find_first_of(' ')));
-	commandHandler(this->_input.substr(0, this->_input.find_first_of(' ')));
-	if (this->_input[0] != ':')
-		paramHandler(this->_input.substr(0, this->_input.find_first_of("\r\n") ));
+	if (this->getInput()[0] == ':')
+		prefixHandler(this->getInput().substr(1, this->getInput().find_first_of(' ')));
+	commandHandler(this->getInput().substr(0, this->getInput().find_first_of(' ')));
+	if (this->getInput()[0] != ':')
+		paramHandler(this->getInput().substr(0, this->getInput().find_first_of("\r\n") ));
 	else
-		setTrailing(this->_input.substr(1, this->_input.find_first_of("\r\n")));
+		setTrailing(this->getInput().substr(1, this->getInput().find_first_of("\r\n")));
 	isValidCommandLine( client );
 	return ;
 }
 
 void Parser::prefixHandler( std::string prefix ) {
 	this->setPrefix(prefix);
-	this->getInput().erase(0, this->_input.find_first_of(' ') + 1);
+	this->getInput().erase(0, this->getInput().find_first_of(' ') + 1);
 }
 
 void Parser::commandHandler( std::string command ) {
 	this->setCMD(command);
-	this->getInput().erase(0, this->_input.find_first_of(' ') + 1);
+	this->getInput().erase(0, this->getInput().find_first_of(' ') + 1);
 }
 
 void Parser::paramHandler( std::string param ) {
