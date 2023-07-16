@@ -184,9 +184,9 @@ void Server::readMsg( Client &client, int i) {
 	ssize_t bytes_read;
 	bytes_read = ::recv(client.getSocketfd(), &buffer[0], buffer.size(), 0);
 	if (bytes_read == -1)
-		throw serverFailException("recv Error");
+		throw serverFailException("ERROR: recv error: Failed to receive data");
 	else if (bytes_read == 0) {
-		std::cout << GREEN << "Client has disconnected from server" << std::endl;
+		std::cout << BLACK "[Server]: " ORANGE "Client " DARK_GRAY "has " LIGHT_RED "disconnected" DARK_GRAY " from server\n" << std::endl;
 		close(client.getSocketfd());
 		this->getConnections().erase(this->_connections.begin() + i);
 	}
@@ -201,14 +201,14 @@ void Server::readMsg( Client &client, int i) {
 		}
 		catch(const Parser::parserErrorException &e)
 		{
-			std::cerr << e.what() << '\n';
+			std::cerr << RED << e.what() << '\n';
 		}
 	}
 	return ;
 }
 
 void Server::launchServer( void ) {
-	std::cout << GREEN << "IRCSERV has launched" << RESET << std::endl;
+	std::cout << BLACK "[Server]: " CYAN BOLD "IRCSERV " DARK_GRAY "has" GREEN BOLD " launched" RESET "\r" << std::endl;
 	clientIOHandler();
 	closeALLConnections();
 	close(this->getServerfd());
@@ -238,7 +238,8 @@ void Server::clientIOHandler( void ) {
 		else {
 			if (FD_ISSET( this->getServerfd(), &readfds )) {
 				addClient( this->getServerfd(), readfds );
-				std::cout << GREEN << "A new client has connected. Total connected clients: " << this->getConnections().size() << std::endl;
+				std::cout << BLACK "[Server]: " DARK_GRAY BOLD "A " MAGENTA "new " ORANGE BOLD "client" DARK_GRAY" has " GREEN "connected" DARK_GRAY "." " Total connected" ORANGE" clients: " RESET
+						  << GREEN << this->getConnections().size() << RESET "\n" << std::endl;
 			}
 			else {
 				for (size_t i = 0; i < this->getConnections().size(); i++) {

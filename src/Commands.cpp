@@ -47,7 +47,7 @@ void Commands::cap( Parser &input, Client client ) {
 		client.sendMsg("CAP * ACK :...\r\n");
 	else {
 		client.sendMsg(SERVER " 410 " + client.getNickname() + " " + input.getParam()[0] + " :Invalid CAP command\r\n");
-		std::cout << "User send a invalid CAP request\n";
+		std::cout << BLACK "[Server]: " DARK_GRAY BOLD "User send a invalid CAP request" RESET "\n" << std::endl;
 	}
 	return ;
 }
@@ -55,7 +55,7 @@ void Commands::cap( Parser &input, Client client ) {
 void Commands::pass( Parser &input, Client &client, std::string password ) {
 	if (!client.getPasswordAccepted()) {
 		if (*input.getParam().begin() == password) {
-			std::cout << "PW accepted!" << std::endl;
+			std::cout << BLACK "[Server]: " DARK_GRAY BOLD "Password accepted from connecting client" RESET "\n" << std::endl;
 			client.setPasswordAccepted(true);
 		}
 		else {
@@ -263,11 +263,11 @@ void Commands::executeInvite( bool sign, Channel &channel, std::string param, Cl
 
 	if (sign) {
 		client.sendMsg(":" + client.getNickname() + " MODE " + channel.getChannelName() + " +i\r\n");
-		std::cout << channel.getChannelName() << " modus was set to: +i" << std::endl;
+		std::cout << BLACK "[Server]: " DARK_GRAY "Channel " MAGENTA << channel.getChannelName() << DARK_GRAY " was set to: " LIGHT_GREEN "+i" RESET "\n" << std::endl;
 	}
 	else {
 		client.sendMsg(":" + client.getNickname() + " MODE " + channel.getChannelName() + " -i\r\n");
-		std::cout << channel.getChannelName() << " modus was set to: -i" << std::endl;
+		std::cout << BLACK "[Server]: " DARK_GRAY "Channel " MAGENTA << channel.getChannelName() << DARK_GRAY " was set to: " LIGHT_RED "-i" RESET "\n" << std::endl;
 	}
 	(void)param;
 	return ;
@@ -279,7 +279,7 @@ void Commands::executeKey( bool sign, Channel &channel, std::string param, Clien
 			channel.getMode()['k'] = sign;
 			channel.setPassword(param);
 			client.sendMsg(":" + client.getNickname() + " MODE " + channel.getChannelName() + " +k " + param + "\r\n");
-			std::cout << channel.getChannelName() << " modus was set to: +k" << std::endl;
+			std::cout << BLACK "[Server]: " DARK_GRAY "Channel " MAGENTA << channel.getChannelName() << DARK_GRAY " was set to: " LIGHT_GREEN "+k" RESET "\n" << std::endl;
 		}
 		else
 			client.sendMsg(SERVER " " ERR_NEEDMOREPARAMS " " + client.getNickname() + " " + channel.getChannelName() + " :Not enough Parameters for +k\r\n");
@@ -288,7 +288,7 @@ void Commands::executeKey( bool sign, Channel &channel, std::string param, Clien
 		channel.getMode()['k'] = sign;
 		channel.setPassword("");
 		client.sendMsg(":" + client.getNickname() + " MODE " + channel.getChannelName() + " -k\r\n");
-		std::cout << channel.getChannelName() << " modus was set to: -k" << std::endl;
+		std::cout << BLACK "[Server]: " DARK_GRAY "Channel " MAGENTA << channel.getChannelName() << DARK_GRAY " was set to: " LIGHT_RED "-k" RESET "\n" << std::endl;
 	}
 	return ;
 }
@@ -305,6 +305,7 @@ void Commands::executeOperator( bool sign, Channel &channel, std::string param, 
 			channel.getOperator().push_back(*clientIt);
 			client.sendMsg(":" + client.getNickname() + " MODE " + channel.getChannelName() + " +o" + param + "\r\n");
 			std::cout << channel.getChannelName() << " " << clientIt->getNickname() << " was promoted to operator" << std::endl;
+			std::cout << BLACK "[Server]: " DARK_GRAY "Channel " MAGENTA << channel.getChannelName() << ": " << ORANGE << clientIt->getNickname() << DARK_GRAY " was " LIGHT_GREEN "promoted" DARK_GRAY "to operator by " ORANGE << client.getNickname() <<  RESET "\n" << std::endl;
 		}
 	}
 	else {
@@ -314,7 +315,7 @@ void Commands::executeOperator( bool sign, Channel &channel, std::string param, 
 			else {
 				channel.getOperator().erase(operatorIt);
 				client.sendMsg(":" + client.getNickname() + " MODE " + channel.getChannelName() + " -o" + param + "\r\n");
-				std::cout << channel.getChannelName() << " " << clientIt->getNickname() << " was demoted" << std::endl;
+				std::cout << BLACK "[Server]: " DARK_GRAY "Channel " MAGENTA << channel.getChannelName() << ": " << ORANGE << clientIt->getNickname() << DARK_GRAY " got " LIGHT_RED "demoted" DARK_GRAY " by " << client.getNickname() << RESET "\n" << std::endl;
 			}
 		}
 	}
@@ -339,7 +340,7 @@ void Commands::executeLimit( bool sign, Channel &channel, std::string param, Cli
 				else {
 					channel.setLimit(limit);
 					client.sendMsg(":" + client.getNickname() + " MODE " + channel.getChannelName() + " +l\r\n");
-					std::cout << channel.getChannelName() << " modus was set to: +l" << std::endl;
+					std::cout << BLACK "[Server]: " DARK_GRAY "Channel " MAGENTA << channel.getChannelName() << DARK_GRAY " was set to: " LIGHT_GREEN "+l " << limit << RESET "\n" << std::endl;
 				}
 			}
 		}
@@ -349,7 +350,7 @@ void Commands::executeLimit( bool sign, Channel &channel, std::string param, Cli
 	else {
 		channel.getMode()['l'] = sign;
 		client.sendMsg(":" + client.getNickname() + " MODE " + channel.getChannelName() + " -l\r\n");
-		std::cout << channel.getChannelName() << " modus was set to: -l" << std::endl;
+		std::cout << BLACK "[Server]: " DARK_GRAY "Channel " MAGENTA << channel.getChannelName() << DARK_GRAY " was set to: " LIGHT_RED "-l" << RESET "\n" << std::endl;
 	}
 	return ;
 }
@@ -358,11 +359,11 @@ void Commands::executeTopic( bool sign, Channel &channel, std::string param, Cli
 	channel.getMode()['t'] = sign;
 	if (sign) {
 		client.sendMsg(":" + client.getNickname() + " MODE " + channel.getChannelName() + " +t\r\n");
-		std::cout << channel.getChannelName() << " modus was set to: +t" << std::endl;
+		std::cout << BLACK "[Server]: " DARK_GRAY "Channel " MAGENTA << channel.getChannelName() << DARK_GRAY " was set to: " LIGHT_GREEN "+t" << RESET "\n" << std::endl;
 	}
 	else {
 		client.sendMsg(":" + client.getNickname() + " MODE " + channel.getChannelName() + " -t\r\n");
-		std::cout << channel.getChannelName() << " modus was set to: -t" << std::endl;
+		std::cout << BLACK "[Server]: " DARK_GRAY "Channel " MAGENTA << channel.getChannelName() << DARK_GRAY " was set to: " LIGHT_RED "-t" << RESET "\n" << std::endl;
 	}
 	(void)param;
 	return ;

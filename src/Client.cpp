@@ -64,6 +64,7 @@ int Client::getSocketfd( void ) {
 
 void Client::sendMsg( std::string message ) {
 	send(this->getSocketfd(), message.c_str(), message.length(), 0);
+	std::cout << BLACK "[Server]: " LIGHT_RED "==> " CYAN SERVER RESET WHITE ": " << message << RESET << std::endl;
 	return ;
 }
 
@@ -71,17 +72,12 @@ int Client::Authentication( std::string CMD ) {
 	if (this->getAuthentication() == false) {
 		if (this->getPasswordAccepted() && !this->getNickname().empty() && !this->getUsername().empty()) {
 			this->setAuthentication(true);
-			std::string joinMessageClient = ":IRCSERVE 001 " + this->getNickname() +
-			" :Welcome to the Internet Relay Network, " + this->getNickname() + "\r\n";
-			send(this->getSocketfd(), joinMessageClient.c_str(), joinMessageClient.length(), 0);
-			std::cout << GREEN << "Client " << this->getNickname() << " has joined the server" << RESET << std::endl;
+			this->sendMsg(SERVER " " RPL_WELCOME " " + this->getNickname() + " :Welcome to the Internet Relay Network, " + this->getNickname() + "\r\n");
+			std::cout << BLACK "[Server]: " << DARK_GRAY BOLD "Client " << this->getNickname() << " has joined the server" << RESET << "\n" << std::endl;
 			return (true);
 		}
-		if (CMD != "PASS" && CMD != "NICK" && CMD != "USER" && CMD != "CAP") {
-			std::cout << CMD << "<>" << CMD.length() << std::endl;
-			std::string message = SERVER " " ERR_NOTREGISTERED " * :You have not registered\r\n";
-			send(this->getSocketfd(), message.c_str(), message.length(), 0);
-		}
+		if (CMD != "PASS" && CMD != "NICK" && CMD != "USER" && CMD != "CAP")
+			this->sendMsg(SERVER " " ERR_NOTREGISTERED " * :You have not registered\r\n");
 		return (false);
 	}
 	return (true);

@@ -11,7 +11,8 @@ Parser::Parser( std::string &buffer, Client client ) {
 	size_t pos = buffer.find("\r\n");
 	if (pos != std::string::npos  || !buffer.empty()) {
 		this->_input = buffer.substr(0, pos);
-		std::cout << "input: " << this->_input << std::endl;
+		std::string name = client.getNickname().empty() ? "*" : client.getNickname();
+		std::cout << BLACK "[Server]: " BLUE BOLD " <== " RESET ORANGE << name << WHITE ": " << this->_input << RESET << std::endl;
 		parseMsg( client );
 		if (std::string::npos != buffer.find("\r\n"))
 			buffer.erase(0, pos + 2);
@@ -19,7 +20,7 @@ Parser::Parser( std::string &buffer, Client client ) {
 			buffer.erase(0, buffer.length());
 	}
 	else
-		std::cerr << "Parsing Error" << std::endl;
+		throw parserErrorException("ERROR: Invalid message format: missing CR LF");
 	return ;
 }
 

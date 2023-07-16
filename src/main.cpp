@@ -5,7 +5,7 @@
 
 int main (int argc, char **argv) {
 	if (argc != 3)	{
-		std::cerr << "Error: wrong input: ./ircserv <port> <password>" << std::endl;
+		std::cerr << RED "Error: wrong input: ./ircserv <port> <password>" RESET << std::endl;
 		return (1);
 	}
 	else {
@@ -16,7 +16,7 @@ int main (int argc, char **argv) {
 		}
 		catch(Server::serverFailException & e)
 		{
-			std::cerr << e.what() << '\n';
+			std::cerr << RED << e.what() << '\n';
 			std::cout << RED << "Server failed to launch" << RESET << std::endl;
 			return (1);
 		}
