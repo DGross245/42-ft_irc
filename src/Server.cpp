@@ -15,6 +15,8 @@
 #include <fcntl.h>
 #include <vector>
 #include <sstream>
+#include <cstring>
+#include <cstdlib>
 
 Server::Server( std::string port, std::string password ) {
 	if (port.find_first_not_of("0123456789") == std::string::npos) {
@@ -86,23 +88,28 @@ void Server::setServerfd( int serverSocketfd ) {
 void Server::initServer( void ) {
 	int serverSocketfd = socket(AF_INET, SOCK_STREAM, 0);
 	if (serverSocketfd == -1)
-		throw serverFailException("Error: socket error");
+		throw serverFailException("Error: socket error: Failed to create a server socket");
+	int optval = 1;
+	if (setsockopt(serverSocketfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) == -1) {
+		close(serverSocketfd);
+		throw serverFailException("Error: setsocketopt error: Failed to set the socket option for reuse");
+	}
 	struct sockaddr_in serverAddress;
 	memset(&serverAddress, 0, sizeof(serverAddress));
 	serverAddress.sin_family = AF_INET;
-	serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
+	serverAddress.sin_addr.s_addr = inet_addr("10.11.5.25");
 	serverAddress.sin_port = htons(this->getPort());
 	if (fcntl(serverSocketfd, F_SETFL, O_NONBLOCK) == -1) {
 		close(serverSocketfd);
-		throw serverFailException("Error: fcntl error");
+		throw serverFailException("Error: fcntl error: Failed to set the socket to non-blocking");
 	}
 	if (bind(serverSocketfd, reinterpret_cast<struct sockaddr *>(&serverAddress), sizeof(serverAddress)) == -1) {
 		close(serverSocketfd);
-		throw serverFailException("Error: bind error");
+		throw serverFailException("Error: bind error: Failed to bind the socket to the specified address");
 	}
-	if (listen(serverSocketfd, 1) == -1) {
+	if (listen(serverSocketfd, 4) == -1) {
 		close(serverSocketfd);
-		throw serverFailException("Error: listen error");
+		throw serverFailException("Error: listen error: Failed listening on socket");
 	}
 	this->setServerfd( serverSocketfd );
 	return ;

@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <map>
 #include <sstream>
+#include <cstdlib>
 
 // @todo Terminal msgs has to be fixed
 // @todo gucken wegen max lenght of text
@@ -146,7 +147,6 @@ void Commands::part( Parser &input, Client client, std::vector<Channel> &channel
 	return ;
 }
 
-// std::string message = ":" + client.getNickname() + " PRIVMSG " + channelName + " :" + trailing;
 void Commands::forwardMsg(std::string message, Client target, std::vector<Client> clients, bool shouldInclude) {
 	if (shouldInclude == INCLUDE) {
 		for (std::vector<Client>::iterator it = clients.begin(); it != clients.end(); ++it)
