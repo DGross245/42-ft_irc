@@ -16,9 +16,11 @@
 #include <sstream>
 #include <cstdlib>
 
-// @todo Terminal msgs has to be fixed
 // @todo gucken wegen max lenght of text
 // @todo generell alles testen jede funktion
+// @todo channel name länge checken
+// @todo topic name chekcen
+
 Commands::Commands() {
 	return ;
 }
@@ -125,6 +127,7 @@ void Commands::kick( Parser &input, Client requestor, std::vector<Channel> &chan
 	return ;
 }
 
+// @todo User auch von Op liste löschen
 void Commands::part( Parser &input, Client client, std::vector<Channel> &channels) {
 	std::string message;
 	std::vector<Channel>::iterator channelIt = searchForChannel(input.getParam()[0], channels);
@@ -190,6 +193,7 @@ void Commands::privmsg( Parser &input, Client client, std::vector<Client> connec
 	return ;
 }
 
+// @todo user auch von op liste löschen
 void Commands::quit( Parser &input, Client client, std::vector<Channel> &channels, std::vector<Client> &connections) {
 	for (std::vector<Channel>::iterator channelIt = channels.begin(); channelIt != channels.end(); channelIt++) {
 		std::vector<Client> &clientCopy = channelIt->getClients();
@@ -215,6 +219,7 @@ void Commands::quit( Parser &input, Client client, std::vector<Channel> &channel
 	return ;
 }
 
+// @todo vergessen an alle zu schicken
 void Commands::mode(Parser &input, Client client , std::vector<Channel> &channels) {
 	std::string modeLine = input.getParam()[1];
 	bool sign = true;
@@ -294,6 +299,7 @@ void Commands::executeKey( bool sign, Channel &channel, std::string param, Clien
 }
 
 void Commands::executeOperator( bool sign, Channel &channel, std::string param, Client client ) {
+	std::string message;
 	if (param.empty())
 		return (client.sendMsg(SERVER " " ERR_NEEDMOREPARAMS " " + client.getNickname() + " " + channel.getChannelName() + " :Not enough Parameters for +/-o\r\n"));
 	std::vector<Client>::iterator clientIt = channel.searchForUser(param, channel.getClients());
@@ -303,9 +309,9 @@ void Commands::executeOperator( bool sign, Channel &channel, std::string param, 
 	if (sign) {
 		if (operatorIt == channel.getOperator().end()) {
 			channel.getOperator().push_back(*clientIt);
-			client.sendMsg(":" + client.getNickname() + " MODE " + channel.getChannelName() + " +o" + param + "\r\n");
-			std::cout << channel.getChannelName() << " " << clientIt->getNickname() << " was promoted to operator" << std::endl;
-			std::cout << BLACK "[Server]: " DARK_GRAY "Channel " MAGENTA << channel.getChannelName() << ": " << ORANGE << clientIt->getNickname() << DARK_GRAY " was " LIGHT_GREEN "promoted" DARK_GRAY "to operator by " ORANGE << client.getNickname() <<  RESET "\n" << std::endl;
+			message = ":" + client.getNickname() + " MODE " + channel.getChannelName() + " +o " + param + "\r\n";
+			forwardMsg(message, client, channel.getClients(), INCLUDE);
+			std::cout << BLACK "[Server]: " DARK_GRAY "Channel " MAGENTA << channel.getChannelName() << ": " << ORANGE << clientIt->getNickname() << DARK_GRAY " was " LIGHT_GREEN "promoted " DARK_GRAY "to operator by " ORANGE << client.getNickname() <<  RESET "\n" << std::endl;
 		}
 	}
 	else {
@@ -314,7 +320,8 @@ void Commands::executeOperator( bool sign, Channel &channel, std::string param, 
 				client.sendMsg(SERVER " " ERR_NOPRIVLIEGES " " + client.getNickname() + " " + channel.getChannelName() + " :You can't demote yourself as the channel owner\r\n");
 			else {
 				channel.getOperator().erase(operatorIt);
-				client.sendMsg(":" + client.getNickname() + " MODE " + channel.getChannelName() + " -o" + param + "\r\n");
+				message = ":" + client.getNickname() + " MODE " + channel.getChannelName() + " -o " + param + "\r\n";
+				forwardMsg(message, client, channel.getClients(), INCLUDE);
 				std::cout << BLACK "[Server]: " DARK_GRAY "Channel " MAGENTA << channel.getChannelName() << ": " << ORANGE << clientIt->getNickname() << DARK_GRAY " got " LIGHT_RED "demoted" DARK_GRAY " by " << client.getNickname() << RESET "\n" << std::endl;
 			}
 		}
@@ -547,6 +554,7 @@ bool invitedPersonIsOnChannel(Client &client, std::vector<Channel> &channels, st
 	return false;
 }
 
+// @todo Wenn man versuch jmd einzuladen der da ist kommt nosuchnick
 void Commands::invite(Client& client, Parser& input, std::vector<Client> &connections, std::vector<Channel> &channels) {
 	if (!checkPermission(client, input.getParam()[1], client.getNickname(), channels))
 		return;
