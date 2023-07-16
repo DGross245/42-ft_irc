@@ -448,13 +448,16 @@ bool checkNickname(Client& client, std::string& nickname, const std::vector<Clie
 	return true;
 }
 
-// @todo nick hat nie den name geschickt also da gabs kein send
 void Commands::nick(Parser& input, Client& client, std::vector<Client>& connections) {
 	if (!checkNickname(client, input.getParam()[0], connections)) {
 		return ;
 	} else {
+		std::string oldNickname = client.getNickname();
 		client.setNickname(input.getParam()[0]);
-		client.sendMsg(":" + client.getConstUsername() + " NICK " + client.getNickname() + "\r\n");
+		if (!oldNickname.empty()) {
+			std::string nameChange = ":" + oldNickname + " NICK " + client.getNickname() + "\r\n";
+			forwardMsg(nameChange, client, connections, INCLUDE);
+		}
 	}
 	return ;
 }
@@ -462,7 +465,6 @@ void Commands::nick(Parser& input, Client& client, std::vector<Client>& connecti
 bool isUsernameAvailable(const std::vector<Client>& connections, const std::string& username) {
 	if (username.empty())
 		return true;
-	std::cout << username << " = " << connections[0].getConstUsername() << std::endl;
 	for (std::vector<Client>::size_type i = 0; i < connections.size(); i++) {
 		if (connections[i].getConstUsername() == username) {
 			return false;
