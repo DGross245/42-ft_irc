@@ -33,8 +33,8 @@ void Channel::setPassword( std::string password ) {
 	return ;
 }
 
-void Channel::setOwner( Client owner ) {
-	this->_owner = owner;
+void Channel::deleteOwner( int invalidfd ) {
+	this->_owner = Client (invalidfd);
 	return ;
 }
 

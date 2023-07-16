@@ -18,7 +18,7 @@ public:
 	bool							canUserJoin( Client user, Parser &input );
 	std::vector<Client>::iterator	searchForUser( std::string nickname, std::vector<Client> &clients );
 
-	void							setOwner( Client owner );
+	void							deleteOwner( int invalidfd );
 	void							setTopic( std::string topic, Client client );
 	void							setMode( std::map<char,bool> mode);
 	void							setLimit( size_t i );

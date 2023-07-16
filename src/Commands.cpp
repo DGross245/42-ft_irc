@@ -31,8 +31,8 @@ Commands::~Commands( void ) {
 
 std::vector<Channel>::iterator	Commands::searchForChannel( std::string channelName, std::vector<Channel> &channels ) {
 	std::vector<Channel>::iterator iterator = channels.end();
-	for (iterator = channels.begin(); iterator != channels.end(); iterator++ ) {
-		if (iterator->getChannelName() == channelName )
+	for (iterator = channels.begin(); iterator != channels.end(); ++iterator) {
+		if (iterator->getChannelName() == channelName)
 			break ;
 	}
 	return (iterator);
@@ -97,6 +97,8 @@ void Commands::topic( Parser &input, Client client, std::vector<Channel> &channe
 }
 
 void Commands::kick( Parser &input, Client requestor, std::vector<Channel> &channels ) {
+	std::string message;
+
 	std::vector<Channel>::iterator channelIt = searchForChannel(input.getParam()[0], channels);
 	if (channelIt == channels.end())
 		return (requestor.sendMsg(SERVER " " ERR_NOSUCHCHANNEL " " + requestor.getNickname() + " " + input.getParam()[0] + " :No such channel\r\n"));
@@ -106,28 +108,32 @@ void Commands::kick( Parser &input, Client requestor, std::vector<Channel> &chan
 	std::vector<Client>::iterator targetIt = channelIt->searchForUser(input.getParam()[1], channelIt->getClients());
 	if (targetIt == channelIt->getClients().end())
 		return (requestor.sendMsg(SERVER " " ERR_NOSUCHNICK " " + requestor.getNickname() + " " + channelIt->getChannelName() + " :No such nickname\r\n"));
+	std::vector<Client>::iterator operatorIt = channelIt->searchForUser(requestor.getNickname(), channelIt->getOperator());
+	if (operatorIt == channelIt->getOperator().end())
+		return (requestor.sendMsg(SERVER " " ERR_CHANOPRIVSNEEDED " " + requestor.getNickname() + " " + channelIt->getChannelName() + " :You're not channel operator\r\n"));
+	if (targetIt->getSocketfd() == channelIt->getOwner().getSocketfd() && requestor.getSocketfd() != channelIt->getOwner().getSocketfd())
+		return (targetIt->sendMsg(SERVER " " ERR_NOPRIVLIEGES " " + requestor.getNickname() + " " + channelIt->getChannelName() + " :You can't kick the owner of this channel\r\n"));
 	else {
-		std::vector<Client> operatorList = channelIt->getOperator();
-		for (std::vector<Client>::iterator operatorIt = operatorList.begin(); operatorIt != operatorList.end(); operatorIt++) {
-			if (requestor.getSocketfd() == operatorIt->getSocketfd()) {
-				if (targetIt->getSocketfd() == channelIt->getOwner().getSocketfd())
-					return (targetIt->sendMsg(SERVER " " ERR_NOPRIVLIEGES " " + requestor.getNickname() + " " + channelIt->getChannelName() + " :You can't kick the owner of this channel\r\n"));
-				for (std::vector<Client>::iterator clientIt = channelIt->getClients().begin(); clientIt != channelIt->getClients().end(); ++clientIt) {
-					if (!input.getTrailing().empty())
-						clientIt->sendMsg(":" + requestor.getNickname() + " KICK " + channelIt->getChannelName() + " " + targetIt->getNickname() + " :" + input.getTrailing() + "\r\n");
-					else
-						clientIt->sendMsg(":" + requestor.getNickname() + " KICK " + channelIt->getChannelName() + " " + targetIt->getNickname() + "\r\n");
-				}
-				channelIt->getClients().erase(targetIt);
-				return ;
-			}
-		}
-		requestor.sendMsg(SERVER " " ERR_CHANOPRIVSNEEDED " " + requestor.getNickname() + " " + channelIt->getChannelName() + " :You're not channel operator\r\n");
+		if (!input.getTrailing().empty())
+			message = ":" + requestor.getNickname() + " KICK " + channelIt->getChannelName() + " " + targetIt->getNickname() + " :" + input.getTrailing() + "\r\n";
+		else
+			message = ":" + requestor.getNickname() + " KICK " + channelIt->getChannelName() + " " + targetIt->getNickname() + "\r\n";
+		forwardMsg(message, requestor, channelIt->getClients(), INCLUDE);
+		if (targetIt->getSocketfd() == channelIt->getOwner().getSocketfd())
+			channelIt->deleteOwner(-2);
+		channelIt->getClients().erase(targetIt);
+		targetIt = channelIt->searchForUser(input.getParam()[1], channelIt->getInviteList());
+		if (targetIt != channelIt->getInviteList().end())
+			channelIt->getInviteList().erase(targetIt);
+		targetIt = channelIt->searchForUser(input.getParam()[1], channelIt->getOperator());
+		if (targetIt != channelIt->getOperator().end())
+			channelIt->getOperator().erase(targetIt);
+		if (channelIt->getClients().size() == 0)
+			channels.erase(channelIt);
 	}
 	return ;
 }
 
-// @todo User auch von Op liste löschen
 void Commands::part( Parser &input, Client client, std::vector<Channel> &channels) {
 	std::string message;
 	std::vector<Channel>::iterator channelIt = searchForChannel(input.getParam()[0], channels);
@@ -144,7 +150,15 @@ void Commands::part( Parser &input, Client client, std::vector<Channel> &channel
 	else
 		message = ":" + client.getNickname() + " PART " + channelIt->getChannelName() + "\r\n";
 	forwardMsg(message, client, channelIt->getClients(), INCLUDE);
+	if (targetIt->getSocketfd() == channelIt->getOwner().getSocketfd())
+		channelIt->deleteOwner(-2);
 	channelIt->getClients().erase(targetIt);
+	targetIt = channelIt->searchForUser(client.getNickname(), channelIt->getInviteList());
+	if (targetIt != channelIt->getInviteList().end())
+		channelIt->getInviteList().erase(targetIt);
+	targetIt = channelIt->searchForUser(client.getNickname(), channelIt->getOperator());
+	if (targetIt != channelIt->getOperator().end())
+		channelIt->getOperator().erase(targetIt);
 	if (channelIt->getClients().size() == 0)
 		channels.erase(channelIt);
 	return ;
@@ -185,7 +199,7 @@ void Commands::privmsg( Parser &input, Client client, std::vector<Client> connec
 			client.sendMsg(ERR_NOSUCHCHANNEL " " + receiver + " :No such channel\r\n");
 	}
 	else {
-		for (std::vector<Client>::iterator targetIt = connections.begin(); targetIt != connections.end(); targetIt++)
+		for (std::vector<Client>::iterator targetIt = connections.begin(); targetIt != connections.end(); ++targetIt)
 			if (targetIt != connections.end() && targetIt->getNickname() == receiver)
 				return (targetIt->sendMsg(":" + client.getNickname() + " PRIVMSG " + receiver + " :" + input.getTrailing() + "\r\n"));
 		client.sendMsg(ERR_NOSUCHNICK " " + receiver + " :No such nickname\r\n");
@@ -193,29 +207,36 @@ void Commands::privmsg( Parser &input, Client client, std::vector<Client> connec
 	return ;
 }
 
-// @todo user auch von op liste löschen
 void Commands::quit( Parser &input, Client client, std::vector<Channel> &channels, std::vector<Client> &connections) {
-	for (std::vector<Channel>::iterator channelIt = channels.begin(); channelIt != channels.end(); channelIt++) {
-		std::vector<Client> &clientCopy = channelIt->getClients();
-		for (std::vector<Client>::iterator targetIt = clientCopy.begin(); targetIt != clientCopy.end(); targetIt++) {
-			if (targetIt->getSocketfd() == client.getSocketfd()) {
-				clientCopy.erase(targetIt);
-				break ;
-			}
-		}
-		for (std::vector<Client>::iterator invitedIterator = clientCopy.begin(); invitedIterator != clientCopy.end(); invitedIterator++) {
-			if (invitedIterator->getSocketfd() == client.getSocketfd()) {
-				clientCopy.erase(invitedIterator);
-				break ;
-			}
-		}
-		if (clientCopy.size() == 0) {
+	std::vector<Client>::iterator targetIt;
+
+	for (std::vector<Channel>::iterator channelIt = channels.begin(); channelIt != channels.end(); ++channelIt) {
+		targetIt = channelIt->searchForUser(client.getNickname(), channelIt->getClients());
+		if (targetIt != channelIt->getClients().end())
+			channelIt->getClients().erase(targetIt);
+		targetIt = channelIt->searchForUser(client.getNickname(), channelIt->getInviteList());
+		if (targetIt != channelIt->getInviteList().end())
+			channelIt->getInviteList().erase(targetIt);
+		targetIt = channelIt->searchForUser(client.getNickname(), channelIt->getOperator());
+		if (targetIt != channelIt->getOperator().end())
+			channelIt->getOperator().erase(targetIt);
+		if (client.getSocketfd() == channelIt->getOwner().getSocketfd())
+			channelIt->deleteOwner(-2);
+		if (channelIt->getClients().size() == 0) {
 			channels.erase(channelIt);
 			channelIt--;
 		}
+		else {
+			std::string message = ":" + client.getNickname() + " QUIT :" + input.getTrailing() + "\r\n";
+			forwardMsg(message, client, channelIt->getClients(), INCLUDE);
+		}
 	}
-	std::string message = ":" + client.getNickname() + " QUIT :" + input.getTrailing() + "\r\n";
-	forwardMsg(message, client, connections, EXCLUDE);
+	for (targetIt = connections.begin(); targetIt != connections.end(); ++targetIt) {
+		if (targetIt->getSocketfd() == client.getSocketfd()) {
+			connections.erase(targetIt);
+			break ;
+		}
+	}
 	return ;
 }
 
@@ -279,14 +300,14 @@ void Commands::executeInvite( bool sign, Channel &channel, std::string param, Cl
 	return ;
 }
 
-void Commands::executeKey( bool sign, Channel &channel, std::string param, Client client ) {
+void Commands::executeKey( bool sign, Channel &channel, std::string key, Client client ) {
 	std::string message;
 
 	if (sign) {
-		if (!param.empty()) {
+		if (!key.empty()) {
 			channel.getMode()['k'] = sign;
-			channel.setPassword(param);
-			message = ":" + client.getNickname() + " MODE " + channel.getChannelName() + " +k " + param + "\r\n";
+			channel.setPassword(key);
+			message = ":" + client.getNickname() + " MODE " + channel.getChannelName() + " +k " + key + "\r\n";
 			std::cout << BLACK "[Server]: " DARK_GRAY "Channel " MAGENTA << channel.getChannelName() << DARK_GRAY " was set to: " LIGHT_GREEN "+k" RESET "\n" << std::endl;
 		}
 		else
@@ -302,29 +323,29 @@ void Commands::executeKey( bool sign, Channel &channel, std::string param, Clien
 	return ;
 }
 
-void Commands::executeOperator( bool sign, Channel &channel, std::string param, Client client ) {
+void Commands::executeOperator( bool sign, Channel &channel, std::string targetName, Client client ) {
 	std::string message;
-	if (param.empty())
+	if (targetName.empty())
 		return (client.sendMsg(SERVER " " ERR_NEEDMOREPARAMS " " + client.getNickname() + " " + channel.getChannelName() + " :Not enough Parameters for +/-o\r\n"));
-	std::vector<Client>::iterator clientIt = channel.searchForUser(param, channel.getClients());
+	std::vector<Client>::iterator clientIt = channel.searchForUser(targetName, channel.getClients());
 	if (clientIt == channel.getClients().end())
 		return (client.sendMsg(SERVER " " ERR_NOSUCHNICK " " + client.getNickname() + " " + channel.getChannelName() + " : No such nickname\r\n"));
-	std::vector<Client>::iterator operatorIt = channel.searchForUser(param, channel.getOperator());
+	std::vector<Client>::iterator targetIt = channel.searchForUser(targetName, channel.getOperator());
 	if (sign) {
-		if (operatorIt == channel.getOperator().end()) {
+		if (targetIt == channel.getOperator().end()) {
 			channel.getOperator().push_back(*clientIt);
-			message = ":" + client.getNickname() + " MODE " + channel.getChannelName() + " +o " + param + "\r\n";
+			message = ":" + client.getNickname() + " MODE " + channel.getChannelName() + " +o " + targetName + "\r\n";
 			forwardMsg(message, client, channel.getClients(), INCLUDE);
 			std::cout << BLACK "[Server]: " DARK_GRAY "Channel " MAGENTA << channel.getChannelName() << ": " << ORANGE << clientIt->getNickname() << DARK_GRAY " was " LIGHT_GREEN "promoted " DARK_GRAY "to operator by " ORANGE << client.getNickname() <<  RESET "\n" << std::endl;
 		}
 	}
 	else {
-		if (operatorIt != channel.getOperator().end()) {
-			if (operatorIt->getSocketfd() == channel.getOwner().getSocketfd())
+		if (targetIt != channel.getOperator().end()) {
+			if (targetIt->getSocketfd() == channel.getOwner().getSocketfd() &&  client.getSocketfd() != channel.getOwner().getSocketfd())
 				client.sendMsg(SERVER " " ERR_NOPRIVLIEGES " " + client.getNickname() + " " + channel.getChannelName() + " :You can't demote yourself as the channel owner\r\n");
 			else {
-				channel.getOperator().erase(operatorIt);
-				message = ":" + client.getNickname() + " MODE " + channel.getChannelName() + " -o " + param + "\r\n";
+				channel.getOperator().erase(targetIt);
+				message = ":" + client.getNickname() + " MODE " + channel.getChannelName() + " -o " + targetName + "\r\n";
 				forwardMsg(message, client, channel.getClients(), INCLUDE);
 				std::cout << BLACK "[Server]: " DARK_GRAY "Channel " MAGENTA << channel.getChannelName() << ": " << ORANGE << clientIt->getNickname() << DARK_GRAY " got " LIGHT_RED "demoted" DARK_GRAY " by " << client.getNickname() << RESET "\n" << std::endl;
 			}
@@ -333,17 +354,17 @@ void Commands::executeOperator( bool sign, Channel &channel, std::string param, 
 	return ;
 }
 
-void Commands::executeLimit( bool sign, Channel &channel, std::string param, Client client ) {
+void Commands::executeLimit( bool sign, Channel &channel, std::string channelLimit, Client client ) {
 	std::string message;
 
 	if (sign) {
-		if (!param.empty()) {
+		if (!channelLimit.empty()) {
 			channel.getMode()['l'] = sign;
-			if (param.find_first_not_of("0123456789") == std::string::npos) {
-				int limit = static_cast<int>( strtod(param.c_str(), NULL) );
+			if (channelLimit.find_first_not_of("0123456789") == std::string::npos) {
+				int limit = static_cast<int>( strtod(channelLimit.c_str(), NULL) );
 				int overflowCheck;
 
-				std::stringstream ss(param);
+				std::stringstream ss(channelLimit);
 				ss >> overflowCheck;
 				if (ss.fail() || !ss.eof())
 					return;
@@ -394,7 +415,7 @@ void Commands::sendWelcomeMessage(Client client, std::vector<Channel>::iterator 
 	message = ":" + client.getNickname() + " JOIN " + channelIt->getChannelName() + "\r\n";
 	forwardMsg(message, client, channelIt->getClients(), EXCLUDE);
 	message = SERVER " " RPL_NAMREPLY " " + client.getNickname() + " " + channelIt->getChannelName() + " :";
-	for (std::vector<Client>::iterator clientIt = channelIt->getClients().begin(); clientIt != channelIt->getClients().end(); clientIt++) {
+	for (std::vector<Client>::iterator clientIt = channelIt->getClients().begin(); clientIt != channelIt->getClients().end(); ++clientIt) {
 		std::vector<Client>::iterator operatorIt = channelIt->searchForUser(clientIt->getNickname(), channelIt->getOperator());
 		if (operatorIt != channelIt->getOperator().end())
 			message += "@";
@@ -563,13 +584,12 @@ bool invitedPersonIsOnChannel(Client &client, std::vector<Channel> &channels, st
 	return false;
 }
 
-// @todo Wenn man versuch jmd einzuladen der da ist kommt nosuchnick
 void Commands::invite(Client& client, Parser& input, std::vector<Client> &connections, std::vector<Channel> &channels) {
 	if (!checkPermission(client, input.getParam()[1], client.getNickname(), channels))
 		return;
 	if (invitedPersonIsOnChannel(client, channels, input.getParam()[1], input.getParam()[0]))
 		return;
-	if (!checkInvitedPerson(connections, input.getParam()[1]))
+	if (!checkInvitedPerson(connections, input.getParam()[0]))
 		return (client.sendMsg(SERVER " " ERR_NOSUCHNICK " " + client.getNickname() + " " + input.getParam()[1] + " :No such nickname\r\n"));
 	sendInvitation(client, input.getParam()[0], input.getParam()[1], channels, connections);
 }

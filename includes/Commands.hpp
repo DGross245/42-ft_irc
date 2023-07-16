@@ -30,9 +30,9 @@ public:
 
 	//Mode functions
 	static void executeInvite(bool sign, Channel &channel, std::string param, Client client);
-	static void executeKey(bool sign, Channel &channel, std::string param, Client client);
-	static void executeOperator(bool sign, Channel &channel, std::string param, Client client);
-	static void executeLimit(bool sign, Channel &channel, std::string param, Client client);
+	static void executeKey(bool sign, Channel &channel, std::string key, Client client);
+	static void executeOperator(bool sign, Channel &channel, std::string targetName, Client client);
+	static void executeLimit(bool sign, Channel &channel, std::string channelLimit, Client client);
 	static void executeTopic(bool sign, Channel &channel, std::string param, Client client);
 
 private:
