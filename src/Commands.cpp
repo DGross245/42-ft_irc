@@ -4,7 +4,7 @@
 #include "Constants.hpp"
 #include "Client.hpp"
 
-
+#include <algorithm>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -15,9 +15,6 @@
 #include <map>
 #include <sstream>
 #include <cstdlib>
-
-// @todo gucken wegen max lenght of text
-// @todo generell alles testen jede funktion
 
 Commands::Commands() {
 	return ;
@@ -134,31 +131,34 @@ void Commands::kick( Parser &input, Client requestor, std::vector<Channel> &chan
 
 void Commands::part( Parser &input, Client client, std::vector<Channel> &channels) {
 	std::string message;
-	std::vector<Channel>::iterator channelIt = searchForChannel(input.getParam()[0], channels);
-	if (channelIt == channels.end())
-		return (client.sendMsg(SERVER " " ERR_NOSUCHCHANNEL " " + client.getNickname() + " " + input.getParam()[0] + " :No such channel\r\n"));
-	std::vector<Client>::iterator clientIt = channelIt->searchForUser(client.getNickname(), channelIt->getClients());
-	if (clientIt == channelIt->getClients().end())
-		return (client.sendMsg(SERVER " " ERR_NOTONCHANNEL " " + client.getNickname() + " " + channelIt->getChannelName() + " :You're not in the channel\r\n"));
-	std::vector<Client>::iterator targetIt = channelIt->searchForUser(client.getNickname(), channelIt->getClients());
-	if (targetIt == channelIt->getClients().end())
-		return (client.sendMsg(SERVER " " ERR_NOSUCHNICK " " + client.getNickname() + " " + input.getParam()[0] + " :No such nickname\r\n"));
-	if (!input.getTrailing().empty())
-		message = ":" + client.getNickname() + " PART " + channelIt->getChannelName() + " :" + input.getTrailing() + "\r\n";
-	else
-		message = ":" + client.getNickname() + " PART " + channelIt->getChannelName() + "\r\n";
-	forwardMsg(message, client, channelIt->getClients(), INCLUDE);
-	if (targetIt->getSocketfd() == channelIt->getOwner().getSocketfd())
-		channelIt->deleteOwner(-2);
-	channelIt->getClients().erase(targetIt);
-	targetIt = channelIt->searchForUser(client.getNickname(), channelIt->getInviteList());
-	if (targetIt != channelIt->getInviteList().end())
-		channelIt->getInviteList().erase(targetIt);
-	targetIt = channelIt->searchForUser(client.getNickname(), channelIt->getOperator());
-	if (targetIt != channelIt->getOperator().end())
-		channelIt->getOperator().erase(targetIt);
-	if (channelIt->getClients().size() == 0)
-		channels.erase(channelIt);
+	splitByComma(input);
+	for (std::vector<std::string>::iterator paramIt = input.getParam().begin(); paramIt != input.getParam().end(); ++paramIt) {
+		std::vector<Channel>::iterator channelIt = searchForChannel(*paramIt, channels);
+		if (channelIt == channels.end())
+			return (client.sendMsg(SERVER " " ERR_NOSUCHCHANNEL " " + client.getNickname() + " " + *paramIt + " :No such channel\r\n"));
+		std::vector<Client>::iterator clientIt = channelIt->searchForUser(client.getNickname(), channelIt->getClients());
+		if (clientIt == channelIt->getClients().end())
+			return (client.sendMsg(SERVER " " ERR_NOTONCHANNEL " " + client.getNickname() + " " + channelIt->getChannelName() + " :You're not in the channel\r\n"));
+		std::vector<Client>::iterator targetIt = channelIt->searchForUser(client.getNickname(), channelIt->getClients());
+		if (targetIt == channelIt->getClients().end())
+			return (client.sendMsg(SERVER " " ERR_NOSUCHNICK " " + client.getNickname() + " " + *paramIt + " :No such nickname\r\n"));
+		if (!input.getTrailing().empty())
+			message = ":" + client.getNickname() + " PART " + channelIt->getChannelName() + " :" + input.getTrailing() + "\r\n";
+		else
+			message = ":" + client.getNickname() + " PART " + channelIt->getChannelName() + "\r\n";
+		forwardMsg(message, client, channelIt->getClients(), INCLUDE);
+		if (targetIt->getSocketfd() == channelIt->getOwner().getSocketfd())
+			channelIt->deleteOwner(-2);
+		channelIt->getClients().erase(targetIt);
+		targetIt = channelIt->searchForUser(client.getNickname(), channelIt->getInviteList());
+		if (targetIt != channelIt->getInviteList().end())
+			channelIt->getInviteList().erase(targetIt);
+		targetIt = channelIt->searchForUser(client.getNickname(), channelIt->getOperator());
+		if (targetIt != channelIt->getOperator().end())
+			channelIt->getOperator().erase(targetIt);
+		if (channelIt->getClients().size() == 0)
+			channels.erase(channelIt);
+	}
 	return ;
 }
 
@@ -426,29 +426,70 @@ void Commands::sendWelcomeMessage(Client client, std::vector<Channel>::iterator 
 	return ;
 }
 
-void Commands::join(Parser &input, Client client, std::vector<Channel> &channels){
-	if (input.getParam()[0].at(0) == '#') {
-		std::vector<Channel>::iterator channelIt = searchForChannel( input.getParam()[0], channels);
-		if (channelIt == channels.end()) {
-			channels.push_back(Channel ( input.getParam()[0], client ));
-			client.sendMsg(":" + client.getNickname() + " JOIN " + input.getParam()[0] + "\r\n");
-			channelIt = searchForChannel( input.getParam()[0], channels);
-		} 
-		else {
-			if (channelIt->canUserJoin( client, input )) {
-				channelIt->addUser( client );
-				std::vector<Client>::iterator clientIt = channelIt->searchForUser(client.getNickname(), channelIt->getInviteList());
-				if (clientIt != channelIt->getInviteList().end())
-					channelIt->getInviteList().erase(clientIt);
-				client.sendMsg(":" + client.getNickname() + " JOIN " + input.getParam()[0] + "\r\n");
-			}
-			else
-				return ;
+void Commands::splitByComma( Parser &input ) {
+	std::vector<std::string> newParam;
+	std::vector<std::string> password;
+	size_t size = input.getParam().size();
+
+	while (!input.getParam()[0].empty()) {
+		size_t pos = input.getParam()[0].find(",");
+		if (pos != std::string::npos) {
+			newParam.push_back(input.getParam()[0].substr(0, pos));
+			input.getParam()[0].erase(0, pos + 1);
 		}
-		sendWelcomeMessage(client, channelIt);
+		else if (!input.getParam()[0].empty()) {
+			newParam.push_back(input.getParam()[0]);
+			input.getParam()[0].erase(0, input.getParam()[0].length());
+		}
 	}
-	else
-		client.sendMsg(SERVER " " ERR_NOSUCHCHANNEL " " + client.getNickname() + " " + input.getParam()[0] + " : No such channel\r\n");
+	if (size == 2) {
+		while (!input.getParam()[1].empty()) {
+			size_t pos = input.getParam()[1].find(",");
+			if (pos != std::string::npos) {
+				password.push_back(input.getParam()[1].substr(0, pos));
+				input.getParam()[1].erase(0, pos + 1);
+			}
+			else if (!input.getParam()[1].empty()) {
+				password.push_back(input.getParam()[1]);
+				input.getParam()[1].erase(0, input.getParam()[1].length());
+			}
+		}
+	}
+	input.setParam(newParam);
+	input.setPassword(password);
+	return ;
+}
+
+void Commands::join(Parser &input, Client client, std::vector<Channel> &channels){
+	splitByComma(input);
+	for (std::vector<std::string>::iterator ParamIt = input.getParam().begin(); ParamIt != input.getParam().end(); ++ParamIt) {
+		if (ParamIt->at(0) == '#') {
+			if (ParamIt->length() < 1 || ParamIt->length() > 199 ) {
+				client.sendMsg(SERVER " " ERR_NOSUCHCHANNEL " " + client.getNickname() + " " + *ParamIt + " :Invalid channel name\r\n");
+				continue ;
+			}
+			std::vector<Channel>::iterator channelIt = searchForChannel( *ParamIt, channels);
+			if (channelIt == channels.end()) {
+				channels.push_back(Channel ( *ParamIt, client ));
+				client.sendMsg(":" + client.getNickname() + " JOIN " + *ParamIt + "\r\n");
+				channelIt = searchForChannel( *ParamIt, channels);
+			} 
+			else {
+				if (channelIt->canUserJoin( client, input )) {
+					channelIt->addUser( client );
+					std::vector<Client>::iterator clientIt = channelIt->searchForUser(client.getNickname(), channelIt->getInviteList());
+					if (clientIt != channelIt->getInviteList().end())
+						channelIt->getInviteList().erase(clientIt);
+					client.sendMsg(":" + client.getNickname() + " JOIN " + *ParamIt + "\r\n");
+				}
+				else
+					continue ;
+			}
+			sendWelcomeMessage(client, channelIt);
+		}
+		else
+			client.sendMsg(SERVER " " ERR_NOSUCHCHANNEL " " + client.getNickname() + " " + *ParamIt + " :No such channel\r\n");
+	}
 	return ;
 }
 

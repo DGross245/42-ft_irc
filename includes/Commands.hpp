@@ -27,6 +27,7 @@ public:
 	static void user(Parser &input, Client &client, std::vector<Client>& connections);
 	static void invite(Client& client, Parser& input, std::vector<Client> &connections, std::vector<Channel> &channels);
 	static void sendWelcomeMessage(Client client, std::vector<Channel>::iterator channelIt);
+	static void splitByComma( Parser &input );
 
 	//Mode functions
 	static void executeInvite(bool sign, Channel &channel, std::string param, Client client);

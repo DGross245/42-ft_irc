@@ -135,13 +135,20 @@ bool Channel::canUserJoin( Client client, Parser &input ) {
 		}
 	}
 	if (this->getMode()['k'] == true) {
-		if (input.getParam().size() != 2) {
+		if (input.getPassword().size() == 0) {
 			client.sendMsg(SERVER " " ERR_BADCHANNELKEY " " + client.getNickname() + " " + input.getParam()[0] + " :Missing or wrong channel key\r\n");
 			return (false);
 		}
-		else if (this->getPassword() != input.getParam()[1]) {
-			client.sendMsg(SERVER " " ERR_BADCHANNELKEY " " + client.getNickname() + " " + input.getParam()[0] + " :Missing or wrong channel key\r\n");
-			return (false);
+		else {
+			std::vector<std::string>::iterator passwordIt;
+			for (passwordIt = input.getPassword().begin(); passwordIt != input.getPassword().end(); ++passwordIt) {
+				if (this->getPassword() == *passwordIt)
+					break ;
+			}
+			if (passwordIt == input.getPassword().end()) {
+				client.sendMsg(SERVER " " ERR_BADCHANNELKEY " " + client.getNickname() + " " + input.getParam()[0] + " :Missing or wrong channel key\r\n");
+				return (false);
+			}
 		}
 	}
 	if (this->getMode()['l'] == true) {

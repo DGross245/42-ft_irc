@@ -7,9 +7,15 @@
 #include <vector>
 #include <sys/socket.h>
 
+#define maxMsgLenght 512
+
 Parser::Parser( std::string &buffer, Client client ) {
 	size_t pos = buffer.find("\r\n");
-	if (pos != std::string::npos  || !buffer.empty()) {
+	if (pos != std::string::npos && buffer.length() > 512 ) {
+		buffer = buffer.substr(0, maxMsgLenght - 2);
+		buffer += "\r\n";
+	}
+	else if (pos != std::string::npos  || !buffer.empty()) {
 		this->_input = buffer.substr(0, pos);
 		std::string name = client.getNickname().empty() ? "*" : client.getNickname();
 		std::cout << BLACK "[Server]: " BLUE BOLD " <== " RESET ORANGE << name << WHITE ": " << this->_input << RESET << std::endl;
@@ -50,6 +56,16 @@ void Parser::setTrailing( std::string trailing ) {
 	return ;
 }
 
+void Parser::setParam( std::vector<std::string> newParam) {
+	this->_parameter = newParam;
+	return ;
+}
+
+void Parser::setPassword( std::vector<std::string> password ) {
+	this->_password = password;
+	return ;
+}
+
 // GETTER FUNCTIONS
 
 std::string &Parser::getInput( void ) {
@@ -70,6 +86,10 @@ std::string &Parser::getCMD( void ) {
 
 std::vector<std::string> &Parser::getParam( void ) {
 	return (this->_parameter);
+}
+
+std::vector<std::string> &Parser::getPassword( void ) {
+	return (this->_password);
 }
 
 void Parser::isValidCommandLine( Client client ) {

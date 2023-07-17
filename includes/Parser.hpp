@@ -35,15 +35,18 @@ public:
 	void checkPART( Client client );
 
 	void setPrefix( std::string prefix );
+	void setParam( std::vector<std::string> newParam );
 	void setCMD( std::string command );
 	void setParameter( std::string parameter );
 	void setTrailing( std::string trailing );
+	void setPassword( std::vector<std::string> password );
 
 	std::string					&getCMD( void );
 	std::vector<std::string>	&getParam( void );
 	std::string					&getPrefix( void );
 	std::string					&getTrailing( void );
 	std::string					&getInput( void );
+	std::vector<std::string>	&getPassword( void );
 
 	class parserErrorException : std::exception {
 
@@ -66,6 +69,7 @@ private:
 	std::string					_command;
 	std::vector<std::string>	_parameter;
 	std::string 				_trailing;
+	std::vector<std::string>	_password;
 
 };
 
