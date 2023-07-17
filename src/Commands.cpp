@@ -16,7 +16,6 @@
 #include <sstream>
 #include <cstdlib>
 
-// @todo mode cmd privliages msg doesnt work
 Commands::Commands() {
 	return ;
 }
@@ -130,7 +129,6 @@ void Commands::kick( Parser &input, Client requestor, std::vector<Channel> &chan
 	return ;
 }
 
-// @todo part msg (lock if I a msg needs to be send that I forgot or rly delete the user)
 void Commands::part( Parser &input, Client client, std::vector<Channel> &channels) {
 	std::string message;
 	splitByComma(input);
@@ -207,8 +205,7 @@ void Commands::privmsg( Parser &input, Client client, std::vector<Client> connec
 	return ;
 }
 
-// #todo server should print that user left the server
-void Commands::quit( Parser &input, Client client, std::vector<Channel> &channels, std::vector<Client> &connections) {
+void Commands::quit( Parser &input, Client client, std::vector<Channel> &channels) {
 	std::vector<Client>::iterator targetIt;
 
 	for (std::vector<Channel>::iterator channelIt = channels.begin(); channelIt != channels.end(); ++channelIt) {
@@ -232,12 +229,6 @@ void Commands::quit( Parser &input, Client client, std::vector<Channel> &channel
 			forwardMsg(message, client, channelIt->getClients(), INCLUDE);
 		}
 	}
-	for (targetIt = connections.begin(); targetIt != connections.end(); ++targetIt) {
-		if (targetIt->getSocketfd() == client.getSocketfd()) {
-			connections.erase(targetIt);
-			break ;
-		}
-	}
 	return ;
 }
 
@@ -256,7 +247,7 @@ void Commands::mode(Parser &input, Client client , std::vector<Channel> &channel
 		return (client.sendMsg(SERVER " " RPL_CHANNELMODEIS " " + client.getNickname() + " " + channelIt->getChannelName() + " +" + channelIt->getModeString() + "\r\n"));
 	std::vector<Client>::iterator operatorIt = channelIt->searchForUser(client.getNickname(), channelIt->getOperator());
 	if (operatorIt == channelIt->getOperator().end())
-		return (client.sendMsg(SERVER " " ERR_CHANOPRIVSNEEDED " " + client.getNickname() + " :Channel privileges needed\r\n")); //
+		return (client.sendMsg(SERVER " " ERR_CHANOPRIVSNEEDED " " + channelIt->getChannelName() + " :Channel privileges needed\r\n")); //
 	if (input.getParam()[1].at(0) != '-' && input.getParam()[1].at(0) != '+')
 		return (client.sendMsg(SERVER " " ERR_UNKNOWNMODE " " + client.getNickname() + " " + channelIt->getChannelName() + " :Unknown mode " + input.getParam()[1].at(0) + "\r\n"));
 

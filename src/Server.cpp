@@ -97,7 +97,7 @@ void Server::initServer( void ) {
 	struct sockaddr_in serverAddress;
 	memset(&serverAddress, 0, sizeof(serverAddress));
 	serverAddress.sin_family = AF_INET;
-	serverAddress.sin_addr.s_addr = inet_addr("10.11.5.25");
+	serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
 	serverAddress.sin_port = htons(this->getPort());
 	if (fcntl(serverSocketfd, F_SETFL, O_NONBLOCK) == -1) {
 		close(serverSocketfd);
@@ -160,7 +160,7 @@ void Server::executeMsg( Parser &input, Client &client ) {
 			else if (input.getCMD() == "JOIN")
 				Commands::join(input, client, this->getChannels());
 			else if (input.getCMD() == "QUIT")
-				Commands::quit(input, client, this->getChannels(), this->getConnections());
+				Commands::quit(input, client, this->getChannels());
 			else if (input.getCMD() == "PRIVMSG")
 				Commands::privmsg(input, client, this->getConnections(), this->getChannels());
 			else if (input.getCMD() == "KICK")
