@@ -67,6 +67,15 @@ void Server::setPort( int port ) {
 	return ;
 }
 
+void Server::setAppendBuffer( std::string buffer ) {
+	this->_appendBuffer = buffer;
+	return ;
+}
+
+std::string &Server::getAppendBuffer( void ) {
+	return (this->_appendBuffer);
+}
+
 std::vector<Client> &Server::getConnections(void) {
 	return (this->_connections);
 }
@@ -97,7 +106,7 @@ void Server::initServer( void ) {
 	struct sockaddr_in serverAddress;
 	memset(&serverAddress, 0, sizeof(serverAddress));
 	serverAddress.sin_family = AF_INET;
-	serverAddress.sin_addr.s_addr = inet_addr("10.11.5.25");
+	serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
 	serverAddress.sin_port = htons(this->getPort());
 	if (fcntl(serverSocketfd, F_SETFL, O_NONBLOCK) == -1) {
 		close(serverSocketfd);
@@ -179,6 +188,16 @@ void Server::executeMsg( Parser &input, Client &client ) {
 	return ;
 }
 
+void Server::appendBuffer( std::string buffer ) {
+	this->setAppendBuffer(this->getAppendBuffer() + buffer );
+	if (this->getAppendBuffer().length() > 510)
+	{
+		buffer = this->getAppendBuffer();
+		buffer += "\r\n";
+	}
+	return ;
+}
+
 void Server::readMsg( Client &client, int i) {
 	std::string buffer(1024, '\0');
 	ssize_t bytes_read;
@@ -194,7 +213,12 @@ void Server::readMsg( Client &client, int i) {
 		try
 		{
 			buffer.resize(bytes_read);
-			while (!buffer.empty() || buffer.find("\r\n") != std::string::npos) {
+			//if (buffer.find("\r\n") == std::string::npos )
+			//	appendBuffer(buffer);
+			//else if (this->getAppendBuffer() != "")
+			//	buffer = this->getAppendBuffer();
+			while (buffer.find("\r\n") != std::string::npos ) {
+				setAppendBuffer("");
 				Parser input( buffer, client );
 				executeMsg( input, client );
 			}

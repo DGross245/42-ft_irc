@@ -81,8 +81,8 @@ void Commands::topic( Parser &input, Client client, std::vector<Channel> &channe
 	else {
 		if (channelIt->getMode()['t']) {
 			std::vector<Client>::iterator operatorIt = channelIt->searchForUser(client.getNickname(), channelIt->getOperator());
-			if (operatorIt == channelIt->getClients().end())
-				return (client.sendMsg(SERVER " " ERR_CHANOPRIVSNEEDED " " + client.getNickname() + " " + input.getParam()[2] + " :Channel privileges needed\r\n"));
+			if (operatorIt == channelIt->getOperator().end())
+				return (client.sendMsg(SERVER " " ERR_CHANOPRIVSNEEDED " " + client.getNickname() + " " + input.getParam()[0] + " :Channel privileges needed\r\n"));
 		}
 		channelIt->setTopic(input.getTrailing(), client);
 		std::string message = SERVER " " RPL_TOPIC " " + client.getNickname() + " " + channelIt->getChannelName() + " :" + channelIt->getTopic() + "\r\n";
