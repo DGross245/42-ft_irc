@@ -23,7 +23,7 @@ public:
 	void					readMsg( Client &client, int i);
 	void					executeMsg( Parser &input, Client &client );
 	void					closeALLConnections( void );
-	void					appendBuffer( std::string buffer );
+
 	void					setAppendBuffer( std::string buffer);
 	void					setPort( int port );
 	void					setPassword( std::string &password );
@@ -31,7 +31,7 @@ public:
 	void					setServerfd( int serverSocketfd );
 	int						getPort( void );
 	int						getMaxfd( fd_set &readfds );
-	std::string				&getAppendBuffer( void );
+	std::string				getAppendBuffer( void );
 	std::string				getPassword( void );
 	std::vector<Client>		&getConnections( void );
 	std::vector<Channel>	&getChannels(void);

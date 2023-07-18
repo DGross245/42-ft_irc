@@ -68,11 +68,16 @@ void Server::setPort( int port ) {
 }
 
 void Server::setAppendBuffer( std::string buffer ) {
-	this->_appendBuffer = buffer;
+	if (buffer.length() > MAX_BUFFER_LENGTH) {
+		this->_appendBuffer = buffer.substr(0, MAX_BUFFER_LENGTH - 2);
+		this->_appendBuffer += "\r\n";
+	}
+	else
+		this->_appendBuffer = buffer;
 	return ;
 }
 
-std::string &Server::getAppendBuffer( void ) {
+std::string Server::getAppendBuffer( void ) {
 	return (this->_appendBuffer);
 }
 
@@ -188,16 +193,6 @@ void Server::executeMsg( Parser &input, Client &client ) {
 	return ;
 }
 
-void Server::appendBuffer( std::string buffer ) {
-	this->setAppendBuffer(this->getAppendBuffer() + buffer );
-	if (this->getAppendBuffer().length() > 510)
-	{
-		buffer = this->getAppendBuffer();
-		buffer += "\r\n";
-	}
-	return ;
-}
-
 void Server::readMsg( Client &client, int i) {
 	std::string buffer(1024, '\0');
 	ssize_t bytes_read;
@@ -213,14 +208,14 @@ void Server::readMsg( Client &client, int i) {
 		try
 		{
 			buffer.resize(bytes_read);
-			//if (buffer.find("\r\n") == std::string::npos )
-			//	appendBuffer(buffer);
-			//else if (this->getAppendBuffer() != "")
-			//	buffer = this->getAppendBuffer();
-			while (buffer.find("\r\n") != std::string::npos ) {
-				setAppendBuffer("");
-				Parser input( buffer, client );
+			setAppendBuffer( getAppendBuffer() + buffer );
+			size_t pos = this->getAppendBuffer().find("\r\n");
+			while (pos != std::string::npos ) {
+				std::string cmd = this->getAppendBuffer().substr(0, pos + 2);
+				Parser input( cmd, client );
 				executeMsg( input, client );
+				setAppendBuffer(getAppendBuffer().substr(pos + 2));
+				pos = this->getAppendBuffer().find("\r\n");
 			}
 		}
 		catch(const Parser::parserErrorException &e)
@@ -232,7 +227,7 @@ void Server::readMsg( Client &client, int i) {
 }
 
 void Server::launchServer( void ) {
-	std::cout << BLACK "[Server]: " CYAN BOLD "IRCSERV " DARK_GRAY "has" GREEN BOLD " launched" RESET "\r" << std::endl;
+	std::cout << BLACK "[Server]: " CYAN BOLD "IRCSERV " DARK_GRAY "has" GREEN BOLD " launched" RESET "\n" << std::endl;
 	clientIOHandler();
 	closeALLConnections();
 	close(this->getServerfd());

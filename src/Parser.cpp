@@ -7,28 +7,11 @@
 #include <vector>
 #include <sys/socket.h>
 
-#define maxMsgLenght 512
-
 Parser::Parser( std::string &buffer, Client client ) {
-	size_t pos = buffer.find("\r\n");
-
-	if (pos != std::string::npos && buffer.length() > 512 ) {
-		buffer = buffer.substr(0, maxMsgLenght - 2);
-		buffer += "\r\n";
-		buffer.resize(512);
-	}
-	else if (pos != std::string::npos) {
-		this->_input = buffer.substr(0, pos);
-		std::string name = client.getNickname().empty() ? "*" : client.getNickname();
-		std::cout << BLACK "[Server]: " BLUE BOLD " <== " RESET ORANGE << name << WHITE ": " << this->_input << RESET << std::endl;
-		parseMsg( client );
-		if (std::string::npos != buffer.find("\r\n"))
-			buffer.erase(0, pos + 2);
-		else
-			buffer.erase(0, buffer.length());
-	}
-	else
-		throw parserErrorException("ERROR: Invalid message format: missing CR LF");
+	this->_input = buffer;
+	std::string name = client.getNickname().empty() ? "*" : client.getNickname();
+	std::cout << BLACK "[Server]: " BLUE BOLD " <== " RESET ORANGE << name << WHITE ": " << this->_input << RESET << std::endl;
+	parseMsg( client );
 	return ;
 }
 

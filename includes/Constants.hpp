@@ -53,7 +53,9 @@
 # define LIGHT_GRAY		"\033[37m"
 # define DARK_GRAY		"\033[90m"
 # define LIGHT_RED		"\033[91m"
+
 # define INCLUDE true
 # define EXCLUDE false
+# define MAX_BUFFER_LENGTH 512
 
 #endif

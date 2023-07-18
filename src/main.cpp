@@ -17,7 +17,6 @@ int main (int argc, char **argv) {
 		catch(Server::serverFailException & e)
 		{
 			std::cerr << RED << e.what() << '\n';
-			std::cout << RED << "Server failed to launch" << RESET << std::endl;
 			return (1);
 		}
 	}
