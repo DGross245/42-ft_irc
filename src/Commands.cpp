@@ -553,10 +553,10 @@ bool isNameValid(const std::string& name) {
 	return true;
 }
 
-void Commands::user(Parser& input, Client& client, std::vector<Client>& connections) {
+void Commands::user(Parser& input, Client& client) {
 	if (!isNameValid(client.getConstUsername()))
 		return;
-	else if (!isUsernameAvailable(connections, input.getTrailing()))
+	if (!client.getUsername().empty())
 		return (client.sendMsg(SERVER " " ERR_ALREADYREGISTRED " " + client.getConstUsername() + " :Username is already in use. Please choose a different username.\r\n"));
 	client.setUsername(input.getTrailing());
 }
