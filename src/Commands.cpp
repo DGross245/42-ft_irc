@@ -178,29 +178,37 @@ void Commands::forwardMsg(std::string message, Client target, std::vector<Client
 }
 
 void Commands::privmsg( Parser &input, Client client, std::vector<Client> connections, std::vector<Channel> channels) {
-	std::string receiver = input.getParam()[0];
 	std::string message;
+	splitByComma(input);
 
-	if (receiver.at(0) == '#') {
-		std::vector<Channel>::iterator channelIt = searchForChannel(receiver, channels);
-		if (channelIt != channels.end()) {
-			std::vector<Client>::iterator clientIt = channelIt->searchForUser(client.getNickname(), channelIt->getClients());
-			message = ":" + client.getNickname() + " PRIVMSG " + channelIt->getChannelName() + " :" + input.getTrailing() + "\r\n";
-			if (clientIt != channelIt->getClients().end())
-				forwardMsg(message, client, channelIt->getClients(), EXCLUDE);
-			else if (channelIt->getMode()['i'] == true || channelIt->getMode()['k'] == true)
-				client.sendMsg(ERR_CANNOTSENDTOCHAN " " + receiver + " :No pemissions\r\n");
+	for (std::vector<std::string>::iterator paramIt = input.getParam().begin(); paramIt != input.getParam().end(); ++paramIt) {
+		if (paramIt->at(0) == '#') {
+			std::vector<Channel>::iterator channelIt = searchForChannel(*paramIt, channels);
+			if (channelIt != channels.end()) {
+				std::vector<Client>::iterator clientIt = channelIt->searchForUser(client.getNickname(), channelIt->getClients());
+				message = ":" + client.getNickname() + " PRIVMSG " + channelIt->getChannelName() + " :" + input.getTrailing() + "\r\n";
+				if (clientIt != channelIt->getClients().end())
+					forwardMsg(message, client, channelIt->getClients(), EXCLUDE);
+				else if (channelIt->getMode()['i'] == true || channelIt->getMode()['k'] == true)
+					client.sendMsg(ERR_CANNOTSENDTOCHAN " " + *paramIt + " :No pemissions\r\n");
+				else
+					forwardMsg(message, client, channelIt->getClients(), EXCLUDE);
+			}
 			else
-				forwardMsg(message, client, channelIt->getClients(), EXCLUDE);
+				client.sendMsg(ERR_NOSUCHCHANNEL " " + *paramIt + " :No such channel\r\n");
 		}
-		else
-			client.sendMsg(ERR_NOSUCHCHANNEL " " + receiver + " :No such channel\r\n");
-	}
-	else {
-		for (std::vector<Client>::iterator targetIt = connections.begin(); targetIt != connections.end(); ++targetIt)
-			if (targetIt != connections.end() && targetIt->getNickname() == receiver)
-				return (targetIt->sendMsg(":" + client.getNickname() + " PRIVMSG " + receiver + " :" + input.getTrailing() + "\r\n"));
-		client.sendMsg(ERR_NOSUCHNICK " " + receiver + " :No such nickname\r\n");
+		else {
+			std::vector<Client>::iterator targetIt;
+			for (targetIt = connections.begin(); targetIt != connections.end(); ++targetIt) {
+				if (targetIt != connections.end() && targetIt->getNickname() == *paramIt) {
+					targetIt->sendMsg(":" + client.getNickname() + " PRIVMSG " + *paramIt + " :" + input.getTrailing() + "\r\n");
+					break ;
+				}
+			}
+			if (targetIt == connections.end())
+				client.sendMsg(SERVER " " ERR_NOSUCHNICK " " + client.getNickname() + " " + *paramIt + " :No such nickname\r\n");
+		}
+
 	}
 	return ;
 }
