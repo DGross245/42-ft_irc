@@ -212,11 +212,13 @@ void Server::readMsg( Client &client, int i) {
 			size_t pos = this->getAppendBuffer().find("\r\n");
 			while (pos != std::string::npos ) {
 				std::string cmd = this->getAppendBuffer().substr(0, pos + 2);
+				std::cout << "executing cmd:" << cmd << std::endl;
 				Parser input( cmd, client );
 				executeMsg( input, client );
 				setAppendBuffer(getAppendBuffer().substr(pos + 2));
 				pos = this->getAppendBuffer().find("\r\n");
 			}
+			std::cout << "buffer:" << getAppendBuffer();
 		}
 		catch(const Parser::parserErrorException &e)
 		{
