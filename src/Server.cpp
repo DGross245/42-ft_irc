@@ -97,7 +97,7 @@ void Server::initServer( void ) {
 	struct sockaddr_in serverAddress;
 	memset(&serverAddress, 0, sizeof(serverAddress));
 	serverAddress.sin_family = AF_INET;
-	serverAddress.sin_addr.s_addr = inet_addr("172.17.0.2");
+	serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
 	serverAddress.sin_port = htons(this->getPort());
 	if (fcntl(serverSocketfd, F_SETFL, O_NONBLOCK) == -1) {
 		close(serverSocketfd);
