@@ -249,7 +249,6 @@ void Commands::quit( Parser &input, Client client, std::vector<Channel> &channel
 }
 
 void Commands::mode(Parser &input, Client client , std::vector<Channel> &channels) {
-	std::string modeLine = input.getParam()[1];
 	bool sign = true;
 	char mode;
 
@@ -274,8 +273,8 @@ void Commands::mode(Parser &input, Client client , std::vector<Channel> &channel
 	modeFuntion['o'] = &executeOperator;
 	modeFuntion['l'] = &executeLimit;
 
-	for (size_t i = 0; i < modeLine.length(); i++) {
-		mode = modeLine[i];
+	for (size_t i = 0; i < input.getParam()[1].length(); i++) {
+		mode = input.getParam()[1][i];
 		if (mode == '+')
 			sign = true;
 		else if (mode == '-')

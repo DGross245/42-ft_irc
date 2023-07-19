@@ -6,7 +6,7 @@
 #    By: dgross <dgross@student.42.fr>              +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/05/31 08:49:39 by dgross            #+#    #+#              #
-#    Updated: 2023/07/19 13:19:17 by dgross           ###   ########.fr        #
+#    Updated: 2023/07/19 16:00:20 by dgross           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -34,7 +34,7 @@ OBJ				= $(addprefix $(OBJ_DIR),$(SRC:.cpp=.o))
 
 CC				= c++
 
-CFLAGS			= -Wall -Wextra -Werror -std=c++98 -g -fsanitize=address
+CFLAGS			= -Wall -Wextra -Werror -std=c++98 -g
 
 all: $(NAME)
 
