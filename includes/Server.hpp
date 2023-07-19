@@ -20,9 +20,10 @@ public:
 	void					launchServer( void );
 	void					clientIOHandler( void );
 	void 					addClient( int serverSocketfd, fd_set &readfds );
-	void					readMsg( Client &client, int i);
+	void					readMsg( Client &client);
 	int						executeMsg( Parser &input, Client &client );
 	void					closeALLConnections( void );
+	void					closeConnection( Client &client, std::vector<Channel> &channels, std::vector<Client> &connections );
 
 	void					setPort( int port );
 	void					setPassword( std::string &password );

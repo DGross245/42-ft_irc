@@ -263,7 +263,7 @@ void Commands::mode(Parser &input, Client client , std::vector<Channel> &channel
 		return (client.sendMsg(SERVER " " RPL_CHANNELMODEIS " " + client.getNickname() + " " + channelIt->getChannelName() + " +" + channelIt->getModeString() + "\r\n"));
 	std::vector<Client>::iterator operatorIt = channelIt->searchForUser(client.getNickname(), channelIt->getOperator());
 	if (operatorIt == channelIt->getOperator().end())
-		return (client.sendMsg(SERVER " " ERR_CHANOPRIVSNEEDED " " + channelIt->getChannelName() + " :Channel privileges needed\r\n")); //
+		return (client.sendMsg(SERVER " " ERR_CHANOPRIVSNEEDED " " + channelIt->getChannelName() + " :Channel privileges needed\r\n"));
 	if (input.getParam()[1].at(0) != '-' && input.getParam()[1].at(0) != '+')
 		return (client.sendMsg(SERVER " " ERR_UNKNOWNMODE " " + client.getNickname() + " " + channelIt->getChannelName() + " :Unknown mode " + input.getParam()[1].at(0) + "\r\n"));
 
@@ -573,7 +573,7 @@ void Commands::user(Parser& input, Client& client) {
 	if (!isNameValid(client.getConstUsername()))
 		return;
 	if (!client.getUsername().empty())
-		return (client.sendMsg(SERVER " " ERR_ALREADYREGISTRED " " + client.getConstUsername() + " :Username is already in use. Please choose a different username.\r\n"));
+		return (client.sendMsg(SERVER " " ERR_ALREADYREGISTRED " " + client.getConstUsername() + " :You are already registered.\r\n"));
 	client.setUsername(input.getTrailing());
 }
 

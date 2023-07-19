@@ -184,7 +184,14 @@ int Server::executeMsg( Parser &input, Client &client ) {
 	return (0);
 }
 
-void Server::readMsg( Client &client, int i) {
+void Server::closeConnection( Client &client, std::vector<Channel> &channels, std::vector<Client> &connections ) {
+	std::string exitMsg = "QUIT :Unexpected exit\r\n";
+	Parser exit( exitMsg, client );
+	Commands::quit(exit, client, channels, connections);
+	return ;
+}
+
+void Server::readMsg( Client &client) {
 	std::string buffer(1024, '\0');
 	ssize_t bytes_read;
 	bytes_read = ::recv(client.getSocketfd(), &buffer[0], buffer.size(), 0);
@@ -192,8 +199,7 @@ void Server::readMsg( Client &client, int i) {
 		throw serverFailException("ERROR: recv error: Failed to receive data");
 	else if (bytes_read == 0) {
 		std::cout << BLACK "[Server]: " ORANGE "Client " DARK_GRAY "has " LIGHT_RED "disconnected" DARK_GRAY " from server\n" << std::endl;
-		close(client.getSocketfd());
-		this->getConnections().erase(this->_connections.begin() + i);
+		closeConnection( client, this->getChannels(), this->getConnections());
 	}
 	else {
 		buffer.resize(bytes_read);
@@ -256,7 +262,7 @@ void Server::clientIOHandler( void ) {
 			else {
 				for (size_t i = 0; i < this->getConnections().size(); i++) {
 					if (FD_ISSET( this->getConnections()[i].getSocketfd(), &readfds ))
-						readMsg( this->getConnections()[i], i );
+						readMsg( this->getConnections()[i]);
 				}
 			}
 		}
