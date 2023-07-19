@@ -213,7 +213,7 @@ void Commands::privmsg( Parser &input, Client client, std::vector<Client> connec
 	return ;
 }
 
-void Commands::quit( Parser &input, Client client, std::vector<Channel> &channels) {
+void Commands::quit( Parser &input, Client client, std::vector<Channel> &channels, std::vector<Client>& connections) {
 	std::vector<Client>::iterator targetIt;
 
 	for (std::vector<Channel>::iterator channelIt = channels.begin(); channelIt != channels.end(); ++channelIt) {
@@ -235,6 +235,14 @@ void Commands::quit( Parser &input, Client client, std::vector<Channel> &channel
 		else {
 			std::string message = ":" + client.getNickname() + " QUIT :" + input.getTrailing() + "\r\n";
 			forwardMsg(message, client, channelIt->getClients(), INCLUDE);
+		}
+	}
+	for (std::vector<Client>::iterator clientIt = connections.begin(); clientIt != connections.end(); ++clientIt) {
+		if (clientIt->getSocketfd() == client.getSocketfd()) {
+			close(client.getSocketfd());
+			connections.erase(clientIt);
+			std::cout << BLACK "[Server]: " ORANGE "Client " DARK_GRAY "has " LIGHT_RED "disconnected" DARK_GRAY " from server\n" << std::endl;
+			return ;
 		}
 	}
 	return ;

@@ -13,6 +13,9 @@ public:
 	int			Authentication( std::string CMD );
 	void		sendMsg( std::string message );
 
+
+	void		setAppendBuffer( std::string buffer);
+	std::string getAppendBuffer( void );
 	bool		getAuthentication( void );
 	int			getSocketfd( void );
 	std::string getUsername( void ) ;
@@ -32,6 +35,7 @@ private:
 	int			_socketfd;
 	bool		_isAuthenticated;
 	bool 		_passwordAccepted;
+	std::string	_appendBuffer;
 
 };
 

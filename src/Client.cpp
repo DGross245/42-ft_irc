@@ -35,6 +35,16 @@ void Client::setPasswordAccepted( bool status ) {
 	return ;
 }
 
+void Client::setAppendBuffer( std::string buffer ) {
+	if (buffer.length() > MAX_BUFFER_LENGTH) {
+		this->_appendBuffer = buffer.substr(0, MAX_BUFFER_LENGTH - 2);
+		this->_appendBuffer += "\r\n";
+	}
+	else
+		this->_appendBuffer = buffer;
+	return ;
+}
+
 //GETTER FUNCTIONS
 
 bool Client::getPasswordAccepted( void ) {
@@ -61,6 +71,12 @@ bool Client::getAuthentication( void ) {
 int Client::getSocketfd( void ) {
 	return (this->_socketfd);
 }
+
+std::string Client::getAppendBuffer( void ) {
+	return (this->_appendBuffer);
+}
+
+// NORMAL FUNCTIONS
 
 void Client::sendMsg( std::string message ) {
 	send(this->getSocketfd(), message.c_str(), message.length(), 0);

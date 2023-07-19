@@ -67,20 +67,6 @@ void Server::setPort( int port ) {
 	return ;
 }
 
-void Server::setAppendBuffer( std::string buffer ) {
-	if (buffer.length() > MAX_BUFFER_LENGTH) {
-		this->_appendBuffer = buffer.substr(0, MAX_BUFFER_LENGTH - 2);
-		this->_appendBuffer += "\r\n";
-	}
-	else
-		this->_appendBuffer = buffer;
-	return ;
-}
-
-std::string Server::getAppendBuffer( void ) {
-	return (this->_appendBuffer);
-}
-
 std::vector<Client> &Server::getConnections(void) {
 	return (this->_connections);
 }
@@ -111,7 +97,7 @@ void Server::initServer( void ) {
 	struct sockaddr_in serverAddress;
 	memset(&serverAddress, 0, sizeof(serverAddress));
 	serverAddress.sin_family = AF_INET;
-	serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
+	serverAddress.sin_addr.s_addr = inet_addr("10.11.5.25");
 	serverAddress.sin_port = htons(this->getPort());
 	if (fcntl(serverSocketfd, F_SETFL, O_NONBLOCK) == -1) {
 		close(serverSocketfd);
@@ -158,11 +144,15 @@ void Server::addClient( int serverSocketfd, fd_set &readfds ) {
 	return ;
 }
 
-void Server::executeMsg( Parser &input, Client &client ) {
+int Server::executeMsg( Parser &input, Client &client ) {
 	if (input.getCMD() == "PASS")
 		Commands::pass(input, client , this->getPassword());
-	else if (client.getPasswordAccepted()) {
-		if (input.getCMD() == "CAP")
+	else {
+		if (!client.getPasswordAccepted()) {
+			client.sendMsg(SERVER " " ERR_NOTREGISTERED " * :You have not registered\r\n");
+			return (0);
+		}
+		else if (input.getCMD() == "CAP")
 			Commands::cap(input, client);
 		else if (input.getCMD() == "NICK")
 			Commands::nick(input, client, this->getConnections());
@@ -173,8 +163,10 @@ void Server::executeMsg( Parser &input, Client &client ) {
 				Commands::ping(input, client);
 			else if (input.getCMD() == "JOIN")
 				Commands::join(input, client, this->getChannels());
-			else if (input.getCMD() == "QUIT")
-				Commands::quit(input, client, this->getChannels());
+			else if (input.getCMD() == "QUIT") {
+				Commands::quit(input, client, this->getChannels(), this->getConnections());
+				return (1);
+			}
 			else if (input.getCMD() == "PRIVMSG")
 				Commands::privmsg(input, client, this->getConnections(), this->getChannels());
 			else if (input.getCMD() == "KICK")
@@ -185,12 +177,11 @@ void Server::executeMsg( Parser &input, Client &client ) {
 				Commands::part(input, client, this->getChannels());
 			else if (input.getCMD() == "TOPIC")
 				Commands::topic(input, client, this->getChannels());
-			else if (input.getCMD() == "INVITE") {
+			else if (input.getCMD() == "INVITE")
 				Commands::invite(client, input, this->getConnections(), this->getChannels());
-			}
 		}
 	}
-	return ;
+	return (0);
 }
 
 void Server::readMsg( Client &client, int i) {
@@ -205,24 +196,24 @@ void Server::readMsg( Client &client, int i) {
 		this->getConnections().erase(this->_connections.begin() + i);
 	}
 	else {
+		buffer.resize(bytes_read);
+		client.setAppendBuffer( client.getAppendBuffer() + buffer );
+		size_t pos = client.getAppendBuffer().find("\r\n");
 		try
 		{
-			buffer.resize(bytes_read);
-			setAppendBuffer( getAppendBuffer() + buffer );
-			size_t pos = this->getAppendBuffer().find("\r\n");
 			while (pos != std::string::npos ) {
-				std::string cmd = this->getAppendBuffer().substr(0, pos + 2);
-				std::cout << "executing cmd:" << cmd << std::endl;
+				std::string cmd = client.getAppendBuffer().substr(0, pos + 2);
 				Parser input( cmd, client );
-				executeMsg( input, client );
-				setAppendBuffer(getAppendBuffer().substr(pos + 2));
-				pos = this->getAppendBuffer().find("\r\n");
+				if (executeMsg( input, client ))
+					return ;
+				client.setAppendBuffer(client.getAppendBuffer().substr(pos + 2));
+				pos = client.getAppendBuffer().find("\r\n");
 			}
-			std::cout << "buffer:" << getAppendBuffer();
 		}
 		catch(const Parser::parserErrorException &e)
 		{
 			std::cerr << RED << e.what() << '\n';
+			client.setAppendBuffer(client.getAppendBuffer().substr(pos + 2));
 		}
 	}
 	return ;

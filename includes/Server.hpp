@@ -21,17 +21,15 @@ public:
 	void					clientIOHandler( void );
 	void 					addClient( int serverSocketfd, fd_set &readfds );
 	void					readMsg( Client &client, int i);
-	void					executeMsg( Parser &input, Client &client );
+	int						executeMsg( Parser &input, Client &client );
 	void					closeALLConnections( void );
 
-	void					setAppendBuffer( std::string buffer);
 	void					setPort( int port );
 	void					setPassword( std::string &password );
 	void					setTime( void );
 	void					setServerfd( int serverSocketfd );
 	int						getPort( void );
 	int						getMaxfd( fd_set &readfds );
-	std::string				getAppendBuffer( void );
 	std::string				getPassword( void );
 	std::vector<Client>		&getConnections( void );
 	std::vector<Channel>	&getChannels(void);
@@ -59,7 +57,7 @@ private:
 	int						_port;
 	std::string				_password;
 	struct timeval			_tv;
-	std::string				_appendBuffer;
+
 };
 
 #endif
