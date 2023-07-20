@@ -97,7 +97,7 @@ void Server::initServer( void ) {
 	struct sockaddr_in serverAddress;
 	memset(&serverAddress, 0, sizeof(serverAddress));
 	serverAddress.sin_family = AF_INET;
-	serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
+	serverAddress.sin_addr.s_addr = INADDR_ANY;
 	serverAddress.sin_port = htons(this->getPort());
 	if (fcntl(serverSocketfd, F_SETFL, O_NONBLOCK) == -1) {
 		close(serverSocketfd);
@@ -197,10 +197,8 @@ void Server::readMsg( Client &client) {
 	bytes_read = ::recv(client.getSocketfd(), &buffer[0], buffer.size(), 0);
 	if (bytes_read == -1)
 		throw serverFailException("ERROR: recv error: Failed to receive data");
-	else if (bytes_read == 0) {
-		std::cout << BLACK "[Server]: " ORANGE "Client " DARK_GRAY "has " LIGHT_RED "disconnected" DARK_GRAY " from server\n" << std::endl;
+	else if (bytes_read == 0)
 		closeConnection( client, this->getChannels(), this->getConnections());
-	}
 	else {
 		buffer.resize(bytes_read);
 		client.setAppendBuffer( client.getAppendBuffer() + buffer );
